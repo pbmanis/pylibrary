@@ -21,7 +21,7 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as pl
 
-def ClementsBekkers(data, sign='+',samplerate=0.1, rise=2, decay=10, threshold=3.5, 
+def ClementsBekkers(data, sign='+',samplerate=0.1, rise=2.0, decay=10.0, threshold=3.5,
 					dispFlag=True, subtractMode = False, direction = 1,
 					lpfilter = 2000, template_type = 2, ntau=5,
 					markercolor = (1,0,0,1)):
@@ -271,7 +271,7 @@ def cb_template(funcid=1, samplerate=0.1, rise=2.0, decay=10.0, lpfilter=2000.0,
 		for i in range(0,N):
 			if t[i] >= predelay:
 				td = t[i]-predelay
-				template[i] = ((1.0-exp((-td/rise)))**2.0) * exp(-td/decay);
+				template[i] = ((1.0-np.exp((-td/rise)))**2.0) * np.exp(-td/decay);
 		m=np.amax(template)
 		template = template/m # normalize to size 1.
 		return(template, predelay)
@@ -390,13 +390,15 @@ def cb_multi(data, sign='+', samplerate=0.1, rise=[5.0, 3.0, 2.0, 0.5], decay=[3
 
 	return(icand, peaks, crit, iscamp, ioff)
 
-
-if __name__ == "__main__":
-	""" provide test of the selected routine(s) """
-	(data, samplerate, rise, decay, threshold, sign) = testdata()
-	ClementsBekkers(data, dispFlag = True, samplerate = samplerate,
+def test():
+    (data, samplerate, rise, decay, threshold, sign) = testdata()
+    ClementsBekkers(data, dispFlag = True, samplerate = samplerate,
 					subtractMode = True, direction=-1,
 					template_type = 1, rise=rise, decay=decay, threshold=4.0,
 					ntau=8, sign=sign)
-	pl.show()
+    pl.show()
+
+if __name__ == "__main__":
+    test()
+
 ##	cb_multi(data, sign=sign, matchflag = True,  dispflag = True, threshold = 4.5)
