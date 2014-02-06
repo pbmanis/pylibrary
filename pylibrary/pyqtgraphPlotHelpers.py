@@ -81,22 +81,13 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
         axl = [axl]
     if axlist is None:
         axlist = string.uppercase(1,len(axl)) # assume we wish to go in sequence
-    # font = FontProperties()
-    # font.set_family('sans-serif')
-    # font.set_weight=weight
-    # font.set_size=fontsize
-    # font.set_style('normal')
+
     for i, ax in enumerate(axl):
         labelText = pg.TextItem(axlist[i])
-        #box = HPacker(children=[at], align="left", pad=0, sep=2)
-        #ab = AnchoredOffsetbox(loc=3, child=box, pad=0., frameon=False, bbox_to_anchor=(-0.05, 1.1),
-        #    bbox_transform=ax.transAxes, borderpad=0.)
-        #ax.add_artist(ab)
         y = ax.getAxis('left').range
         x = ax.getAxis('bottom').range
         ax.addItem(labelText)
         labelText.setPos(x[0], y[1])
-        #text(-0.02, 1.05, axlist[i], verticalalignment='bottom', ha='right', fontproperties = font)
 
 def listAxes(axd):
     """
@@ -127,13 +118,7 @@ def formatTicks(axl, axis='xy', fmt='%d', font='Arial'):
     """
     if type(axl) is not list:
         axl = [axl]
-#    majorFormatter = FormatStrFormatter(fmt)
-#    for ax in axl:
-#        if 'x' in axis:
-#            ax.xaxis.set_major_formatter(majorFormatter)
-#        if 'y' in axis:
-#            ax.yaxis.set_major_formatter(majorFormatter)
-    
+
 def autoFormatTicks(axl, axis='xy', font='Arial'):
     if type(axl) is not list:
         axl = [axl]
