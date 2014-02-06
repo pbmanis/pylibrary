@@ -23,7 +23,7 @@ import string
 stdFont = 'Arial'
 
 from scipy.stats import gaussian_kde
-import numpy
+import numpy as np
 import pyqtgraph as pg
 from PyQt4 import QtCore, QtGui
 
@@ -148,8 +148,8 @@ def autoFormatTicks(axl, axis='xy', font='Arial'):
  #           setFormatter(ax, y0, y1, axis = 'y')
 
 def setFormatter(ax, x0, x1, axis='x'):
-    datarange = numpy.abs(x0-x1)
-    mdata = numpy.ceil(numpy.log10(datarange))
+    datarange = np.abs(x0-x1)
+    mdata = np.ceil(np.log10(datarange))
     # if mdata > 0 and mdata <= 4:
     #     majorFormatter = FormatStrFormatter('%d')
     # elif mdata > 4:
@@ -333,7 +333,7 @@ def violin_plot(ax, data, pos, bp=False):
         k = gaussian_kde(d) #calculates the kernel density
         m = k.dataset.min() #lower bound of violin
         M = k.dataset.max() #upper bound of violin
-        x = numpy.arange(m, M, (M-m)/100.) # support for violin
+        x = np.arange(m, M, (M-m)/100.) # support for violin
         v = k.evaluate(x) #violin profile (density curve)
         v = v / v.max() * w #scaling the violin to the available space
        # ax.fill_betweenx(x, p, v+p, facecolor='y', alpha=0.3)
@@ -344,4 +344,43 @@ def violin_plot(ax, data, pos, bp=False):
        # pylab.setp(bpf['boxes'], color='black')
        # pylab.setp(bpf['whiskers'], color='black', linestyle='-')
 
-               
+
+def labelUp(plot, xtext, ytext, title=None, label=None):
+    """helper to label up the plot"""
+    plot.setLabel('bottom', xtext)
+    plot.setLabel('left', ytext)
+    if label is not None:
+        text = pg.TextItem(label)
+        plot.addItem(text)
+        text.setPos(-0.1, 1.0)
+    if title is not None:
+        plot.setTitle(title="<b><large>%s</large></b>" % title)
+
+
+def makeLayout(cols=1, rows=1, letters=True, margins=4, spacing=4):
+        import string
+        letters = string.ascii_uppercase
+        widget = QtGui.QWidget()
+        gridLayout = QtGui.QGridLayout()
+        widget.setLayout(gridLayout)
+        gridLayout.setContentsMargins(margins, margins, margins, margins)
+        gridLayout.setSpacing(spacing)
+        plots = [[0 for x in xrange(cols)] for x in xrange(rows)]
+        i = 0
+        for c in range(cols):
+            for r in range(rows):
+                plots[r][c] = pg.PlotWidget()
+                gridLayout.addWidget(plots[r][c], c, r)
+                labelUp(plots[r][c], 'T(s)', 'Y', title = letters[i])
+                i += 1
+                if i > 25:
+                    i = 0
+
+        return(plots, widget, gridLayout)
+
+if __name__ == '__main__':
+    pg.mkQApp()
+    win = pg.GraphicsWindow(title="VC Plots")
+    (p, w, g) = makeLayout(2,4)
+    win.setLayout(g)
+    QtGui.QApplication.instance().exec_()
