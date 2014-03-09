@@ -46,7 +46,7 @@ class Params(object):
         r = {}
         for dictelement in self.__dict__:
             if isinstance(self.__dict__[dictelement], Params):
-                print 'nested: ', dictelement
+                #print 'nested: ', dictelement
                 r[dictelement] = self.__dict__[dictelement].todict()
             else:
                 r[dictelement] = self.__dict__[dictelement]

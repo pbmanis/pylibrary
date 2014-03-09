@@ -24,8 +24,11 @@ stdFont = 'Arial'
 
 from scipy.stats import gaussian_kde
 import numpy as np
-import pyqtgraph as pg
-from PyQt4 import QtCore, QtGui
+try:
+    import pyqtgraph as pg
+    from PyQt4 import QtCore, QtGui
+except:
+    pass
 
 def nice_plot(plotlist, spines = ['left', 'bottom'], position = 10, direction='inward', axesoff = False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot
@@ -229,34 +232,34 @@ def calbar(plotlist, calbar = None, axesoff = True, orient = 'left', unitNames=N
         if calbar[2] < 1.0:
             Vfmt = '%.1f'
         Hfmt = '%.0f'
+        if calbar[3] < 1.0:
+            Hfmt = '%.1f'
         if unitNames is not None:
             Vfmt = Vfmt + ' ' + unitNames['x']
             Hfmt = Hfmt + ' ' + unitNames['y']
-        Vtxt = pg.TextItem(Vfmt % calbar[2], anchor=(0., 0.))
-        Htxt = pg.TextItem(Hfmt % calbar[3], anchor=(0., 0.))
-        if calbar[3] < 1.0:
-            Hfmt = '%.1f'
-        print pl
+        Vtxt = pg.TextItem(Vfmt % calbar[2], anchor=(0.5, 0.5), color=pg.mkColor('k'))
+        Htxt = pg.TextItem(Hfmt % calbar[3], anchor=(0.5, 0.5), color=pg.mkColor('k'))
+       # print pl
         if calbar is not None:
             if orient == 'left': # vertical part is on the left
                 pl.plot([calbar[0], calbar[0], calbar[0]+calbar[2]],
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
+                    pen=pg.mkPen('k'), linestyle = '-', linewidth = 1.5)
                 ht = Htxt.setPos(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3])
             elif orient == 'right': # vertical part goes on the right
                 pl.plot([calbar[0] + calbar[2], calbar[0]+calbar[2], calbar[0]],
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
+                    pen=pg.mkPen('k'), linestyle = '-', linewidth = 1.5)
                 ht = Htxt.setPos(calbar[0]+calbar[2]-0.05*calbar[2], calbar[1]+0.5*calbar[3])
             else:
                 print "PlotHelpers.py: I did not understand orientation: %s" % (orient)
                 print "plotting as if set to left... "
                 pl.plot([calbar[0], calbar[0], calbar[0]+calbar[2]],
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
+                    pen=pg.mkPen('k'), linestyle = '-', linewidth = 1.5)
                 ht = Htxt.setPos(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3])
                 Htxt.setText(Hfmt % calbar[3])
-            xc = float(calbar[0]+calbar[2]*0.5)
+            xc = float(calbar[0]+calbar[2]*0.5)  # always centered, below the line
             yc = float(calbar[1]-0.1*calbar[3])
             vt = Vtxt.setPos(xc, yc)
             Vtxt.setText(Vfmt % calbar[2])
@@ -284,7 +287,7 @@ def refline(axl, refline = None, color = [64, 64, 64], linestyle = '--' ,linewid
         if refline is not None:
             x = ax.getAxis('bottom')
             xlims = x.range
-            ax.plot(xlims, [refline, refline], pen = pg.mkPen(color, width=linewidth, style=style))
+            ax.plot(xlims, [refline, refline], pen=pg.mkPen(color, width=linewidth, style=style))
 
 def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
     """
@@ -331,7 +334,14 @@ def violin_plot(ax, data, pos, bp=False):
 
 
 def labelUp(plot, xtext, ytext, title=None, label=None):
-    """helper to label up the plot"""
+    """
+        helper to label up the plot
+        Inputs: plot item
+                text for x axis
+                text for yaxis
+                plot title (on top)
+                plot panel label (for example, "A", "A1")
+    """
     plot.setLabel('bottom', xtext)
     plot.setLabel('left', ytext)
     if label is not None:
@@ -343,29 +353,46 @@ def labelUp(plot, xtext, ytext, title=None, label=None):
 
 
 def makeLayout(cols=1, rows=1, letters=True, margins=4, spacing=4):
-        import string
-        letters = string.ascii_uppercase
-        widget = QtGui.QWidget()
-        gridLayout = QtGui.QGridLayout()
-        widget.setLayout(gridLayout)
-        gridLayout.setContentsMargins(margins, margins, margins, margins)
-        gridLayout.setSpacing(spacing)
-        plots = [[0 for x in xrange(cols)] for x in xrange(rows)]
-        i = 0
-        for c in range(cols):
-            for r in range(rows):
-                plots[r][c] = pg.PlotWidget()
-                gridLayout.addWidget(plots[r][c], c, r)
-                labelUp(plots[r][c], 'T(s)', 'Y', title = letters[i])
-                i += 1
-                if i > 25:
-                    i = 0
+    """
+    Create a multipanel plot, returning the various pyptgraph elements.
+    The layout is always a rectangular grid with shape (cols, rows)
+    if letters is true, then the plot is labeled "A, B, C..."
+    margins sets the margins around the outside of the plot
+    spacing sets the spacing between the elements of the grid
+    """
+    import string
+    letters = string.ascii_uppercase
+    widget = QtGui.QWidget()
+    gridLayout = QtGui.QGridLayout()
+    widget.setLayout(gridLayout)
+    gridLayout.setContentsMargins(margins, margins, margins, margins)
+    gridLayout.setSpacing(spacing)
+    plots = [[0 for x in xrange(cols)] for x in xrange(rows)]
+    i = 0
+    for c in range(cols):
+        for r in range(rows):
+            plots[r][c] = pg.PlotWidget()
+            gridLayout.addWidget(plots[r][c], c, r)
+            labelUp(plots[r][c], 'T(s)', 'Y', title = letters[i])
+            i += 1
+            if i > 25:
+                i = 0
 
-        return(plots, widget, gridLayout)
+    return(plots, widget, gridLayout)
 
-if __name__ == '__main__':
+
+def figure(title = None):
+    pg.setConfigOption('background', 'w')  # set background to white
+    pg.setConfigOption('foreground', 'k')
     pg.mkQApp()
     win = pg.GraphicsWindow(title="VC Plots")
+    return win
+
+def show():
+    QtGui.QApplication.instance().exec_()
+
+if __name__ == '__main__':
+    win = figure(title='testing')
     (p, w, g) = makeLayout(2,4)
     win.setLayout(g)
-    QtGui.QApplication.instance().exec_()
+    show()

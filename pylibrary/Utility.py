@@ -384,7 +384,7 @@ def RichardsonSilberberg(data, tau, time = None):
     else:
         return rn
 
-def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode=None, interpolate=False, debug=False):
+def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpolate=False, debug=False):
     """ findspikes identifies the times of action potential in the trace v, with the
     times in t. An action potential is simply timed at the first point that exceeds
     the threshold... or is the peak. 
@@ -560,6 +560,17 @@ def measure(mode, x, y, x0, x1, thresh = 0):
     if mode == 'min' or mode == 'minimum':
         r1 = ma.min(ym)
         r2 = xm[ma.argmin(ym)]
+    if mode == 'minormax':
+        r1p = ma.max(ym)
+        r1n = ma.min(ym)
+        if ma.abs(r1p) > ma.abs(r1n):
+            r1 = r1p
+            r2 = xm[ma.argmax(ym)]
+
+        else:
+            r1 = r1n
+            r2 = xm[ma.argmin(ym)]
+
     if mode == 'median':
         r1 = ma.median(ym)
         r2 = 0
@@ -712,6 +723,7 @@ def analyzeIV(t, V, I, tw, thr):
             vss.append(ssv[0]) # get steady state voltage
             vmin.append(minv[0]) # and min voltage
             tmin.append(minv[1]) # and min time
+
 
     return({'I': numpy.array(ic), 'Vmin': numpy.array(vmin), 'Vss': numpy.array(vss),
             'Vm': numpy.array(vm), 'Tmin': numpy.array(tmin), 
