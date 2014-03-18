@@ -37,6 +37,8 @@ def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
         for loc, spine in ax.spines.iteritems():
             if loc in spines:
                 spine.set_position(('outward', position)) # outward by 10 points
@@ -69,6 +71,8 @@ def noaxes(axl, whichaxes = 'xy'):
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
         if 'x' in whichaxes:
             ax.xaxis.set_ticks([])
         if 'y' in whichaxes:
@@ -111,7 +115,9 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
     font.set_size=fontsize
     font.set_style('normal')
     for i, ax in enumerate(axl):
-        at = TextArea(axlist[i], textprops=dict(color="k", verticalalignment='bottom', 
+        if ax is None:
+            continue
+        at = TextArea(axlist[i], textprops=dict(color="k", verticalalignment='bottom',
             weight=weight, horizontalalignment='right', fontsize=fontsize, family='sans-serif'))
         box = HPacker(children=[at], align="left", pad=0, sep=2)
         ab = AnchoredOffsetbox(loc=3, child=box, pad=0., frameon=False, bbox_to_anchor=(-0.08, 1.1),
@@ -136,6 +142,8 @@ def cleanAxes(axl):
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
         for loc, spine in ax.spines.iteritems():
             if loc in ['left', 'bottom']:
                 pass
@@ -155,6 +163,8 @@ def setTicks(axl, axis='x', ticks=numpy.arange(0, 1.1, 1.0)):
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
         if axis == 'x':
             ax.set_xticks(ticks)
         if axis == 'y':
@@ -170,6 +180,8 @@ def formatTicks(axl, axis='xy', fmt='%d', font='Arial'):
         axl = [axl]
     majorFormatter = FormatStrFormatter(fmt)
     for ax in axl:
+        if ax is None:
+            continue
         if 'x' in axis:
             ax.xaxis.set_major_formatter(majorFormatter)
         if 'y' in axis:
@@ -179,8 +191,10 @@ def autoFormatTicks(axl, axis='xy', font='Arial'):
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
         if 'x' in axis:
-            print ax.get_xlim()
+        #    print ax.get_xlim()
             x0, x1= ax.get_xlim()
             setFormatter(ax,  x0, x1, axis = 'x')
         if 'y' in axis:
@@ -212,6 +226,8 @@ def update_font(axl, size=9, font=stdFont):
     fontProperties = {'family':'sans-serif','sans-serif':[font],
             'weight' : 'normal', 'size' : size}
     for ax in axl:
+        if ax is None:
+            continue
         for tick in ax.xaxis.get_major_ticks():
               tick.label1.set_family('sans-serif')
               tick.label1.set_fontname(stdFont)
@@ -237,7 +253,9 @@ def lockPlot(axl, lims, ticks=None):
         axl = [axl]
     plist = []
     for ax in axl:
-        lpl = ax.plot([lims[0], lims[0], lims[1], lims[1]], [lims[2], lims[3], lims[2], lims[3]], 
+        if ax is None:
+            continue
+        lpl = ax.plot([lims[0], lims[0], lims[1], lims[1]], [lims[2], lims[3], lims[2], lims[3]],
             color='none', marker='', linestyle='None')
         plist.extend(lpl)
         ax.axis(lims)
@@ -247,6 +265,8 @@ def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', dista
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
         # turn off ticks where there is no spine
         if 'left' in spines:
             ax.yaxis.set_ticks_position('left')
@@ -278,6 +298,8 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
         if axesoff is True:
             noaxes(ax)
         Vfmt = '%.0f'
@@ -324,6 +346,8 @@ def refline(axl, refline = None, color = '0.33', linestyle = '--' ,linewidth = 0
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
         if refline is not None:
             xlims = ax.get_xlim()
             ax.plot([xlims[0], xlims[1]], [refline, refline], color = color, linestyle=linestyle, linewidth=linewidth)
@@ -337,6 +361,8 @@ def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
+        if ax is None:
+            continue
 #        ax.set_title('spines at data (1,2)')
 #        ax.plot(x,y)
         ax.spines['left'].set_position(('data',xyzero[0]))
