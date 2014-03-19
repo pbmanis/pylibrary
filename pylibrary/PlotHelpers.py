@@ -28,6 +28,7 @@ from scipy.stats import gaussian_kde
 import numpy
 import matplotlib.pyplot as pylab
 
+
 def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward', axesoff = False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot
         Also allow quickaccess to things we like to do for publication plots, including:
@@ -41,9 +42,11 @@ def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward
             continue
         for loc, spine in ax.spines.iteritems():
             if loc in spines:
-                spine.set_position(('outward', position)) # outward by 10 points
+                spine.set_position(('outward', position))
+                # outward by 10 points
             else:
-                spine.set_color('none') # don't draw spine
+                spine.set_color('none')
+                # don't draw spine
         if axesoff is True:
             noaxes(ax)
 
@@ -66,6 +69,7 @@ def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward
             ax.tick_params(axis='y', direction='out')
             ax.tick_params(axis='x', direction='out')
 
+
 def noaxes(axl, whichaxes = 'xy'):
     """ take away all the axis ticks and the lines"""
     if type(axl) is not list:
@@ -80,6 +84,7 @@ def noaxes(axl, whichaxes = 'xy'):
         if 'xy' == whichaxes:
             ax.set_axis_off()
 
+
 def setY(ax1, ax2):
     if type(ax1) is list:
         print 'PlotHelpers: cannot use list as source to set Y axis'
@@ -89,7 +94,8 @@ def setY(ax1, ax2):
     refy = ax1.get_ylim()
     for ax in ax2:
         ax.set_ylim(refy)
-        
+
+
 def setX(ax1, ax2):
     if type(ax1) is list:
         print 'PlotHelpers: cannot use list as source to set Y axis'
@@ -100,6 +106,7 @@ def setX(ax1, ax2):
     for ax in ax2:
         ax.set_xlim(refx)
 
+
 def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
     if type(axl) is dict:
         axt = [axl[x] for x in axl]
@@ -108,7 +115,8 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
     if type(axl) is not list:
         axl = [axl]
     if axlist is None:
-        axlist = string.uppercase(1,len(axl)) # assume we wish to go in sequence
+        axlist = string.uppercase(1,len(axl))
+        # assume we wish to go in sequence
     font = FontProperties()
     font.set_family('sans-serif')
     font.set_weight=weight
@@ -125,6 +133,7 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
         ax.add_artist(ab)
         #text(-0.02, 1.05, axlist[i], verticalalignment='bottom', ha='right', fontproperties = font)
 
+
 def listAxes(axd):
     """
     make a list of the axes from the dictionary
@@ -138,6 +147,7 @@ def listAxes(axd):
     axl = [axd[x] for x in axd]
     return axl
 
+
 def cleanAxes(axl):
     if type(axl) is not list:
         axl = [axl]
@@ -148,14 +158,16 @@ def cleanAxes(axl):
             if loc in ['left', 'bottom']:
                 pass
             elif loc in ['right', 'top']:
-                spine.set_color('none') # do not draw the spine
+                spine.set_color('none')
+                # do not draw the spine
             else:
                 raise ValueError('Unknown spine location: %s' % loc)
             # turn off ticks when there is no spine
             ax.xaxis.set_ticks_position('bottom')
             #pdb.set_trace()
-            ax.yaxis.set_ticks_position('left') # stopped working in matplotlib 1.10
+            ax.yaxis.set_ticks_position('left')  # stopped working in matplotlib 1.10
         update_font(ax)
+
 
 def setTicks(axl, axis='x', ticks=numpy.arange(0, 1.1, 1.0)):
     if type(axl) is dict:
@@ -169,6 +181,7 @@ def setTicks(axl, axis='x', ticks=numpy.arange(0, 1.1, 1.0)):
             ax.set_xticks(ticks)
         if axis == 'y':
             ax.set_yticks(ticks)
+
 
 def formatTicks(axl, axis='xy', fmt='%d', font='Arial'):
     """
@@ -186,7 +199,8 @@ def formatTicks(axl, axis='xy', fmt='%d', font='Arial'):
             ax.xaxis.set_major_formatter(majorFormatter)
         if 'y' in axis:
             ax.yaxis.set_major_formatter(majorFormatter)
-    
+
+
 def autoFormatTicks(axl, axis='xy', font='Arial'):
     if type(axl) is not list:
         axl = [axl]
@@ -200,6 +214,7 @@ def autoFormatTicks(axl, axis='xy', font='Arial'):
         if 'y' in axis:
             y0, y1= ax.get_xlim
             setFormatter(ax, y0, y1, axis = 'y')
+
 
 def setFormatter(ax, x0, x1, axis='x'):
     datarange = numpy.abs(x0-x1)
@@ -223,25 +238,26 @@ def setFormatter(ax, x0, x1, axis='x'):
 def update_font(axl, size=9, font=stdFont):
     if type(axl) is not list:
         axl = [axl]
-    fontProperties = {'family':'sans-serif','sans-serif':[font],
+    fontProperties = {'family':'sans-serif','sans-serif': font,
             'weight' : 'normal', 'size' : size}
     for ax in axl:
         if ax is None:
             continue
         for tick in ax.xaxis.get_major_ticks():
-              tick.label1.set_family('sans-serif')
-              tick.label1.set_fontname(stdFont)
+              #tick.label1.set_family('sans-serif')
+            #  tick.label1.set_fontname(stdFont)
               tick.label1.set_size(size)
 
         for tick in ax.yaxis.get_major_ticks():
-              tick.label1.set_family('sans-serif')
-              tick.label1.set_fontname(stdFont)
+             # tick.label1.set_family('sans-serif')
+            #  tick.label1.set_fontname(stdFont)
               tick.label1.set_size(size)
         ax.set_xticklabels(ax.get_xticks(), fontProperties)
         ax.set_yticklabels(ax.get_yticks(), fontProperties)
         ax.xaxis.set_smart_bounds(True)
         ax.yaxis.set_smart_bounds(True) 
         ax.tick_params(axis = 'both', labelsize = size)
+
 
 def lockPlot(axl, lims, ticks=None):
     """ 
@@ -259,7 +275,8 @@ def lockPlot(axl, lims, ticks=None):
             color='none', marker='', linestyle='None')
         plist.extend(lpl)
         ax.axis(lims)
-    return(plist) # just in case you want to modify these plots later.
+    return(plist)  # just in case you want to modify these plots later.
+
 
 def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', distance=5, smart=True):
     if type(axl) is not list:
@@ -287,8 +304,8 @@ def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', dista
                 else:
                     spine.set_smart_bounds(False)
             else:
-                spine.set_color('none') # don't draw spine
-        return
+                spine.set_color('none')  # don't draw spine
+
         
 def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
     """
@@ -312,14 +329,14 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
             Vfmt = Vfmt + ' ' + unitNames['x']
             Hfmt = Hfmt + ' ' + unitNames['y']
         if calbar is not None:
-            if orient == 'left': # vertical part is on the left
+            if orient == 'left':  # vertical part is on the left
                 ax.plot([calbar[0], calbar[0], calbar[0]+calbar[2]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
                     color = 'k', linestyle = '-', linewidth = 1.5)
                 ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3], Hfmt % calbar[3], 
                     horizontalalignment = 'left', verticalalignment = 'center',
                     fontsize = 11)
-            elif orient == 'right': # vertical part goes on the right
+            elif orient == 'right':  # vertical part goes on the right
                 ax.plot([calbar[0] + calbar[2], calbar[0]+calbar[2], calbar[0]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
                     color = 'k', linestyle = '-', linewidth = 1.5)
@@ -337,7 +354,8 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
                     fontsize = 11)
             ax.text(calbar[0]+calbar[2]*0.5, calbar[1]-0.1*calbar[3], Vfmt % calbar[2], 
                 horizontalalignment = 'center', verticalalignment = 'top',
-                fontsize = 11)            
+                fontsize = 11)
+
 
 def refline(axl, refline = None, color = '0.33', linestyle = '--' ,linewidth = 0.5):
     """
@@ -384,12 +402,12 @@ def violin_plot(ax, data, pos, bp=False, median = False):
     dist = max(pos)-min(pos)
     w = min(0.15*max(dist,1.0),0.5)
     for d,p in zip(data,pos):
-        k = gaussian_kde(d) #calculates the kernel density
-        m = k.dataset.min() #lower bound of violin
-        M = k.dataset.max() #upper bound of violin
-        x = numpy.arange(m, M, (M-m)/100.) # support for violin
-        v = k.evaluate(x) #violin profile (density curve)
-        v = v / v.max() * w #scaling the violin to the available space
+        k = gaussian_kde(d)  #calculates the kernel density
+        m = k.dataset.min()  #lower bound of violin
+        M = k.dataset.max()  #upper bound of violin
+        x = numpy.arange(m, M, (M-m)/100.)  # support for violin
+        v = k.evaluate(x)  #violin profile (density curve)
+        v = v / v.max() * w  #scaling the violin to the available space
         ax.fill_betweenx(x, p, v+p, facecolor='y', alpha=0.3)
         ax.fill_betweenx(x, p, -v+p, facecolor='y', alpha=0.3)
         if median:
