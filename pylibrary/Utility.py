@@ -337,20 +337,21 @@ def local_maxima(data, span=10, sign=1):
     from scipy.ndimage import minimum_filter
     from scipy.ndimage import maximum_filter
     data = numpy.asarray(data)
-    print 'data size: ', data.shape
+    #print 'data size: ', data.shape
     if sign <= 0: # look for minima
         maxfits = minimum_filter(data, size=span, mode="wrap")
     else:
         maxfits = maximum_filter(data, size=span, mode="wrap")
-    print 'maxfits shape: ', maxfits.shape
+    #print 'maxfits shape: ', maxfits.shape
     maxima_mask = numpy.where(data == maxfits)
     good_indices = numpy.arange(len(data))[maxima_mask]
-    print 'len good index: ', len(good_indices)
+    #print 'len good index: ', len(good_indices)
     good_fits = data[maxima_mask]
     order = good_fits.argsort()
     return good_indices[order], good_fits[order]
 
-def clementsBekkers(data, template, threshold=1.0, minpeakdist=15):
+def clementsBekkers(t, data, template, threshold=2.5, minpeakdist=5):
+    import matplotlib.pyplot as mp
     D = data.view(numpy.ndarray)
     T = template.view(numpy.ndarray)
     N = len(T)
@@ -358,11 +359,11 @@ def clementsBekkers(data, template, threshold=1.0, minpeakdist=15):
     sumT = T.sum()
     sumT2 = (T**2).sum()
     sumD = _rollingSum(D, N)
-    sumD2 = _rollingSum(D**2, N)
+    sumD2 = _rollingSum(D**2.0, N)
     sumTD = numpy.correlate(D, T, mode='valid')
-    scale = (sumTD - sumT * sumD /N) / (sumT2 - sumT**2 /N)
+    scale = (sumTD - sumT * sumD /N) / (sumT2 - sumT**2.0 /N)
     offset = (sumD - scale * sumT) /N
-    SSE = sumD2 + scale**2 * sumT2 + N * offset**2 - 2 * (scale*sumTD + offset*sumD - scale*offset*sumT)
+    SSE = sumD2 + scale**2.0 * sumT2 + N * offset**2 - 2 * (scale*sumTD + offset*sumD - scale*offset*sumT)
     error = numpy.sqrt(SSE / (N-1))
     sf = scale/error
     # isolate events from the sf signal
@@ -370,9 +371,102 @@ def clementsBekkers(data, template, threshold=1.0, minpeakdist=15):
     (evp, eva) = local_maxima(a, span=minpeakdist, sign=1)
     # now clean it up
     u = numpy.where(eva > 0.0)
+    print u
+    print evp[u]
+    print eva[u]
+    mp.figure(1)
+    mp.plot(t, data)
+
+    mp.plot(t, sf, 'g-')
+    #mp.plot(t[0:len(a)], a, 'g-')
+    mp.plot(t[evp[u]], data[evp[u]], 'bx')
+    mp.show()
     t_start = t[evp[u]]
-    d_start = eva[evp[u]]
+    d_start = data[evp[u]]
     return (t_start, d_start) # just return the list of the starts
+
+def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpfilter=0):
+    dual_fraction = 0.5
+    if dual_fraction == 0.0:
+        decay2 = 0.5
+
+    if type == 'alpha':
+        predelay = 0.5
+        if decay*ntau < 2.5:
+            ntau = 2.5 / decay
+        N = numpy.floor((decay*ntau+predelay)/samplerate)
+        tb = numpy.arange(0., N*samplerate, samplerate)
+        template = numpy.zeros(N)
+        for i, t in enumerate(tb):
+            if t >= predelay:
+                template[i] = ((t - predelay)/decay)*numpy.exp((-(t - predelay))/decay)
+
+    if type == 'EPSC':  #  for EPSC detection
+        predelay = 0.5
+        if predelay <= 0.5:
+            predelay = 0.5
+        if decay*ntau < 2.5: # less than 5 msec is a problem though
+            ntau = 2.5/decay
+        N = numpy.floor((decay*ntau+predelay)/samplerate)
+        tb = numpy.arange(0., N*samplerate, samplerate)
+        template = numpy.zeros(N)
+        for i, t in enumerate(tb):
+            if t >= predelay:
+                template[i] = (1.-numpy.exp(-(t-predelay)/rise))**2.0*numpy.exp(-(t-predelay)/decay);
+            end;
+        end;
+        if lpfilter > 0:
+            template = SignalFilter_LPFButter(template, lpfilter, 1./samplerate, NPole = 8)
+    #
+    # case 2 % dual exponential function with power (standard)
+    #     predelay = 0.25;
+    #     N = floor((decay*ntau+predelay)/samplerate);
+    #     template = zeros(N, 1);
+    #     for i = 1:N
+    #         t = i*samplerate;
+    #         if(t >= predelay)
+    #             td = t-predelay;
+    #             template(i) = ((1-exp((-td/rise)))^2) * exp(-td/decay);
+    #         end;
+    #     end;
+    #
+    # case 3 % dual exponential decay function with exp power rise
+    #     predelay = 0.25;
+    #     N = floor(((decay+decay2)*ntau+predelay)/samplerate);
+    #     template = zeros(N, 1);
+    #     for i = 1:N
+    #         t = i*samplerate;
+    #         if(t >= predelay)
+    #             td = t-predelay;
+    #             template(i) = ((1-exp((-td/rise)))^2) *( (dual_fraction * exp(-td/decay2) + ...
+    #                 (1.0 - dual_fraction )* exp(-td/decay)));
+    #         end;
+    #     end;
+    #
+    # case 4 % use data from average waveform somewhere
+    #     % 5/13/2008.
+    #     % aveargin/zoom, etc put the displayed data into the "stack" variable
+    #     % this is then usable as a template. It is normalized first, and
+    #     % sent to the routine.
+    #     predelay = 0.05;
+    #     template = STACK{1}; % pull from the new "stack" variable.
+    #     template = template/max(template);
+    #
+    # case 5 % use the average of the prior analysis.
+    #     sf = getmainselection();
+    #     predelay = CONTROL(sf).EPSC.predelay;
+    #     template = CONTROL(sf).EPSC.iavg;
+    #     template = template/max(template);
+    #
+    # otherwise
+    #     template = [];
+    #     return
+
+    template = template/numpy.max(template);
+    #N = length(template);
+    #newfigure('mini_showtemplate', 'Mini Template');
+    #plot(0:samplerate:(N-1)*samplerate', template);
+    return template
 
 def RichardsonSilberberg(data, tau, time = None):
     D = data.view(numpy.ndarray)

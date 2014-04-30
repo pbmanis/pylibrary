@@ -54,9 +54,9 @@ import numpy.random
 #from numba import autojit
 
 usingMPlot = False
-if usingMPlot:
-    import MPlot # we include plotting as part of the fitting
-
+# if usingMPlot:
+#     import MPlot # we include plotting as part of the fitting
+pyqt = False
 def debug_trace():
     '''Set a tracepoint in the Python debugger that works with Qt'''
     if pyqt:
@@ -89,6 +89,8 @@ class Fitting():
                        [0.0, 1.0, 100.0], ['DC', 'A0', 'tau'], None, None),
             'exppulse': (self.expPulse, [3.0, 2.5, 0.2, 2.5, 2.0, 0.5], 2000, 'k', [0, 10, 0.3],
                          [0.0, 0., 0.75, 4., 1.5, 1.], ['DC', 't0', 'tau1', 'tau2', 'amp', 'width'], None, None),
+            'FIGrowth1': (self.FIGrowth1, [0.0, 100., 1.0, 40., 200.], 2000, 'k', [0, 1000, 50], # [Fzero, Ibreak, F1amp, F2amp, Irate]
+                         [0.0, 0., 0., 10., 100.], ['Fzero', 'Ibreak', 'F1amp', 'F2amp', 'Irate'], None, None),
             'boltz': (self.boltzeval, [0.0, 1.0, -50.0, -5.0], 5000, 'r', [-130., -30., 1.],
                       [0.00, 0.010, -100.0, 7.0], ['DC', 'A0', 'x0', 'k'], None, None),
             'gauss': (self.gausseval, [1.0, 0.0, 0.5], 2000, 'y', [-10., 10., 0.2],
@@ -246,6 +248,36 @@ class Fitting():
                 return ss
             else:
                 return y - yd
+                
+    
+    def FIGrowth1(self, p, x, y=None, C=None, sumsq=False, weights=None):
+        """
+        Frequency versus current intensity (FI plot) fit
+        Linear fit from 0 to breakpoint
+        exponential growth thereafter
+        
+        Parameter p is [Fzero, Ibreak, F1amp, F2amp, Irate]
+        for I < break:
+            F = Fzero + I*F1amp
+        for I >= break:
+            F = F(break)+ F2amp(1-exp^(-t/Irate))
+        """
+        Fzero, Ibreak, F1amp, F2amp, Irate = p
+        yd = numpy.zeros(x.shape)
+        m1 = (x < Ibreak)
+        m2 = (x >= Ibreak)
+        yd[m1] = Fzero + x[m1]*F1amp/Ibreak
+        maxyd = numpy.max(yd)
+        yd[m2] = F2amp * (1.0 - numpy.exp(- (x[m2]-Ibreak) / Irate)) + maxyd
+        if y == None:
+            return yd
+        else:
+            if sumsq is True:
+                ss = numpy.sqrt(numpy.sum((y - yd) ** 2.0))
+                return ss
+            else:
+                return y - yd
+
 
     def boltzeval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] + (p[1] - p[0]) / (1.0 + numpy.exp((x - p[2]) / p[3]))
@@ -493,8 +525,8 @@ class Fitting():
                 yfit = func[0](plsq, xfit, C=fixedPars)
                 yy = func[0](plsq, tx, C=fixedPars) # calculate function
                 self.fitSum2Err = numpy.sum((dy - yy) ** 2)
-                if usingMPlot and FitPlot != None and plotInstance != None:
-                    self.FitPlot(xFit=xfit, yFit=yfit, fitFunc=fund[0],
+                if usingMPlot and fitPlot != None and plotInstance != None:
+                    self.FitPlot(xFit=xfit, yFit=yfit, fitFunc=func[0],
                                  fitPars=plsq, plot=fitPlot, plotInstance=plotInstance)
                 xp.append(plsq) # parameter list
                 xf.append(xfit) # x plot point list
@@ -519,14 +551,16 @@ class Fitting():
         else:
             fcolor = color
         if yFit is None:
-            yFit = numpy.array([])
-            for k in range(0, len(fitPars)):
-                yFit[k] = func[0](fitPars[k], xFit[k], C=fixedPars)
+            yFit = numpy.array(xFit.shape)
+            print 'xfit shape: ', xFit.shape
+            yFit = func[0](fitPars, xFit, C=fixedPars)
+          #  for k in range(0, len(fitPars)):
+           #     yFit[k] = func[0](fitPars[k], xFit[k], C=fixedPars)
         if plotInstance is None or fitPlot is None:
-            return (yfit)
+            return (yFit)
         for k in range(0, len(fitPars)):
             plotInstance.PlotLine(fitPlot, xFit[k], yFit[k], color=fcolor)
-        return (yfit)
+        return (yFit)
 
     def getFitErr(self):
         """ Return the fit error for the most recent fit"""
@@ -669,12 +703,10 @@ class Fitting():
 
 if __name__ == "__main__":
 #    import matplotlib.pyplot as pyplot
-    import timeit
-    import Fitting
+
     import matplotlib as MP
 
     MP.use('Qt4Agg')
-    import matplotlib.gridspec as GS
 
     stdFont = 'Arial'
 
@@ -691,7 +723,8 @@ if __name__ == "__main__":
     pylab.rcParams['text.dvipnghack'] = True
     ##################### to here (matplotlib stuff - touchy!
 
-    Fits = Fitting.Fitting()
+    print 'Testing Fitting'
+    Fits = Fitting()
     #    x = numpy.arange(0, 100.0, 0.1)
     #    y = 5.0-2.5*numpy.exp(-x/5.0)+0.5*numpy.random.randn(len(x))
     #    (dc, aFit,tauFit) = Fits.expfit(x,y)
@@ -703,10 +736,10 @@ if __name__ == "__main__":
     #  pyplot.show()
     exploreError = False
 
+    func = 'FIGrowth1'
     if exploreError is True:
         # explore the error surface for a function:
 
-        func = 'exppulse'
         f = Fits.fitfuncmap[func]
         p1range = numpy.arange(0.1, 5.0, 0.1)
         p2range = numpy.arange(0.1, 5.0, 0.1)
@@ -749,7 +782,7 @@ if __name__ == "__main__":
 
     signal_to_noise = 100000.
     for func in Fits.fitfuncmap:
-        if func != 'exppulse':
+        if func != 'FIGrowth1':
             continue
         print "\nFunction: %s\nTarget: " % (func),
         f = Fits.fitfuncmap[func]
@@ -783,8 +816,16 @@ if __name__ == "__main__":
                       (0., 1000), (0.0, 500.0), (0.1, 50.0)]
             (fpar, xf, yf, names) = Fits.FitRegion(numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds,
                                                    method=testMethod)
+        elif func == 'FIGrowth1':
+                # Parameter p is [Fzero, Ibreak, F1amp, F2amp, Irate]
+                print '\nFIGrowth1: '
+                bounds = [(0.0,3.0), (0.0, 1000), (0.0, 5.0), (0.0, 100.0,), (0.0, 100.0)]
+                initialgr = f[0](f[5], x, None)
+                (fpar, xf, yf, names) = Fits.FitRegion(numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds,
+                                                constraints=[], fixedPars=None, method=testMethod)
+                tv = f[5]
+                
         elif func == 'boltz':
-            continue
             bounds = [(-0.5, 0.5), (0.0, 20.0), (-120., 0.), (-20., 0.)]
             (fpar, xf, yf, names) = Fits.FitRegion(numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds,
                                                    method=testMethod)
@@ -838,7 +879,7 @@ if __name__ == "__main__":
         print( "FIT(%d)   : %s" % (j, outstr) )
         print( "init(%d) : %s" % (j, initstr) )
         print( "Error:   : %f" % (Fits.fitSum2Err))
-        if func is 'exppulse':
+        if func in ['exppulse', 'FIGrowth1']:
             pylab.figure()
             pylab.plot(numpy.array(x), yd, 'ro-')
             pylab.hold(True)

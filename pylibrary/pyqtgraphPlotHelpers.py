@@ -372,7 +372,7 @@ def makeLayout(cols=1, rows=1, letters=True, margins=4, spacing=4):
     for c in range(cols):
         for r in range(rows):
             plots[r][c] = pg.PlotWidget()
-            gridLayout.addWidget(plots[r][c], c, r)
+            gridLayout.addWidget(plots[r][c], r, c)
             labelUp(plots[r][c], 'T(s)', 'Y', title = letters[i])
             i += 1
             if i > 25:
@@ -381,11 +381,12 @@ def makeLayout(cols=1, rows=1, letters=True, margins=4, spacing=4):
     return(plots, widget, gridLayout)
 
 
-def figure(title = None):
-    pg.setConfigOption('background', 'w')  # set background to white
-    pg.setConfigOption('foreground', 'k')
+def figure(title = None, background='w'):
+    if background == 'w':
+        pg.setConfigOption('background', 'w')  # set background to white
+        pg.setConfigOption('foreground', 'k')
     pg.mkQApp()
-    win = pg.GraphicsWindow(title="VC Plots")
+    win = pg.GraphicsWindow(title=title)
     return win
 
 def show():
@@ -393,6 +394,6 @@ def show():
 
 if __name__ == '__main__':
     win = figure(title='testing')
-    (p, w, g) = makeLayout(2,4)
+    (p, w, g) = makeLayout(cols=1,rows=2)
     win.setLayout(g)
     show()
