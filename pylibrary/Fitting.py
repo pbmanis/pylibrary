@@ -93,8 +93,12 @@ class Fitting():
                          [0.0, 0., 0., 10., 100.], ['Fzero', 'Ibreak', 'F1amp', 'F2amp', 'Irate'], None, None),
             'boltz': (self.boltzeval, [0.0, 1.0, -50.0, -5.0], 5000, 'r', [-130., -30., 1.],
                       [0.00, 0.010, -100.0, 7.0], ['DC', 'A0', 'x0', 'k'], None, None),
+            'normalizedgauss': (self.normalized_gausseval, [1.0, 0.0, 0.5], 2000, 'y', [-10., 10., 0.2],
+                      [1.0, 1.0, 2.0], ['A', 'mu', 'sigma'], None, None),
             'gauss': (self.gausseval, [1.0, 0.0, 0.5], 2000, 'y', [-10., 10., 0.2],
                       [1.0, 1.0, 2.0], ['A', 'mu', 'sigma'], None, None),
+            'ngauss': (self.ngausseval, [1.0, 0.0, 0.5, 2., 1., 0.25], 2000, 'y', [-10., 10., 0.2],
+                      [1.0, 1.0, 2.0, 0.5, 0.5, 0.1], ['A1', 'mu1', 'sigma1', 'A2', 'mu2', 'sigma2'], 2, None),
             'line': (self.lineeval, [1.0, 0.0], 500, 'r', [-10., 10., 0.5],
                      [0.0, 2.0], ['m', 'b'], None, None),
             'poly2': (self.poly2eval, [1.0, 1.0, 0.0], 500, 'r', [0, 100, 1.],
@@ -299,7 +303,10 @@ class Fitting():
             else:
                 return y - yd
 
-    def gausseval(self, p, x, y=None, C=None, sumsq=False, weights=None):
+    def normalized_gausseval(self, p, x, y=None, C=None, sumsq=False, weights=None):
+        """
+        Normalized version (area = 1)
+        """
         yd = (p[0] / (p[2] * numpy.sqrt(2.0 * numpy.pi))) * numpy.exp(-((x - p[1]) ** 2.0) / (2.0 * (p[2] ** 2.0)))
         if y == None:
             return yd
@@ -308,6 +315,41 @@ class Fitting():
                 return numpy.sum((y - yd) ** 2)
             else:
                 return y - yd
+
+    def gausseval(self, p, x, y=None, C=None, sumsq=False, weights=None):
+        """
+        Non-normalized version 
+        """
+        yd = p[0] * numpy.exp(-((x - p[1]) ** 2.0) / (2.0 * (p[2] ** 2.0)))
+        if y == None:
+            return yd
+        else:
+            if sumsq is True:
+                return numpy.sum((y - yd) ** 2)
+            else:
+                return y - yd
+
+
+    def ngausseval(self, p, x, y=None, C=2, sumsq=False, weights=None):
+        # C is the number of gaussians to evaluate
+        # p[0,1,2] are the parameters for the first gaussian
+        # p[3,4,5] are the parameters for the second
+        # etc. 
+        #
+        for i in range(int(C)):
+            pn = p[(i*3):(i*3)+3]
+            if i == 0:
+                yd = self.gausseval(pn, x, y=None)
+            else:
+                yd += self.gausseval(pn, x, y=None)
+        if y == None:
+            return yd
+        else:
+            if sumsq is True:
+                return numpy.sum((y - yd) ** 2)
+            else:
+                return y - yd        
+        
 
     def lineeval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] * x + p[1]
@@ -464,19 +506,19 @@ class Fitting():
                                                                                 tx.astype('float64'), dy.astype('float64'),
                                                                                 fixedPars),
                                                                             full_output=1, maxfev=func[2])
-                    print 'none/leastsq'
-                    print 'plsq: ', plsq
-                    print 'cov: ', cov
+                    # print 'none/leastsq'
+                    # print 'plsq: ', plsq
+                    # print 'cov: ', cov
                     if ier > 4:
                         print "optimize.leastsq error flag is: %d" % (ier)
                         print mesg
                 elif method == 'curve_fit':
-                    print fpars
-                    print fixedPars
+                    # print fpars
+                    # print fixedPars
                     plsq, cov = scipy.optimize.curve_fit(func[0], tx.astype('float64'), dy.astype('float64'), p0=fpars)
-                    print 'curve_fit'
-                    print 'plsq: ', plsq
-                    print 'cov: ', cov
+                    # print 'curve_fit'
+                    # print 'plsq: ', plsq
+                    # print 'cov: ', cov
                     ier = 0
                 elif method in ['fmin', 'simplex', 'Nelder-Mead', 'bfgs', 'TNC', 'SLSQP', 'COBYLA',
                                 'L-BFGS-B']: # use standard wrapper from scipy for those routintes
@@ -486,7 +528,7 @@ class Fitting():
                                                   constraints=constraints, tol=None, callback=None,
                                                   options={'maxiter': func[2], 'disp': False})
                     plsq = res.x
-                    print 'res: ', res
+                    # print 'res: ', res
 
 
                 # next section is replaced by the code above - kept here for reference if needed...
@@ -503,8 +545,8 @@ class Fitting():
                     print 'OpenOpt!!!'
                     if bounds is not None:
                         # unpack bounds
-                        lb = [y[0] for y in bounds]
-                        ub = [y[1] for y in bounds]
+                        lb = [z[0] for z in bounds]
+                        ub = [z[1] for z in bounds]
                         fopt = openopt.DFP(func[0], fpars, tx, dy, df=fitFuncDer, lb=lb, ub=ub)
                         # fopt.df = func[8]
                         r = fopt.solve('nlp:ralg', plot=0, iprint=10)
@@ -736,7 +778,7 @@ if __name__ == "__main__":
     #  pyplot.show()
     exploreError = False
 
-    func = 'FIGrowth1'
+    func = 'ngauss'
     if exploreError is True:
         # explore the error surface for a function:
 
@@ -747,10 +789,9 @@ if __name__ == "__main__":
         err = numpy.zeros((len(p1range), len(p2range)))
         x = numpy.array(numpy.arange(f[4][0], f[4][1], f[4][2]))
         C = None
-        if func == 'expsum2':
+        if func in ['expsum2', 'exppulse', 'ngauss']:
             C = f[7]
         # check exchange of tau1 ([1]) and width[4]
-        C = None
         yOffset, t0, tau1, tau2, amp, width = f[1] # get inital parameters
         y0 = f[0](f[1], x, C=C)
         noise = numpy.random.random(y0.shape) - 0.5
@@ -777,12 +818,12 @@ if __name__ == "__main__":
 
     # run tests for each type of fit, return results to compare parameters
 
-    cons = None
+    cons = []
     bnds = None
 
     signal_to_noise = 100000.
     for func in Fits.fitfuncmap:
-        if func != 'FIGrowth1':
+        if func != 'ngauss':
             continue
         print "\nFunction: %s\nTarget: " % (func),
         f = Fits.fitfuncmap[func]
@@ -797,10 +838,8 @@ if __name__ == "__main__":
         #            nstep = 100.0
         x = numpy.array(numpy.arange(f[4][0], f[4][1], f[4][2]))
         C = None
-        if func == 'expsum2':
-            C = f[7]
-
-        if func == 'exppulse':
+        if func in ['expsum2', 'exppulse', 'ngauss']:
+            print '\n', f[7]
             C = f[7]
 
         y = f[0](f[1], x, C=C)
@@ -862,6 +901,7 @@ if __name__ == "__main__":
             # print names
 
         else:
+            tv = f[5]
             (fpar, xf, yf, names) = Fits.FitRegion(
                 numpy.array([1]), 0, x, yd, fitFunc=func, fixedPars=C, constraints=cons, bounds=bnds, method=testMethod)
             #print fpar
