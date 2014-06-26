@@ -79,6 +79,8 @@ class Fitting():
                      [1.0, 5.0], ['A0', 'tau'], None, None),
             'exp1': (self.expeval, [0.0, 0.0, 20.0], 2000, 'k', [0, 100, 1.],
                      [0.5, 1.0, 5.0], ['DC', 'A0', 'tau'], None, self.expevalprime),
+            'expsat': (self.expsat, [0.0, 1.0, 20.0], 2000, 'k', [0, 10, 1.],
+                     [0.5, 1.0, 5.0], ['DC', 'A0', 'tau'], None, self.expsatprime),
             'expsum': (self.expsumeval, [0.0, -0.5, 200.0, -0.25, 450.0], 500000, 'k', [0, 1000, 1.],
                        [0.0, -1.0, 150.0, -0.25, 350.0], ['DC', 'A0', 'tau0', 'A1', 'tau1'], None, None),
             'expsum2': (self.expsumeval2, [0., -0.5, -0.250], 50000, 'k', [0, 1000, 1.],
@@ -184,7 +186,6 @@ class Fitting():
         """
         ydp = p[1] * numpy.exp(-x / p[2]) / (p[2] * p[2])
         yd = p[0] + p[1] * numpy.exp(-x / p[2])
-        print y
         if y is None:
             return (yd, ydp)
         else:
@@ -192,6 +193,29 @@ class Fitting():
                 return numpy.sum((y - yd) ** 2)
             else:
                 return y - yd
+
+    def expsat(self, p, x, y=None, C=None, sumsq=False, weights=None):
+        """
+        Saturing single exponential rise with DC offset:
+        p[0] + p[1]*(1-np.exp(-x/p[2]))
+        """
+        yd = p[0] + p[1] * (1.0 - numpy.exp(-x * p[2]))
+        if y is None:
+            return yd
+        else:
+            if sumsq is True:
+                return numpy.sum((y - yd) ** 2)
+            else:
+                return y - yd
+    
+    def expsatprime(self, p, x):
+        """
+        derivative for expsat
+        """
+#        yd = p[0] + p[1] * (1.0 - numpy.exp(-x * p[2]))
+        ydp = p[1]*p[2]*numpy.exp(-x*p[2])
+        return ydp
+
 
     def exppoweval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         """
@@ -252,8 +276,8 @@ class Fitting():
                 return ss
             else:
                 return y - yd
-                
-    
+
+
     def FIGrowth1(self, p, x, y=None, C=None, sumsq=False, weights=None):
         """
         Frequency versus current intensity (FI plot) fit
@@ -272,15 +296,19 @@ class Fitting():
         m2 = (x >= Ibreak)
         yd[m1] = Fzero + x[m1]*F1amp/Ibreak
         maxyd = numpy.max(yd)
-        yd[m2] = F2amp * (1.0 - numpy.exp(- (x[m2]-Ibreak) / Irate)) + maxyd
+        yd[m2] = F2amp * (1.0 - numpy.exp(- (x[m2]-Ibreak) * Irate)) + maxyd
         if y == None:
             return yd
         else:
+            dy = y - yd
+            w = numpy.ones(len(x))
+#            xp = numpy.where(x>0)
+#            w[xp] = w[xp] + 3.*x[xp]/numpy.max(x)
             if sumsq is True:
-                ss = numpy.sqrt(numpy.sum((y - yd) ** 2.0))
+                ss = numpy.sqrt(numpy.sum((w*dy) ** 2.0))
                 return ss
             else:
-                return y - yd
+                return w*dy
 
 
     def boltzeval(self, p, x, y=None, C=None, sumsq=False, weights=None):

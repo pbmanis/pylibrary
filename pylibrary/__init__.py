@@ -12,7 +12,5 @@ import simplex
 import TiffInfo
 import tifffile
 import titlecase
-
-
-
+import RStats
 

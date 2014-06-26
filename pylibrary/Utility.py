@@ -34,7 +34,7 @@ then call Utils.xxxxx()
 """
 
 import sys, re, os
-import numpy
+import numpy as np
 import numpy.ma as ma
 #import numpy.linalg.lstsq
 import scipy.fftpack as spFFT
@@ -58,23 +58,23 @@ def pSpectrum(data=None, samplefreq=44100):
         print "? no data in pSpectrum"
         return
 # pad to the nearest higher power of 2
-    (a,b) = numpy.frexp(npts)
+    (a,b) = np.frexp(npts)
     if a <= 0.5:
         b = b = 1
     npad = 2**b -npts
     if debugFlag:
         print "npts: %d   npad: %d   npad+npts: %d" % (npts, npad, npad+npts)
-    padw =  numpy.append(data, numpy.zeros(npad))
+    padw =  np.append(data, np.zeros(npad))
     npts = len(padw)
     sigfft = spFFT.fft(padw)
-    nUniquePts = numpy.ceil((npts+1)/2.0)
+    nUniquePts = np.ceil((npts+1)/2.0)
     sigfft = sigfft[0:nUniquePts]
     spectrum = abs(sigfft)
     spectrum = spectrum / float(npts) # scale by the number of points so that
                        # the magnitude does not depend on the length
                        # of the signal or on its sampling frequency
     spectrum = spectrum**2  # square it to get the power
-    spmax = numpy.amax(spectrum)
+    spmax = np.amax(spectrum)
     spectrum = spectrum + 1e-12*spmax
     # multiply by two (see technical document for details)
     # odd nfft excludes Nyquist point
@@ -82,7 +82,7 @@ def pSpectrum(data=None, samplefreq=44100):
         spectrum[1:len(spectrum)] = spectrum[1:len(spectrum)] * 2
     else:
         spectrum[1:len(spectrum) -1] = spectrum[1:len(spectrum) - 1] * 2 # we've got even number of points fft
-    freqAzero = numpy.arange(0, nUniquePts, 1.0) * (samplefreq / npts)
+    freqAzero = np.arange(0, nUniquePts, 1.0) * (samplefreq / npts)
     return(spectrum, freqAzero)
 
 def sinefit(x, y, F):
@@ -90,16 +90,16 @@ def sinefit(x, y, F):
         aka "cosinor" analysis. 
     """
     npar = 2
-    w = 2.0 * numpy.pi * F
-    A = numpy.zeros((len(x), npar), float)
-    A[:,0] = numpy.sin(w*x)
-    A[:,1] = numpy.cos(w*x)
-    (p, residulas, rank, s) = numpy.linalg.lstsq(A, y)
-    Amplitude = numpy.sqrt(p[0]**2+p[1]**2)
-    Phase = numpy.arctan2(p[1],p[0]) # better check this... 
+    w = 2.0 * np.pi * F
+    A = np.zeros((len(x), npar), float)
+    A[:,0] = np.sin(w*x)
+    A[:,1] = np.cos(w*x)
+    (p, residulas, rank, s) = np.linalg.lstsq(A, y)
+    Amplitude = np.sqrt(p[0]**2+p[1]**2)
+    Phase = np.arctan2(p[1],p[0]) # better check this... 
 #    yest=Amplitude*cos(w*x+Phase) # estimated y
 #
-#    f=numpy.sum((yest-numpy.mean(y)).^2)/numpy.sum((y-yest).^2)*(length(y)-3)/2
+#    f=np.sum((yest-np.mean(y)).^2)/np.sum((y-yest).^2)*(length(y)-3)/2
 #   P=1-fcdf(f,2,length(y)-3);
     return (Amplitude, Phase)
 
@@ -108,12 +108,12 @@ def sinefit_precalc(x, y, A):
         aka "cosinor" analysis. 
         assumes that A (in sinefit) is precalculated
     """
-    (p, residulas, rank, s) = numpy.linalg.lstsq(A, y)
-    Amplitude = numpy.sqrt(p[0]**2+p[1]**2)
-    Phase = numpy.arctan2(p[1],p[0]) # better check this... 
+    (p, residulas, rank, s) = np.linalg.lstsq(A, y)
+    Amplitude = np.sqrt(p[0]**2+p[1]**2)
+    Phase = np.arctan2(p[1],p[0]) # better check this... 
 #    yest=Amplitude*cos(w*x+Phase) # estimated y
 #
-#    f=numpy.sum((yest-numpy.mean(y)).^2)/numpy.sum((y-yest).^2)*(length(y)-3)/2
+#    f=np.sum((yest-np.mean(y)).^2)/np.sum((y-yest).^2)*(length(y)-3)/2
 #   P=1-fcdf(f,2,length(y)-3);
     return (Amplitude, Phase)
 
@@ -140,9 +140,9 @@ def savitzky_golay(data, kernel = 11, order = 4):
     # a second order polynomial has 3 coefficients
     order_range = range(order+1)
     half_window = (kernel -1) // 2
-    b = numpy.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
+    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
     # since we don't want the derivative, else choose [1] or [2], respectively
-    m = numpy.linalg.pinv(b).A[0]
+    m = np.linalg.pinv(b).A[0]
     window_size = len(m)
     half_window = (window_size-1) // 2
     # precompute the offset values for better performance
@@ -150,17 +150,17 @@ def savitzky_golay(data, kernel = 11, order = 4):
     offset_data = zip(offsets, m)
     smooth_data = list()
     # temporary data, with padded zeros (since we want the same length after smoothing)
-    #data = numpy.concatenate((numpy.zeros(half_window), data, numpy.zeros(half_window)))
+    #data = np.concatenate((np.zeros(half_window), data, np.zeros(half_window)))
     # temporary data, with padded first/last values (since we want the same length after smoothing)
     firstval=data[0]
     lastval=data[len(data)-1]
-    data = numpy.concatenate((numpy.zeros(half_window)+firstval, data, numpy.zeros(half_window)+lastval))
+    data = np.concatenate((np.zeros(half_window)+firstval, data, np.zeros(half_window)+lastval))
     for i in range(half_window, len(data) - half_window):
             value = 0.0
             for offset, weight in offset_data:
                 value += weight * data[i + offset]
             smooth_data.append(value)
-    return numpy.array(smooth_data)
+    return np.array(smooth_data)
 
 # filter signal with elliptical filter
 def SignalFilter(signal, LPF, HPF, samplefreq):
@@ -179,12 +179,12 @@ def SignalFilter(signal, LPF, HPF, samplefreq):
             gpass=1.0,
             gstop=60.0,
             ftype="ellip")
-    msig = numpy.mean(signal)
+    msig = np.mean(signal)
     signal = signal - msig
     w=spSignal.lfilter(filter_b, filter_a, signal) # filter the incoming signal
     signal = signal + msig
     if debugFlag:
-        print "sig: %f-%f w: %f-%f" % (numpy.amin(signal), numpy.amax(signal), numpy.amin(w), numpy.amax(w))
+        print "sig: %f-%f w: %f-%f" % (np.amin(signal), np.amax(signal), np.amin(w), np.amax(w))
     return(w)
 
 # filter with Butterworth low pass, using time-causal lfilter 
@@ -195,7 +195,7 @@ def SignalFilter_LPFButter(signal, LPF, samplefreq, NPole = 8):
     b, a = spSignal.butter(NPole, wn, btype='low', output='ba')
     zi = spSignal.lfilter_zi(b,a)
     out, zo = spSignal.lfilter(b, a, signal, zi=zi*signal[0])
-    return(numpy.array(out))
+    return(np.array(out))
      
 # filter signal with low-pass Bessel
 def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole = 8, reduce = False):
@@ -225,35 +225,35 @@ def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole = 8, reduce = False):
             btype = 'low',
             output = 'ba')
     if signal.ndim == 1:
-        sm = numpy.mean(signal)
+        sm = np.mean(signal)
         w=spSignal.lfilter(filter_b, filter_a, signal-sm) # filter the incoming signal
         w = w + sm
         if reduction > 1:
             w = spSignal.resample(w, reduction)
         return(w)
     if signal.ndim == 2:
-        sh = numpy.shape(signal)
-        for i in range(0, numpy.shape(signal)[0]):
-            sm = numpy.mean(signal[i,:])
+        sh = np.shape(signal)
+        for i in range(0, np.shape(signal)[0]):
+            sm = np.mean(signal[i,:])
             w1 = spSignal.lfilter(filter_b, filter_a, signal[i,:]-sm)
             w1 = w1 + sm
             if reduction == 1:
                 w1 = spSignal.resample(w1, reduction)
             if i == 0:
-                w = numpy.empty((sh[0], numpy.shape(w1)[0]))
+                w = np.empty((sh[0], np.shape(w1)[0]))
             w[i,:] = w1
         return w
     if signal.ndim == 3:
-        sh = numpy.shape(signal)
-        for i in range(0, numpy.shape(signal)[0]):
-            for j in range(0, numpy.shape(signal)[1]):
-                sm = numpy.mean(signal[i,j,:])
+        sh = np.shape(signal)
+        for i in range(0, np.shape(signal)[0]):
+            for j in range(0, np.shape(signal)[1]):
+                sm = np.mean(signal[i,j,:])
                 w1 = spSignal.lfilter(filter_b, filter_a, signal[i,j,:]-sm)
                 w1 = w1 + sm
                 if reduction == 1:
                     w1 = spSignal.resample(w1, reduction)
                 if i == 0 and j == 0:
-                    w = numpy.empty((sh[0], sh[1], numpy.shape(w1)[0]))
+                    w = np.empty((sh[0], sh[1], np.shape(w1)[0]))
                 w[i,j,:] = w1
         return(w)
     if signal.ndim > 3:
@@ -327,7 +327,7 @@ def unique(seq, keepstr=True):
 def _rollingSum(data, n):
     d1 = data.copy()
     d1[1:] += d1[:-1]    # integrate
-    d2 = numpy.empty(len(d1) - n + 1, dtype=data.dtype)
+    d2 = np.empty(len(d1) - n + 1, dtype=data.dtype)
     d2[0] = d1[n-1]      # copy first point
     d2[1:] = d1[n:] - d1[:-n]   # subtract the rest
     return d2
@@ -336,15 +336,15 @@ def _rollingSum(data, n):
 def local_maxima(data, span=10, sign=1):
     from scipy.ndimage import minimum_filter
     from scipy.ndimage import maximum_filter
-    data = numpy.asarray(data)
+    data = np.asarray(data)
     #print 'data size: ', data.shape
     if sign <= 0: # look for minima
         maxfits = minimum_filter(data, size=span, mode="wrap")
     else:
         maxfits = maximum_filter(data, size=span, mode="wrap")
     #print 'maxfits shape: ', maxfits.shape
-    maxima_mask = numpy.where(data == maxfits)
-    good_indices = numpy.arange(len(data))[maxima_mask]
+    maxima_mask = np.where(data == maxfits)
+    good_indices = np.arange(len(data))[maxima_mask]
     #print 'len good index: ', len(good_indices)
     good_fits = data[maxima_mask]
     order = good_fits.argsort()
@@ -352,25 +352,25 @@ def local_maxima(data, span=10, sign=1):
 
 def clementsBekkers(t, data, template, threshold=2.5, minpeakdist=5):
     import matplotlib.pyplot as mp
-    D = data.view(numpy.ndarray)
-    T = template.view(numpy.ndarray)
+    D = data.view(np.ndarray)
+    T = template.view(np.ndarray)
     N = len(T)
-    window = numpy.ones(N)
+    window = np.ones(N)
     sumT = T.sum()
     sumT2 = (T**2).sum()
     sumD = _rollingSum(D, N)
     sumD2 = _rollingSum(D**2.0, N)
-    sumTD = numpy.correlate(D, T, mode='valid')
+    sumTD = np.correlate(D, T, mode='valid')
     scale = (sumTD - sumT * sumD /N) / (sumT2 - sumT**2.0 /N)
     offset = (sumD - scale * sumT) /N
     SSE = sumD2 + scale**2.0 * sumT2 + N * offset**2 - 2 * (scale*sumTD + offset*sumD - scale*offset*sumT)
-    error = numpy.sqrt(SSE / (N-1))
+    error = np.sqrt(SSE / (N-1))
     sf = scale/error
     # isolate events from the sf signal
-    a=sf*numpy.where(sf >= threshold, 1, 0)
+    a=sf*np.where(sf >= threshold, 1, 0)
     (evp, eva) = local_maxima(a, span=minpeakdist, sign=1)
     # now clean it up
-    u = numpy.where(eva > 0.0)
+    u = np.where(eva > 0.0)
     print u
     print evp[u]
     print eva[u]
@@ -394,12 +394,12 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
         predelay = 0.5
         if decay*ntau < 2.5:
             ntau = 2.5 / decay
-        N = numpy.floor((decay*ntau+predelay)/samplerate)
-        tb = numpy.arange(0., N*samplerate, samplerate)
-        template = numpy.zeros(N)
+        N = np.floor((decay*ntau+predelay)/samplerate)
+        tb = np.arange(0., N*samplerate, samplerate)
+        template = np.zeros(N)
         for i, t in enumerate(tb):
             if t >= predelay:
-                template[i] = ((t - predelay)/decay)*numpy.exp((-(t - predelay))/decay)
+                template[i] = ((t - predelay)/decay)*np.exp((-(t - predelay))/decay)
 
     if type == 'EPSC':  #  for EPSC detection
         predelay = 0.5
@@ -407,12 +407,12 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
             predelay = 0.5
         if decay*ntau < 2.5: # less than 5 msec is a problem though
             ntau = 2.5/decay
-        N = numpy.floor((decay*ntau+predelay)/samplerate)
-        tb = numpy.arange(0., N*samplerate, samplerate)
-        template = numpy.zeros(N)
+        N = np.floor((decay*ntau+predelay)/samplerate)
+        tb = np.arange(0., N*samplerate, samplerate)
+        template = np.zeros(N)
         for i, t in enumerate(tb):
             if t >= predelay:
-                template[i] = (1.-numpy.exp(-(t-predelay)/rise))**2.0*numpy.exp(-(t-predelay)/decay);
+                template[i] = (1.-np.exp(-(t-predelay)/rise))**2.0*np.exp(-(t-predelay)/decay);
             end;
         end;
         if lpfilter > 0:
@@ -462,18 +462,18 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
     #     template = [];
     #     return
 
-    template = template/numpy.max(template);
+    template = template/np.max(template);
     #N = length(template);
     #newfigure('mini_showtemplate', 'Mini Template');
     #plot(0:samplerate:(N-1)*samplerate', template);
     return template
 
 def RichardsonSilberberg(data, tau, time = None):
-    D = data.view(numpy.ndarray)
-    rn = tau*numpy.diff(D) + D[:-2,:]
+    D = data.view(np.ndarray)
+    rn = tau*np.diff(D) + D[:-2,:]
     rn = SavitzyGolay(rn, kernel = 11, order = 4)
     if time is not None:
-        vn = rn - tau*SavitzyGolay(numpy.diff(D), kernel = 11, order = 4)
+        vn = rn - tau*SavitzyGolay(np.diff(D), kernel = 11, order = 4)
         return(rn, vn);
     else:
         return rn
@@ -505,16 +505,16 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
         xt = ma.compressed(xt) # convert back to usual numpy arrays then
         v = ma.compressed(v)
     else:
-        xt = numpy.array(x)
-        v = numpy.array(v)
+        xt = np.array(x)
+        v = np.array(v)
     if debug:
         f = figure(1)
         plot(xt, v, 'k-')
         show()
-    dv = numpy.diff(v)/dt # compute slope
-    st=numpy.array([])
-    spv = numpy.where(v > thresh)[0].tolist() # find points above threshold
-    sps = numpy.where(dv > 0.0)[0].tolist() # find points where slope is positive
+    dv = np.diff(v)/dt # compute slope
+    st=np.array([])
+    spv = np.where(v > thresh)[0].tolist() # find points above threshold
+    sps = np.where(dv > 0.0)[0].tolist() # find points where slope is positive
     sp = list(set(spv) & set(sps)) # intersection defines putative spike start times
     sp.sort() # make sure all detected events are in order (sets is unordered)
     sp = tuple(sp) # convert to tuple
@@ -527,18 +527,18 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
             if interpolate:
                 m = (y[1]-y[0])/dt # local slope
                 b = y[0]-(x[0]*m)
-                st  = numpy.append(st, x[1]+(thresh-b)/m)
+                st  = np.append(st, x[1]+(thresh-b)/m)
             else:
-                st = numpy.append(st, x[1])
+                st = np.append(st, x[1])
                 
     elif mode is 'peak':
         pkwidth = 1.0 # in same units as dt  - usually msec
         kpkw = int(pkwidth/dt)
-        z = (numpy.array(numpy.where(numpy.diff(spv) > 1)[0])+1).tolist()
+        z = (np.array(np.where(np.diff(spv) > 1)[0])+1).tolist()
         z.insert(0, 0) # first element in spv is needed to get starting AP
         for k in z:
             zk = spv[k]
-            spk = numpy.argmax(v[zk:zk+kpkw])+zk # find the peak position
+            spk = np.argmax(v[zk:zk+kpkw])+zk # find the peak position
 #            print spk
 #            print len(v)
             x = xt[spk-1:spk+2]
@@ -555,26 +555,26 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
                     b2 = y[1]-(x[1]*m2)
                     mprime = (m2-m1)/dt # find where slope goes to 0 by getting the line
                     bprime = m2-((dt/2.0)*mprime)
-                    st = numpy.append(st, -bprime/mprime+x[1])
+                    st = np.append(st, -bprime/mprime+x[1])
                 except:
                     continue
             else:
-                st = numpy.append(st, x[1]) # always save the first one
+                st = np.append(st, x[1]) # always save the first one
 #        print "xt spike: %8.3f  vs ST way: %8.3f   diff: %8.4f" %  (xt[spk], xt[sp[0]], xt[sp[0]]-xt[spk]) 
 
     #print 'sp: ', sp
     #print 'spike list shape: ', st.shape
     #print 'st: ', st
-    #diffsp = numpy.diff(st) # look for the jumps
+    #diffsp = np.diff(st) # look for the jumps
     # print diffsp
-    #isd = numpy.where(diffsp > 0.7) # look for non-sequential points in the array
-    #stret = numpy.array(st[isd])
-    #stret = numpy.append(st, st[0])
-    #stret = numpy.sort(stret)
+    #isd = np.where(diffsp > 0.7) # look for non-sequential points in the array
+    #stret = np.array(st[isd])
+    #stret = np.append(st, st[0])
+    #stret = np.sort(stret)
     #for i in isd:
     #    if xt[sp[i+1]] > st[i]+dt: # minimum interval in time
-    #        stret = numpy.append(stret, xt[sp[i+1]]) # build times from difference array
-#    stret = numpy.sort(stret)
+    #        stret = np.append(stret, xt[sp[i+1]]) # build times from difference array
+#    stret = np.sort(stret)
     return(st)
 
 # getSpikes returns a dictionary with keys that are record numbers, each with values
@@ -584,7 +584,7 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
 
 def getSpikes(x, y, axis, tpts, tdel=0, thresh=0, selection = None, refractory=1.0, mode='schmitt', interpolate = False):
     if selection is None: # really means whatever is displayed/selected
-        selected = numpy.arange(0, numpy.shape(y)[0]).astype(int).tolist()
+        selected = np.arange(0, np.shape(y)[0]).astype(int).tolist()
     else:
         selected = selection
     splist = {}
@@ -599,45 +599,45 @@ def getSpikes(x, y, axis, tpts, tdel=0, thresh=0, selection = None, refractory=1
 # within the window t0-t1, on the data "axis", and according to the selected mode
 
 def measureTrace(x, y, t0 = 0, t1 = 10, thisaxis = 0, mode='mean', selection = None, threshold = 0):
-    result = numpy.array([])
+    result = np.array([])
     if selection is None: # whooops
         return
     else:
         selected = selection
-    if numpy.ndim(y) == 4: # we have multiple block
+    if np.ndim(y) == 4: # we have multiple block
         for i in range(0, len(y)):
             d = y[i][selected[i],thisaxis,:] # get data for this block
-            for j in range(0, numpy.shape(d)[0]):
+            for j in range(0, np.shape(d)[0]):
                 if isinstance(threshold, int):
                     thr = threshold
                 else:
                     thr = threshold[j]
                 (m1, m2) = measure(mode, x[i], d[j,:], t0, t1, thresh= thr)
-                result = numpy.append(result, m1)
+                result = np.append(result, m1)
     else:
         d = y[selected,thisaxis,:] # get data for this block
-        for j in range(0, numpy.shape(d)[0]):
+        for j in range(0, np.shape(d)[0]):
             if isinstance(threshold, int):
                 thr = threshold
             else:
                 thr = threshold[j]
             (m1, m2) = measure(mode, x, d[j,:], t0, t1, thresh= thr)
-            result = numpy.append(result, m1)
+            result = np.append(result, m1)
     return(result)
 
 def measureTrace2(x, y, t0 = 0, t1 = 10, thisaxis = 0, mode='mean', threshold = 0):
     """
     Simplified version that just expects a 2-d array for y, nothing fancy
     """
-    result = numpy.array([])
+    result = np.array([])
     d = y.T # get data for this block
-    for j in range(0, numpy.shape(d)[0]):
+    for j in range(0, np.shape(d)[0]):
         if isinstance(threshold, int):
             thr = threshold
         else:
             thr = threshold[j]
         (m1, m2) = measure(mode, x, d[j][:], t0, t1, thresh= thr)
-        result = numpy.append(result, m1)
+        result = np.append(result, m1)
     return(result)
     
 def measure(mode, x, y, x0, x1, thresh = 0):
@@ -646,8 +646,8 @@ def measure(mode, x, y, x0, x1, thresh = 0):
     xm = ma.masked_outside(x, x0, x1)# .compressed()
     ym = ma.array(y, mask = ma.getmask(xm))# .compressed()
     if mode == 'mean':
-        r1 = numpy.mean(ym)
-        r2 = numpy.std(ym)
+        r1 = np.mean(ym)
+        r2 = np.std(ym)
     if mode == 'max' or mode == 'maximum':
         r1 = ma.max(ym)
         r2 = xm[ma.argmax(ym)]
@@ -710,40 +710,40 @@ def measure(mode, x, y, x0, x1, thresh = 0):
         r2 = 0
     if mode == 'maxslope':
         return(0,0)
-        slope = numpy.array([])
+        slope = np.array([])
         win = ma.flatnotmasked_contiguous(ym)
         st = int(len(win)/20) # look over small ranges
         for k in win: # move through the slope measurementwindow
             tb = range(k-st, k+st) # get tb array
-            newa = numpy.array(self.dat[i][j, thisaxis, tb])
-            ppars = numpy.polyfit(x[tb], ym[tb], 1) # do a linear fit - smooths the slope measures
-            slope = numpy.append(slope, ppars[0]) # keep track of max slope
-        r1 = numpy.amax(slope)
-        r2 = numpy.argmax(slope)
+            newa = np.array(self.dat[i][j, thisaxis, tb])
+            ppars = np.polyfit(x[tb], ym[tb], 1) # do a linear fit - smooths the slope measures
+            slope = np.append(slope, ppars[0]) # keep track of max slope
+        r1 = np.amax(slope)
+        r2 = np.argmax(slope)
     return(r1, r2)
 
 def mask(x, xm, x0, x1):
-    if numpy.ndim(xm) != 1:
+    if np.ndim(xm) != 1:
         print "utility.mask(): array to used to derive mask must be 1D"
-        return(numpy.array([]))
+        return(np.array([]))
     xmask = ma.masked_outside(xm, x0, x1)
     tmask =ma.getmask(xmask)
-    if numpy.ndim(x) == 1:
+    if np.ndim(x) == 1:
         xnew = ma.array(x, mask=tmask)
         return(xnew.compressed())
-    if numpy.ndim(x) == 2:
-        for i in range(0, numpy.shape(x)[0]):
+    if np.ndim(x) == 2:
+        for i in range(0, np.shape(x)[0]):
             xnew= ma.array(x[i,:], mask=tmask)
             xcmp = ma.compressed(xnew)
             if i == 0:
                 print ma.shape(xcmp)[0]
-                print numpy.shape(x)[0]
-                xout = numpy.zeros((numpy.shape(x)[0], ma.shape(xcmp)[0]))
+                print np.shape(x)[0]
+                xout = np.zeros((np.shape(x)[0], ma.shape(xcmp)[0]))
             xout[i,:] = xcmp
         return(xout)
     else:
         print "Utility.Mask: dimensions of input arrays are not acceptable"
-        return(numpy.array([]))
+        return(np.array([]))
 
 def clipdata(y, xm, x0, x1, minFlag = False):
     mx = ma.getdata(mask(xm, xm, x0, x1))
@@ -757,7 +757,7 @@ def clipdata(y, xm, x0, x1, minFlag = False):
 def count_spikes(spk):
     """ mostly protection for an older error in the findspikes routine, but
         now it should be ok to just get the first element of the shape """
-    shspk = numpy.shape(spk)
+    shspk = np.shape(spk)
     if len(shspk) == 0:
         nspk = 0
     elif shspk[0] == 0:
@@ -782,7 +782,7 @@ def analyzeIV(t, V, I, tw, thr):
         ispk 
         eventually should also include time constant measures,and adaptation ratio
     """
-    ntraces = numpy.shape(V)[0]
+    ntraces = np.shape(V)[0]
     vss     = []
     vmin    = []
     vm      = []
@@ -819,10 +819,10 @@ def analyzeIV(t, V, I, tw, thr):
             tmin.append(minv[1]) # and min time
 
 
-    return({'I': numpy.array(ic), 'Vmin': numpy.array(vmin), 'Vss': numpy.array(vss),
-            'Vm': numpy.array(vm), 'Tmin': numpy.array(tmin), 
-            'Ispike': numpy.array(ispikes), 'Nspike': numpy.array(nspikes), 
-            'FSL': numpy.array(fsl), 'FISI': numpy.array(fisi)})
+    return({'I': np.array(ic), 'Vmin': np.array(vmin), 'Vss': np.array(vss),
+            'Vm': np.array(vm), 'Tmin': np.array(tmin), 
+            'Ispike': np.array(ispikes), 'Nspike': np.array(nspikes), 
+            'FSL': np.array(fsl), 'FISI': np.array(fisi)})
 
 import os, sys, types, re, fnmatch, itertools
 
@@ -877,7 +877,6 @@ def ffind(path, shellglobs=None, namefs=None, relative=True):
     return(fileList)
 
 
-
 def seqparse(sequence):
     """ parse the list of the format:
      12;23/10 etc... like nxtrec in datac
@@ -909,7 +908,7 @@ def seqparse(sequence):
     target=[]
     sequence.replace(' ', '') # remove all spaces - nice to read, not needed to calculate
     sequence = str(sequence) #make sure we have a nice string
-    (seq2, sep, remain) = sequence.partition('&') # find  and returnnested sequences
+    (seq2, sep, remain) = sequence.partition('&') # find and return nested sequences
     while seq2 is not '':
         try:
             (oneseq, onetarget) = recparse(seq2)
@@ -920,6 +919,9 @@ def seqparse(sequence):
         (seq2, sep, remain) = remain.partition('&') # find  and returnnested sequences
     return (seq, target)
 
+
+fpn='([-+]?\d*[\.]?\d*|\d+)'  # re for floating point number (no exponents)
+re_recparse = re.compile('(\w*:{1,1})?'+fpn+';?'+fpn+'/?'+fpn+'([ltnra]?)'+fpn+'?')  # re for recparse
 
 def recparse(cmdstr):
     """ function to parse basic word unit of the list - a;b/c or the like
@@ -935,54 +937,61 @@ def recparse(cmdstr):
     such as linear, log, randomized, etc.
     """
 
+    r = re_recparse.match(cmdstr)
+    res = r.groups(0)
+    if res[0] == 0:
+        target = None
+    else:
+        target = res[0][:-1] # strip off the colon
+    if res[1] != '':
+        n1 = float(res[1])
+    else:
+        return((None, None)) # need at least ONE number
+    if res[2] == '':
+        return(([n1], target))
+    else:
+        n2 = float(res[2])
+    if res[3] == '':
+        skip = 1.0
+    else:
+        skip = float(res[3])
+    if res[4] == '':
+        mode = ''
+    else:
+        mode = res[4]
+    if res[5] == '':  # check for the alternation value
+        altvalue = 0
+    else:
+        altvalue = float(res[5])
     recs=[]
-    target=[]
     seed=0
-    skip = 1.0
-    (target, sep, rest) = cmdstr.partition(':') # get the target
-    if rest is '':
-        rest = target # no : found, so no target designated.
-        target=''
-    (sfn, sep, rest1) = rest.partition(';')
-    (sln, sep, rest2) = rest1.partition('/')
-    (sskip, sep, mo) = rest2.partition('*') # look for mode
-    fn = float(sfn)
-    ln = float(sln)
-    skip = float(sskip)
-    ln = ln + 0.01*skip
-#    print "mo: %s" % (mo)
-    if mo is '': # linear spacing; skip is size of step
-        recs=eval('arange(%f,%f,%f)' % (fn, ln, skip))
 
-    if mo.find('l') >= 0: # log spacing; skip is length of result
-        recs=eval('logspace(log10(%f),log10(%f),%f)' % (fn, ln, skip))
-
-    if mo.find('t') >= 0: # just repeat the first value
-        recs = eval('%f*[1]' % (fn))
-
-    if mo.find('n') >= 0: # use the number of steps, not the step size
+    n2 = n2 + 0.01*skip
+    print 'mode: ', mode
+    if mode == 0 or mode == '': # linear spacing; skip is size of step
+        recs=np.arange(n1,n2,skip)
+    elif mode == 'l': # log spacing; skip is length of result
+        recs=np.logspace(np.log10(n1),np.log10(n2),skip)
+    elif moode == 't': # just repeat the first value
+        recs = n1
+    elif mode == 'n': # use the number of steps, not the step size
         if skip is 1.0:
             sk = (ln - fn)
         else:
-            sk = eval('(%f-%f)/(%f-1.0)' % (ln, fn, skip))
-        recs=eval('arange(%f,%f,%f)' % (fn, ln, sk))
+            sk = (n2-n1)/(skip-1.0)
+        recs=np.arange(n1,n2,sk)
 
-    if mo.find('r') >= 0: # randomize the result
+    elif mode == 'r': # randomize the result
         if recs is []:
-            recs=eval('arange(%f,%f,%f)' % (fn, ln, skip))
+            recs=np.arange(n1, n2, skip)
         recs = sample(recs, len(recs))
 
-    if mo.find('a') >= 0: # alternation - also test for a value after that
-        (arg, sep, value) = mo.partition('a') # is there anything after the letter?
-        if value is '':
-            value = 0.0
-        else:
-            value = float(value)
-        val = eval('%f' % (value))
-        c = [val]*len(recs)*2 # double the length of the sequence
+    elif mode == 'a': # alternation - also test for a value after that
+        c = [altvalue]*len(recs)*2 # double the length of the sequence
         c[0:len(c):2] = recs # fill the alternate positions with the sequence
         recs = c # copy back
     return((recs, target))
+
 
 def makeRGB(ncol = 16, minc = 32, maxc = 216):
     """
@@ -991,14 +1000,14 @@ def makeRGB(ncol = 16, minc = 32, maxc = 216):
     maxc = 216
     """
     subd = int((maxc - minc)/ncol)
-    numpy.random.seed(1)
+    np.random.seed(1)
     RGB = [[]]
     for r in range(minc, maxc, subd):
         for g in range(minc, maxc, subd):
             for b in range(minc, maxc, subd):
-                RGB.append(numpy.array([r,g,b]))
+                RGB.append(np.array([r,g,b]))
     #print "# of colors: ", len(self.RGB)
-    rgb_order = numpy.random.permutation(len(RGB)) # randomize the order
+    rgb_order = np.random.permutation(len(RGB)) # randomize the order
     RGB = [RGB[x] for x in rgb_order]
     return RGB
     
@@ -1033,14 +1042,14 @@ if __name__ == "__main__":
 
     if options.cb: # test clements bekkers
         # first generate some events
-        t = numpy.arange(0, 1000.0, 0.1)
-        ta = numpy.arange(0, 50.0, 0.1)
-        events = numpy.zeros(t.shape)
+        t = np.arange(0, 1000.0, 0.1)
+        ta = np.arange(0, 50.0, 0.1)
+        events = np.zeros(t.shape)
         events[[50,100,250,350, 475, 525, 900, 1500, 2800, 5000, 5200, 7000, 7500],] = 1
         tau1 = 3
-        alpha = 1.0 * (ta/tau1) * numpy.exp(1 - ta/tau1)
+        alpha = 1.0 * (ta/tau1) * np.exp(1 - ta/tau1)
         sig = spSignal.fftconvolve(events, alpha, mode='full')
-        sig = sig[0:len(t)]+numpy.random.normal(0, 0.25, len(t))
+        sig = sig[0:len(t)]+np.random.normal(0, 0.25, len(t))
         f = MP.figure()
         MP.plot(t, sig, 'r-')
         MP.plot(t, events, 'k-')
@@ -1051,8 +1060,8 @@ if __name__ == "__main__":
 
     if options.findspikes: # test the findspikes routine
         dt = 0.1
-        t = numpy.arange(0, 100, dt)
-        v = numpy.zeros_like(t)-60.0
+        t = np.arange(0, 100, dt)
+        v = np.zeros_like(t)-60.0
         p = range(20, 900, 50)
         p1 = range(19,899,50)
         p2 = range(21,901,50)
@@ -1064,11 +1073,11 @@ if __name__ == "__main__":
         print 'sp: ', sp
         f = MP.figure(1)
         MP.plot(t, v, 'ro-')
-        si = (numpy.floor(sp/dt))
+        si = (np.floor(sp/dt))
         print 'si: ', si
         spk = []
         for k in si:
-            spk.append(numpy.argmax(v[k-1:k+1])+k)
+            spk.append(np.argmax(v[k-1:k+1])+k)
         MP.plot(sp, v[spk], 'bs')
         MP.ylim((0, 25))
         MP.draw()
@@ -1078,14 +1087,14 @@ if __name__ == "__main__":
         print "getSpikes"
         y=[]*5
         for j in range(0,1):
-            d = numpy.zeros((5,1,len(v)))
+            d = np.zeros((5,1,len(v)))
             for k in range(0, 5):
                 p = range(20*k, 500, 50 + int(50.0*(k/2.0)))
                 vn = v.copy()
                 vn[p] = 20.0
-                d[k, 0, :] = numpy.array(vn) # load up the "spike" array
+                d[k, 0, :] = np.array(vn) # load up the "spike" array
             y.append(d)
-        tpts = range(0, len(t)) # numpy.arange(0, len(t)).astype(int).tolist()
+        tpts = range(0, len(t)) # np.arange(0, len(t)).astype(int).tolist()
         #def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode=None, interpolate=False):
         for k in range(0, len(y)):
             sp = getSpikes(t, y[k], 0, tpts, tdel=0, thresh=0, selection = None, interpolate = True)
@@ -1093,14 +1102,14 @@ if __name__ == "__main__":
     
     # test the sine fitting routine
     if options.sinefit:
-        from numpy.random import normal
+        from np.random import normal
         F = 1.0/8.0
         phi = 0.2
         A = 2.0
-        t = numpy.arange(0.0, 60.0, 1.0/7.5)
+        t = np.arange(0.0, 60.0, 1.0/7.5)
         # check over a range of values (is phase correct?)
-        for phi in numpy.arange(-2.0*numpy.pi, 2.0*numpy.pi, numpy.pi/8.0):
-            y = A * numpy.sin(2.*numpy.pi*t*F+phi) + normal(0.0, 0.5, len(t))
+        for phi in np.arange(-2.0*np.pi, 2.0*np.pi, np.pi/8.0):
+            y = A * np.sin(2.*np.pi*t*F+phi) + normal(0.0, 0.5, len(t))
             (a, p) = sinefit(t, y, F)
             print "A: %f a: %f  phi: %f p: %f" % (A, a, phi, p)
 
