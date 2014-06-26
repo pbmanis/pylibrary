@@ -69,7 +69,7 @@ def OneWayAnova3(dataDict=None, dataLabel='data', mode='parametric'):
     robjects.globalenv['l3'] = labels[2]
     x=robjects.r("Yd <- c(g1, g2, g3)") # could do inside call, but here is convenient for testing values
     vData = robjects.r("""vData <- data.frame( Yd, 
-                Location=factor(rep(c(l1, l2, l3), times=c(length(g1), length(g2), length(g3)))))""")
+                Group=factor(rep(c(l1, l2, l3), times=c(length(g1), length(g2), length(g3)))))""")
 # OLD code for blanaced groups:
     #groups = RBase.gl(3, len(d3), len(d3)*3, labels=labels)
     #robjects.globalenv["vData"] = vData
@@ -78,7 +78,7 @@ def OneWayAnova3(dataDict=None, dataLabel='data', mode='parametric'):
    # robjects.globalenv["group"] = groups
 
     if mode == 'parametric':
-        aov = robjects.r("aov(Yd ~ Location, data=vData)")
+        aov = robjects.r("aov(Yd ~ Group, data=vData)")
         print aov
         robjects.globalenv["aov"] = aov
         sum = robjects.r("summary(aov)")
@@ -91,14 +91,14 @@ def OneWayAnova3(dataDict=None, dataLabel='data', mode='parametric'):
         y=robjects.r("TukeyHSD(aov)")
         print y
     else:
-        kw = robjects.r("kruskal.test(Yd ~ Location, data=vData)")
+        kw = robjects.r("kruskal.test(Yd ~ Group, data=vData)")
         print kw
-        loc = robjects.r('Location=factor(rep(c(l1, l2, l3), times=c(length(g1), length(g2), length(g3))))')
-        kwmc = robjects.r('pairwise.wilcox.test(Yd, Location, p.adj="bonferroni")')
+        loc = robjects.r('Group=factor(rep(c(l1, l2, l3), times=c(length(g1), length(g2), length(g3))))')
+        kwmc = robjects.r('pairwise.wilcox.test(Yd, Group, p.adj="bonferroni")')
         print "PostTest: pairwise wilcox\n", kwmc
     #rprint = robjects.globalenv.get("print")
     # the boxplot is redundant, but worth checking out
-    #bp = robjects.r("boxplot(Yd ~ Location, data=vData)")
+    #bp = robjects.r("boxplot(Yd ~ Group, data=vData)")
     #rprint(bp)
 #        import time
 #        time.sleep(10)
@@ -179,7 +179,7 @@ def OneWayAnova4(dataDict=None, dataLabel='data', mode='parametric'):
         print "PostTest: pairwise wilcox\n", kwmc
     #rprint = robjects.globalenv.get("print")
     # the boxplot is redundant, but worth checking out
-    #bp = robjects.r("boxplot(Yd ~ Location, data=vData)")
+    #bp = robjects.r("boxplot(Yd ~ Group, data=vData)")
     #rprint(bp)
 #        import time
 #        time.sleep(10)
@@ -264,7 +264,7 @@ def OneWayAnova5(dataDict=None, dataLabel='data', mode='parametric'):
         print "PostTest: pairwise wilcox\n", kwmc
     #rprint = robjects.globalenv.get("print")
     # the boxplot is redundant, but worth checking out
-    #bp = robjects.r("boxplot(Yd ~ Location, data=vData)")
+    #bp = robjects.r("boxplot(Yd ~ Group, data=vData)")
     #rprint(bp)
 #        import time
 #        time.sleep(10)

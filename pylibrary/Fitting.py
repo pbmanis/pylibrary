@@ -622,7 +622,7 @@ class Fitting():
             fcolor = color
         if yFit is None:
             yFit = numpy.array(xFit.shape)
-            print 'xfit shape: ', xFit.shape
+#            print 'xfit shape: ', xFit.shape
             yFit = func[0](fitPars, xFit, C=fixedPars)
           #  for k in range(0, len(fitPars)):
            #     yFit[k] = func[0](fitPars[k], xFit[k], C=fixedPars)
