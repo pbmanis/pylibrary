@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.random as npr
-import pylab
 
 def bootstrap(data, num_samples, statistic, alpha):
     """Returns bootstrap estimate of 100.0*(1-alpha) CI for statistic."""
@@ -13,6 +12,7 @@ def bootstrap(data, num_samples, statistic, alpha):
 
 if __name__ == '__main__':
     # data of interest is bimodal and obviously not normal
+    import matplotlib.pyplot as pylab
     x = np.concatenate([npr.normal(3, 1, 100), npr.normal(6, 2, 200)])
 
     # find mean 95% CI and 100,000 bootstrap samples

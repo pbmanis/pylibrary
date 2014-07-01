@@ -22,7 +22,7 @@ try:
 except:
     raise Exception ('Rstats.py: R import Failed! Are R and RPy2 installed?')
     R_imported = False
-    exit
+    exit()
 
 
 def OneWayAnova3(dataDict=None, dataLabel='data', mode='parametric'):

@@ -295,7 +295,7 @@ def long_Eval(line):
             inquote = False
             continue
         if c is "'" and not inquote:
-            inquote is True
+            inquote = True
     return u
 
 # routine to flatten an array/list.
@@ -351,7 +351,7 @@ def local_maxima(data, span=10, sign=1):
     return good_indices[order], good_fits[order]
 
 def clementsBekkers(t, data, template, threshold=2.5, minpeakdist=5):
-    import matplotlib.pyplot as mp
+#    import matplotlib.pyplot as mp
     D = data.view(np.ndarray)
     T = template.view(np.ndarray)
     N = len(T)
@@ -371,16 +371,16 @@ def clementsBekkers(t, data, template, threshold=2.5, minpeakdist=5):
     (evp, eva) = local_maxima(a, span=minpeakdist, sign=1)
     # now clean it up
     u = np.where(eva > 0.0)
-    print u
-    print evp[u]
-    print eva[u]
-    mp.figure(1)
-    mp.plot(t, data)
-
-    mp.plot(t, sf, 'g-')
-    #mp.plot(t[0:len(a)], a, 'g-')
-    mp.plot(t[evp[u]], data[evp[u]], 'bx')
-    mp.show()
+    # print u
+    # print evp[u]
+    # print eva[u]
+    # mp.figure(1)
+    # mp.plot(t, data)
+    #
+    # mp.plot(t, sf, 'g-')
+    # #mp.plot(t[0:len(a)], a, 'g-')
+    # mp.plot(t[evp[u]], data[evp[u]], 'bx')
+    # mp.show()
     t_start = t[evp[u]]
     d_start = data[evp[u]]
     return (t_start, d_start) # just return the list of the starts
@@ -412,9 +412,7 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
         template = np.zeros(N)
         for i, t in enumerate(tb):
             if t >= predelay:
-                template[i] = (1.-np.exp(-(t-predelay)/rise))**2.0*np.exp(-(t-predelay)/decay);
-            end;
-        end;
+                template[i] = (1.-np.exp(-(t-predelay)/rise))**2.0*np.exp(-(t-predelay)/decay)
         if lpfilter > 0:
             template = SignalFilter_LPFButter(template, lpfilter, 1./samplerate, NPole = 8)
     #
@@ -462,7 +460,7 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
     #     template = [];
     #     return
 
-    template = template/np.max(template);
+    template = template/np.max(template)
     #N = length(template);
     #newfigure('mini_showtemplate', 'Mini Template');
     #plot(0:samplerate:(N-1)*samplerate', template);
@@ -471,10 +469,11 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
 def RichardsonSilberberg(data, tau, time = None):
     D = data.view(np.ndarray)
     rn = tau*np.diff(D) + D[:-2,:]
-    rn = SavitzyGolay(rn, kernel = 11, order = 4)
+    rn = spSignal.savgol_filter(rn, 11, 4) # , deriv=0, delta=1.0, axis=-1, mode='interp', cval=0.0)[source]
+#    rn = SavitzyGolay(rn, kernel = 11, order = 4) # old
     if time is not None:
-        vn = rn - tau*SavitzyGolay(np.diff(D), kernel = 11, order = 4)
-        return(rn, vn);
+        vn = rn - tau * spSignal.savgol_filter(np.diff(D), 11, 4)
+        return(rn, vn)
     else:
         return rn
 
@@ -489,13 +488,13 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
     if True, the returned time is interpolated, based on a spline fit
     if False, the returned time is just taken as the data time. 
     """
-    if debug:
+#    if debug:
     # this does not work with pyside...
-        import matplotlib
-        matplotlib.use('Qt4Agg')
-        import pylab
-        from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-        from matplotlib.figure import Figure
+    #     import matplotlib
+    #     matplotlib.use('Qt4Agg')
+    #     import pylab
+    #     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+    #     from matplotlib.figure import Figure
         
         #MP.rcParams['interactive'] = False
         
@@ -507,10 +506,10 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
     else:
         xt = np.array(x)
         v = np.array(v)
-    if debug:
-        f = figure(1)
-        plot(xt, v, 'k-')
-        show()
+    # if debug:
+    #     f = figure(1)
+    #     plot(xt, v, 'k-')
+    #     show()
     dv = np.diff(v)/dt # compute slope
     st=np.array([])
     spv = np.where(v > thresh)[0].tolist() # find points above threshold
@@ -972,14 +971,14 @@ def recparse(cmdstr):
         recs=np.arange(n1,n2,skip)
     elif mode == 'l': # log spacing; skip is length of result
         recs=np.logspace(np.log10(n1),np.log10(n2),skip)
-    elif moode == 't': # just repeat the first value
+    elif mode == 't': # just repeat the first value
         recs = n1
     elif mode == 'n': # use the number of steps, not the step size
         if skip is 1.0:
-            sk = (ln - fn)
+            sk = (n2 - n1)
         else:
             sk = (n2-n1)/(skip-1.0)
-        recs=np.arange(n1,n2,sk)
+        recs=np.arange(n1, n2, sk)
 
     elif mode == 'r': # randomize the result
         if recs is []:
@@ -1018,100 +1017,101 @@ def makeRGB(ncol = 16, minc = 32, maxc = 216):
 
 # If this file is called directly, then provide tests of some of the routines.
 if __name__ == "__main__":
-    from optparse import OptionParser
-    import matplotlib.pylab as MP
-    MP.rcParams['interactive'] = False
-    
-    parser=OptionParser() # command line options
-    parser.add_option("-d", action="store_true", dest="dictionary", default=False)
-    parser.add_option("-s", action="store_true", dest="sinefit", default=False)
-    parser.add_option("-f", action="store_true", dest="findspikes", default=False)
-    parser.add_option("-c", action="store_true", dest="cb", default=False)
-
-    argsin = sys.argv[1:]
-    if argsin is not None:
-        (options, args) = parser.parse_args(argsin)
-    else:
-        (options, args) = parser.parse_args()
-
-    if options.dictionary:
-        d="{'CN_Dur': 100.0, 'PP_LP': 16000.0, 'ST_Dur': 50.0, 'Trials': 24.0, 'PP_HP': 8000.0, 'CN_Mode': 0, 'ITI_Var': 5.0, 'PP_GapFlag': False, 'PS_Dur': 50.0, 'ST_Level': 80.0, 'PP_Mode': 2, 'WavePlot': True, 'PP_Dur': 50.0, 'Analysis_LPF': 500.0, 'CN_Level': 70.0, 'NHabTrials': 2.0, 'PP_Notch_F2': 14000.0, 'PP_Notch_F1': 12000.0, 'StimEnable': True, 'PP_OffLevel': 0.0, 'Analysis_HPF': 75.0, 'CN_Var': 10.0, 'Analysis_Start': -100.0, 'ITI': 20.0, 'PP_Level': 90.0, 'Analysis_End': 100.0, 'PP_Freq': 4000.0, 'PP_MultiFreq': 'linspace(2.0,32.0,4.0)'} "
-        di = long_Eval(d)
-        print 'The dictionary is: ',
-        print di
-
-    if options.cb: # test clements bekkers
-        # first generate some events
-        t = np.arange(0, 1000.0, 0.1)
-        ta = np.arange(0, 50.0, 0.1)
-        events = np.zeros(t.shape)
-        events[[50,100,250,350, 475, 525, 900, 1500, 2800, 5000, 5200, 7000, 7500],] = 1
-        tau1 = 3
-        alpha = 1.0 * (ta/tau1) * np.exp(1 - ta/tau1)
-        sig = spSignal.fftconvolve(events, alpha, mode='full')
-        sig = sig[0:len(t)]+np.random.normal(0, 0.25, len(t))
-        f = MP.figure()
-        MP.plot(t, sig, 'r-')
-        MP.plot(t, events, 'k-')
-        # now call the finding routine, using the exact template (!)
-        (t_start, d_start) = clementsBekkers(sig, alpha, threshold=0.5, minpeakdist=15) 
-        MP.plot(t_start, d_start, 'bs')
-        MP.show()
-
-    if options.findspikes: # test the findspikes routine
-        dt = 0.1
-        t = np.arange(0, 100, dt)
-        v = np.zeros_like(t)-60.0
-        p = range(20, 900, 50)
-        p1 = range(19,899,50)
-        p2 = range(21,901,50)
-        v[p] = 20.0
-        v[p1] = 15.0
-        v[p2] = -20.0
-        sp = findspikes(t, v, 0.0, dt = dt, mode = 'schmitt', interpolate = False)
-        print 'findSpikes'
-        print 'sp: ', sp
-        f = MP.figure(1)
-        MP.plot(t, v, 'ro-')
-        si = (np.floor(sp/dt))
-        print 'si: ', si
-        spk = []
-        for k in si:
-            spk.append(np.argmax(v[k-1:k+1])+k)
-        MP.plot(sp, v[spk], 'bs')
-        MP.ylim((0, 25))
-        MP.draw()
-        MP.show()
-        
-        exit()
-        print "getSpikes"
-        y=[]*5
-        for j in range(0,1):
-            d = np.zeros((5,1,len(v)))
-            for k in range(0, 5):
-                p = range(20*k, 500, 50 + int(50.0*(k/2.0)))
-                vn = v.copy()
-                vn[p] = 20.0
-                d[k, 0, :] = np.array(vn) # load up the "spike" array
-            y.append(d)
-        tpts = range(0, len(t)) # np.arange(0, len(t)).astype(int).tolist()
-        #def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode=None, interpolate=False):
-        for k in range(0, len(y)):
-            sp = getSpikes(t, y[k], 0, tpts, tdel=0, thresh=0, selection = None, interpolate = True)
-            print 'r: %d' % k, 'sp: ', sp
-    
-    # test the sine fitting routine
-    if options.sinefit:
-        from np.random import normal
-        F = 1.0/8.0
-        phi = 0.2
-        A = 2.0
-        t = np.arange(0.0, 60.0, 1.0/7.5)
-        # check over a range of values (is phase correct?)
-        for phi in np.arange(-2.0*np.pi, 2.0*np.pi, np.pi/8.0):
-            y = A * np.sin(2.*np.pi*t*F+phi) + normal(0.0, 0.5, len(t))
-            (a, p) = sinefit(t, y, F)
-            print "A: %f a: %f  phi: %f p: %f" % (A, a, phi, p)
+    pass
+    # from optparse import OptionParser
+    # import matplotlib.pylab as MP
+    # MP.rcParams['interactive'] = False
+    #
+    # parser=OptionParser() # command line options
+    # parser.add_option("-d", action="store_true", dest="dictionary", default=False)
+    # parser.add_option("-s", action="store_true", dest="sinefit", default=False)
+    # parser.add_option("-f", action="store_true", dest="findspikes", default=False)
+    # parser.add_option("-c", action="store_true", dest="cb", default=False)
+    #
+    # argsin = sys.argv[1:]
+    # if argsin is not None:
+    #     (options, args) = parser.parse_args(argsin)
+    # else:
+    #     (options, args) = parser.parse_args()
+    #
+    # if options.dictionary:
+    #     d="{'CN_Dur': 100.0, 'PP_LP': 16000.0, 'ST_Dur': 50.0, 'Trials': 24.0, 'PP_HP': 8000.0, 'CN_Mode': 0, 'ITI_Var': 5.0, 'PP_GapFlag': False, 'PS_Dur': 50.0, 'ST_Level': 80.0, 'PP_Mode': 2, 'WavePlot': True, 'PP_Dur': 50.0, 'Analysis_LPF': 500.0, 'CN_Level': 70.0, 'NHabTrials': 2.0, 'PP_Notch_F2': 14000.0, 'PP_Notch_F1': 12000.0, 'StimEnable': True, 'PP_OffLevel': 0.0, 'Analysis_HPF': 75.0, 'CN_Var': 10.0, 'Analysis_Start': -100.0, 'ITI': 20.0, 'PP_Level': 90.0, 'Analysis_End': 100.0, 'PP_Freq': 4000.0, 'PP_MultiFreq': 'linspace(2.0,32.0,4.0)'} "
+    #     di = long_Eval(d)
+    #     print 'The dictionary is: ',
+    #     print di
+    #
+    # if options.cb: # test clements bekkers
+    #     # first generate some events
+    #     t = np.arange(0, 1000.0, 0.1)
+    #     ta = np.arange(0, 50.0, 0.1)
+    #     events = np.zeros(t.shape)
+    #     events[[50,100,250,350, 475, 525, 900, 1500, 2800, 5000, 5200, 7000, 7500],] = 1
+    #     tau1 = 3
+    #     alpha = 1.0 * (ta/tau1) * np.exp(1 - ta/tau1)
+    #     sig = spSignal.fftconvolve(events, alpha, mode='full')
+    #     sig = sig[0:len(t)]+np.random.normal(0, 0.25, len(t))
+    #     f = MP.figure()
+    #     MP.plot(t, sig, 'r-')
+    #     MP.plot(t, events, 'k-')
+    #     # now call the finding routine, using the exact template (!)
+    #     (t_start, d_start) = clementsBekkers(sig, alpha, threshold=0.5, minpeakdist=15)
+    #     MP.plot(t_start, d_start, 'bs')
+    #     MP.show()
+    #
+    # if options.findspikes: # test the findspikes routine
+    #     dt = 0.1
+    #     t = np.arange(0, 100, dt)
+    #     v = np.zeros_like(t)-60.0
+    #     p = range(20, 900, 50)
+    #     p1 = range(19,899,50)
+    #     p2 = range(21,901,50)
+    #     v[p] = 20.0
+    #     v[p1] = 15.0
+    #     v[p2] = -20.0
+    #     sp = findspikes(t, v, 0.0, dt = dt, mode = 'schmitt', interpolate = False)
+    #     print 'findSpikes'
+    #     print 'sp: ', sp
+    #     f = MP.figure(1)
+    #     MP.plot(t, v, 'ro-')
+    #     si = (np.floor(sp/dt))
+    #     print 'si: ', si
+    #     spk = []
+    #     for k in si:
+    #         spk.append(np.argmax(v[k-1:k+1])+k)
+    #     MP.plot(sp, v[spk], 'bs')
+    #     MP.ylim((0, 25))
+    #     MP.draw()
+    #     MP.show()
+    #
+    #     exit()
+    #     print "getSpikes"
+    #     y=[]*5
+    #     for j in range(0,1):
+    #         d = np.zeros((5,1,len(v)))
+    #         for k in range(0, 5):
+    #             p = range(20*k, 500, 50 + int(50.0*(k/2.0)))
+    #             vn = v.copy()
+    #             vn[p] = 20.0
+    #             d[k, 0, :] = np.array(vn) # load up the "spike" array
+    #         y.append(d)
+    #     tpts = range(0, len(t)) # np.arange(0, len(t)).astype(int).tolist()
+    #     #def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode=None, interpolate=False):
+    #     for k in range(0, len(y)):
+    #         sp = getSpikes(t, y[k], 0, tpts, tdel=0, thresh=0, selection = None, interpolate = True)
+    #         print 'r: %d' % k, 'sp: ', sp
+    #
+    # # test the sine fitting routine
+    # if options.sinefit:
+    #     from np.random import normal
+    #     F = 1.0/8.0
+    #     phi = 0.2
+    #     A = 2.0
+    #     t = np.arange(0.0, 60.0, 1.0/7.5)
+    #     # check over a range of values (is phase correct?)
+    #     for phi in np.arange(-2.0*np.pi, 2.0*np.pi, np.pi/8.0):
+    #         y = A * np.sin(2.*np.pi*t*F+phi) + normal(0.0, 0.5, len(t))
+    #         (a, p) = sinefit(t, y, F)
+    #         print "A: %f a: %f  phi: %f p: %f" % (A, a, phi, p)
 
 
     

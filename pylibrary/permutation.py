@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.random as npr
-import pylab
 
 def permutation_resampling(case, control, num_samples, statistic):
     """Returns p-value that statistic for case is different
@@ -21,7 +20,8 @@ def permutation_resampling(case, control, num_samples, statistic):
     return pval, observed_diff, diffs
 
 if __name__ == '__main__':
-    # make up some data
+    import pylab
+# make up some data
     case = [94, 38, 23, 197, 99, 16, 141]
     control = [52, 10, 40, 104, 51, 27, 146, 30, 46]
 

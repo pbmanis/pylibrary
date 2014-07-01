@@ -774,23 +774,23 @@ class Fitting():
 if __name__ == "__main__":
 #    import matplotlib.pyplot as pyplot
 
-    import matplotlib as MP
+    #import matplotlib as MP
 
-    MP.use('Qt4Agg')
-
-    stdFont = 'Arial'
-
+    # MP.use('Qt4Agg')
+    #
+    # stdFont = 'Arial'
+    #
     import matplotlib.pyplot as pylab
-
-    pylab.rcParams['text.usetex'] = True
-    pylab.rcParams['interactive'] = False
-    pylab.rcParams['font.family'] = 'sans-serif'
-    pylab.rcParams['font.sans-serif'] = 'Arial'
-    pylab.rcParams['mathtext.default'] = 'sf'
-    pylab.rcParams['figure.facecolor'] = 'white'
-    # next setting allows pdf font to be readable in Adobe Illustrator
-    pylab.rcParams['pdf.fonttype'] = 42
-    pylab.rcParams['text.dvipnghack'] = True
+    #
+    # pylab.rcParams['text.usetex'] = True
+    # pylab.rcParams['interactive'] = False
+    # pylab.rcParams['font.family'] = 'sans-serif'
+    # pylab.rcParams['font.sans-serif'] = 'Arial'
+    # pylab.rcParams['mathtext.default'] = 'sf'
+    # pylab.rcParams['figure.facecolor'] = 'white'
+    # # next setting allows pdf font to be readable in Adobe Illustrator
+    # pylab.rcParams['pdf.fonttype'] = 42
+    # pylab.rcParams['text.dvipnghack'] = True
     ##################### to here (matplotlib stuff - touchy!
 
     print 'Testing Fitting'
