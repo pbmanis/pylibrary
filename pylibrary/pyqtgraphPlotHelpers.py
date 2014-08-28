@@ -352,34 +352,61 @@ def labelUp(plot, xtext, ytext, title=None, label=None):
         plot.setTitle(title="<b><large>%s</large></b>" % title)
 
 
-def makeLayout(cols=1, rows=1, letters=True, margins=4, spacing=4):
-    """
-    Create a multipanel plot, returning the various pyptgraph elements.
-    The layout is always a rectangular grid with shape (cols, rows)
-    if letters is true, then the plot is labeled "A, B, C..."
-    margins sets the margins around the outside of the plot
-    spacing sets the spacing between the elements of the grid
-    """
-    import string
-    letters = string.ascii_uppercase
-    widget = QtGui.QWidget()
-    gridLayout = QtGui.QGridLayout()
-    widget.setLayout(gridLayout)
-    gridLayout.setContentsMargins(margins, margins, margins, margins)
-    gridLayout.setSpacing(spacing)
-    plots = [[0 for x in xrange(cols)] for x in xrange(rows)]
-    i = 0
-    for c in range(cols):
+class LayoutMaker():
+    def __init__(self, cols=1, rows=1, win=None, letters=True, margins=4, spacing=4):
+        self.cols=cols
+        self.rows=rows
+        self.letters=letters
+        self.margins=margins
+        self.spacing=spacing
+        self.crmap = [None]*cols*rows
+        self._makeLayout(cols=cols, rows=rows, letters=letters, margins=margins, spacing=spacing)
+        self.addLayout(win)
+
+    def addLayout(self, win=None):
+        if win is not None:
+            win.setLayout(self.gridLayout)
+
+    def getCols(self):
+        return self.cols
+
+    def getRows(self):
+        return self.rows
+
+    def mapFromIndex(self, index):
+        """
+        for a given index, return the row, col tuple associated with the index
+        """
+        return self.crmap(index)
+
+    def _makeLayout(self, cols=1, rows=1, letters=True, margins=4, spacing=4):
+        """
+        Create a multipanel plot.
+        The pyptgraph elements (widget, gridlayout, plots) are stored as class variables.
+        The layout is always a rectangular grid with shape (cols, rows)
+        if letters is true, then the plot is labeled "A, B, C..." Indices move horizontally first, then vertically
+        margins sets the margins around the outside of the plot
+        spacing sets the spacing between the elements of the grid
+        """
+        import string
+        sequential_letters = string.ascii_uppercase
+        self.widget = QtGui.QWidget()
+        self.gridLayout = QtGui.QGridLayout()
+        self.widget.setLayout(self.gridLayout)
+        self.gridLayout.setContentsMargins(margins, margins, margins, margins)
+        self.gridLayout.setSpacing(spacing)
+        self.plots = [[0 for x in xrange(cols)] for x in xrange(rows)]
+        i = 0
         for r in range(rows):
-            plots[r][c] = pg.PlotWidget()
-            gridLayout.addWidget(plots[r][c], r, c)
-            labelUp(plots[r][c], 'T(s)', 'Y', title = letters[i])
-            i += 1
-            if i > 25:
-                i = 0
-
-    return(plots, widget, gridLayout)
-
+            for c in range(cols):
+                self.plots[r][c] = pg.PlotWidget()
+                self.gridLayout.addWidget(self.plots[r][c], r, c)
+                if letters:
+                    labelUp(self.plots[r][c], 'T(s)', 'Y', title = sequential_letters[i])
+                self.crmap[i] = (r, c)
+                i += 1
+                if i > 25:
+                    i = 0
 
 def figure(title = None, background='w'):
     if background == 'w':
@@ -394,6 +421,6 @@ def show():
 
 if __name__ == '__main__':
     win = figure(title='testing')
-    (p, w, g) = makeLayout(cols=1,rows=2)
-    win.setLayout(g)
+    layout = LayoutMaker(cols=4,rows=2, win=win)
+    # win.setLayout(layout.gridLayout)
     show()
