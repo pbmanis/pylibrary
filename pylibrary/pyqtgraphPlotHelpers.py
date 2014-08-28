@@ -359,7 +359,8 @@ class LayoutMaker():
         self.letters=letters
         self.margins=margins
         self.spacing=spacing
-        self.crmap = [None]*cols*rows
+        self.rcmap = [None]*cols*rows
+        self.plots = None
         self._makeLayout(cols=cols, rows=rows, letters=letters, margins=margins, spacing=spacing)
         self.addLayout(win)
 
@@ -377,7 +378,17 @@ class LayoutMaker():
         """
         for a given index, return the row, col tuple associated with the index
         """
-        return self.crmap(index)
+        return self.rcmap[index]
+
+    def getPlot(self, index):
+        """
+        return the plot item in the list corresponding to the index n
+        """
+        r, c = self.rcmap[index]
+        return self.plots[r][c]
+
+    def plot(self, index, *args, **kwargs):
+        self.getPlot(index).plot(*args, **kwargs)
 
     def _makeLayout(self, cols=1, rows=1, letters=True, margins=4, spacing=4):
         """
@@ -403,7 +414,7 @@ class LayoutMaker():
                 self.gridLayout.addWidget(self.plots[r][c], r, c)
                 if letters:
                     labelUp(self.plots[r][c], 'T(s)', 'Y', title = sequential_letters[i])
-                self.crmap[i] = (r, c)
+                self.rcmap[i] = (r, c)
                 i += 1
                 if i > 25:
                     i = 0
@@ -422,5 +433,9 @@ def show():
 if __name__ == '__main__':
     win = figure(title='testing')
     layout = LayoutMaker(cols=4,rows=2, win=win)
+    x=np.arange(0, 10., 0.1)
+    y = np.sin(x*3.)
+    for n in range(4*2):
+        layout.plot(n, x, y)
     # win.setLayout(layout.gridLayout)
     show()
