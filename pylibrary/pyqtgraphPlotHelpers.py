@@ -178,7 +178,7 @@ def update_font(axl, size=6, font=stdFont):
 
 def lockPlot(axl, lims, ticks=None):
     """ 
-        This routine forces the plot of invisible data to force the axes to take certian
+        This routine forces the plot of invisible data to force the axes to take certain
         limits and to force the tick marks to appear. 
         call with the axis and lims = [x0, x1, y0, y1]
     """ 
@@ -342,18 +342,42 @@ def labelUp(plot, xtext, ytext, title=None, label=None):
                 plot title (on top)
                 plot panel label (for example, "A", "A1")
     """
+
+
     plot.setLabel('bottom', xtext)
     plot.setLabel('left', ytext)
-    if label is not None:
-        text = pg.TextItem(label)
-        plot.addItem(text)
-        text.setPos(-0.1, 1.0)
     if title is not None:
         plot.setTitle(title="<b><large>%s</large></b>" % title)
+    else:
+        plot.setTitle(title=" ")
+    if label is not None:
+        plot.setPlotLabel(plotlabel="<b>%s</b>" % label)
+    else:
+        plot.setPlotLabel(plotlabel="")
 
+# def setPlotLabel(plot, plotlabel, **args):
+#     """
+#     Set the plotlabel of the plot. Basic HTML formatting is allowed.
+#     If plotlabel is None, then the title will be hidden.
+#     A plotlabel is just a "title", but in the upper left corner of the
+#     QGridLayout (position 0,0), which is currently unused.
+#     """
+#     plotitem = plot.getPlotItem()
+#     if plotlabel is None:
+#         plotitem.titleLabel.setVisible(False)
+#         plotitem.layout.setRowFixedHeight(0, 0)
+#         plotitem.titleLabel.setMaximumHeight(0)
+#
+#     else:
+#         plotitem.titleLabel.setMaximumHeight(30)
+#         plotitem.layout.setRowFixedHeight(0, 30)
+#         plotitem.titleLabel.setVisible(True)
+#         plotitem.titleLabel.setText(plotlabel, **args)
+#
 
 class LayoutMaker():
-    def __init__(self, cols=1, rows=1, win=None, letters=True, margins=4, spacing=4):
+    def __init__(self, win=None, cols=1, rows=1, letters=True, margins=4, spacing=4):
+        self.sequential_letters = string.ascii_uppercase
         self.cols=cols
         self.rows=rows
         self.letters=letters
@@ -361,12 +385,13 @@ class LayoutMaker():
         self.spacing=spacing
         self.rcmap = [None]*cols*rows
         self.plots = None
-        self._makeLayout(cols=cols, rows=rows, letters=letters, margins=margins, spacing=spacing)
-        self.addLayout(win)
+        self.win = win
+        self._makeLayout(letters=letters, margins=margins, spacing=spacing)
+        #self.addLayout(win)
 
-    def addLayout(self, win=None):
-        if win is not None:
-            win.setLayout(self.gridLayout)
+    # def addLayout(self, win=None):
+    #     if win is not None:
+    #         win.setLayout(self.gridLayout)
 
     def getCols(self):
         return self.cols
@@ -384,13 +409,18 @@ class LayoutMaker():
         """
         return the plot item in the list corresponding to the index n
         """
-        r, c = self.rcmap[index]
+        if isinstance(index, tuple):
+            r, c = index
+        elif isinstance(index, int):
+            r, c = self.rcmap[index]
+        else:
+            raise ValueError ('pyqtgraphPlotHelpers, LayoutMaker plot: index must be int or tuple(r,c)')
         return self.plots[r][c]
 
     def plot(self, index, *args, **kwargs):
         self.getPlot(index).plot(*args, **kwargs)
 
-    def _makeLayout(self, cols=1, rows=1, letters=True, margins=4, spacing=4):
+    def _makeLayout(self, letters=True, margins=4, spacing=4):
         """
         Create a multipanel plot.
         The pyptgraph elements (widget, gridlayout, plots) are stored as class variables.
@@ -400,24 +430,48 @@ class LayoutMaker():
         spacing sets the spacing between the elements of the grid
         """
         import string
-        sequential_letters = string.ascii_uppercase
-        self.widget = QtGui.QWidget()
-        self.gridLayout = QtGui.QGridLayout()
-        self.widget.setLayout(self.gridLayout)
+       # self.widget = QtGui.QWidget()
+       # self.gridLayout = QtGui.QGridLayout()
+        self.gridLayout = self.win.ci.layout  # 'central item'
+        # self.widget.setLayout(self.gridLayout)
         self.gridLayout.setContentsMargins(margins, margins, margins, margins)
         self.gridLayout.setSpacing(spacing)
-        self.plots = [[0 for x in xrange(cols)] for x in xrange(rows)]
+        self.plots = [[0 for x in xrange(self.cols)] for x in xrange(self.rows)]
         i = 0
-        for r in range(rows):
-            for c in range(cols):
-                self.plots[r][c] = pg.PlotWidget()
-                self.gridLayout.addWidget(self.plots[r][c], r, c)
+        for r in range(self.rows):
+            for c in range(self.cols):
+                self.plots[r][c] = self.win.addPlot(row=r, col=c) # pg.PlotWidget()
+                #self.gridLayout.addWidget(self.plots[r][c], r, c)
+                # if i == 0:
+                #     print dir(self.plots[r][c])
                 if letters:
-                    labelUp(self.plots[r][c], 'T(s)', 'Y', title = sequential_letters[i])
+                    labelUp(self.plots[r][c], 'T(s)', 'Y', label=self.sequential_letters[i])
+                else:
+                    labelUp(self.plots[r][c], 'T(s)', 'Y', label=None, title=self.sequential_letters[i])
+
                 self.rcmap[i] = (r, c)
                 i += 1
                 if i > 25:
                     i = 0
+
+    def labelEdges(self, xlabel='T(s)', ylabel='Y'):
+        """
+        label the axes on the outer edges of the gridlayout, leaving the interior axes clean
+        """
+        (lastrow, lastcol) = self.rcmap[-1]
+        i = 0
+        for (r,c) in self.rcmap:
+            if c == 0:
+                ylab = ylabel
+            else:
+                ylab = ''
+            if r == self.rows-1:
+                xlab = xlabel
+            else:
+                xlab = ''
+            labelUp(self.plots[r][c], xlab, ylab, label=self.sequential_letters[i])
+            i += 1
+
 
 def figure(title = None, background='w'):
     if background == 'w':
@@ -438,4 +492,5 @@ if __name__ == '__main__':
     for n in range(4*2):
         layout.plot(n, x, y)
     # win.setLayout(layout.gridLayout)
+    #layout.labelEdges()
     show()
