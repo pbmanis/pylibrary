@@ -101,6 +101,11 @@ class Fitting():
                       [1.0, 1.0, 2.0], ['A', 'mu', 'sigma'], None, None),
             'ngauss': (self.ngausseval, [1.0, 0.0, 0.5, 2., 1., 0.25], 2000, 'y', [-10., 10., 0.2],
                       [1.0, 1.0, 2.0, 0.5, 0.5, 0.1], ['A1', 'mu1', 'sigma1', 'A2', 'mu2', 'sigma2'], 2, None),
+            'flattopgauss': (self.flattop_gausseval, [1.0, 0.0, 0.5, 0.25], 2000, 'y', [-10., 10., 0.2],
+                      [1.0, 1.0, 2.0, 0.2], ['A', 'mu', 'sigma', 'ftwidth'], None, None),
+            'flattopngauss': (self.flattop_ngausseval, [1.0, -1.0, 0.2, 0.25, 0.5, 1.0, 0.25, 0.5], 2000, 'y', [-10., 10., 0.2],
+                      [1.0, 1.0, 2.0, 0.2, 0.75, 1.0, 2.0, 0.2], ['A', 'mu', 'sigma', 'ftwidth', 'A2', 'mu2', 'sigma2', 'ftwidth2'],
+                      2, None),
             'line': (self.lineeval, [1.0, 0.0], 500, 'r', [-10., 10., 0.5],
                      [0.0, 2.0], ['m', 'b'], None, None),
             'poly2': (self.poly2eval, [1.0, 1.0, 0.0], 500, 'r', [0, 100, 1.],
@@ -357,6 +362,32 @@ class Fitting():
             else:
                 return y - yd
 
+    def flattop_gausseval(self, p, x, y=None, C=None, sumsq=False, weights=None):
+        """
+        Non-normalized version
+        p[0] is amplitude
+        p[1] is central positoin
+        p[2] is sigma
+        p[3] is the half-width of the flattop region (should be >= 0.)
+        """
+        pl = p[1]-p[3]
+        pr = p[1]+p[3]
+        xl = numpy.where(numpy.abs((x-pl) < 0))
+        xr = numpy.where(numpy.abs((x-pr) > 0))
+        yd = numpy.zeros(x.shape)
+        yd[xl] = p[0] * numpy.exp(-((x[xl] - pl) ** 2.0) / (2.0 * (p[2] ** 2.0)))
+        yd[xr] = p[0] * numpy.exp(-((x[xr] - pr) ** 2.0) / (2.0 * (p[2] ** 2.0)))
+        flatpts = numpy.where(numpy.abs(x-p[1]) < p[3]) # if inside the flatop interval
+        if len(flatpts) > 0:
+            yd[flatpts] = p[0]
+        if y == None:
+            return yd
+        else:
+            if sumsq is True:
+                return numpy.sum((y - yd) ** 2)
+            else:
+                return y - yd
+
 
     def ngausseval(self, p, x, y=None, C=2, sumsq=False, weights=None):
         # C is the number of gaussians to evaluate
@@ -378,6 +409,27 @@ class Fitting():
             else:
                 return y - yd        
         
+    def flattop_ngausseval(self, p, x, y=None, C=2, sumsq=False, weights=None):
+        # C[0] is the number of gaussians to evaluate
+        # C[1] is the truncation value (usually, 1.0)
+        # p[0,1,2] are the parameters for the first gaussian
+        # p[3,4,5] are the parameters for the second
+        # etc.
+        #
+        for i in range(int(C)):
+            pn = p[(i*4):(i*4)+4]
+            if i == 0:
+                yd = self.flattop_gausseval(pn, x, y=None)
+            else:
+                yd += self.flattop_gausseval(pn, x, y=None)
+
+        if y == None:
+            return yd
+        else:
+            if sumsq is True:
+                return numpy.sum((y - yd) ** 2)
+            else:
+                return y - yd
 
     def lineeval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] * x + p[1]
@@ -806,7 +858,7 @@ if __name__ == "__main__":
     #  pyplot.show()
     exploreError = False
 
-    func = 'ngauss'
+    func = 'flattopngauss'
     if exploreError is True:
         # explore the error surface for a function:
 
@@ -851,7 +903,7 @@ if __name__ == "__main__":
 
     signal_to_noise = 100000.
     for func in Fits.fitfuncmap:
-        if func != 'ngauss':
+        if func != 'flattopngauss':
             continue
         print "\nFunction: %s\nTarget: " % (func),
         f = Fits.fitfuncmap[func]
@@ -866,7 +918,7 @@ if __name__ == "__main__":
         #            nstep = 100.0
         x = numpy.array(numpy.arange(f[4][0], f[4][1], f[4][2]))
         C = None
-        if func in ['expsum2', 'exppulse', 'ngauss']:
+        if func in ['expsum2', 'exppulse', 'ngauss', 'flattopgauss', 'flattopngauss']:
             print '\n', f[7]
             C = f[7]
 
@@ -930,6 +982,7 @@ if __name__ == "__main__":
 
         else:
             tv = f[5]
+            initialgr = f[0](f[5], x, None)
             (fpar, xf, yf, names) = Fits.FitRegion(
                 numpy.array([1]), 0, x, yd, fitFunc=func, fixedPars=C, constraints=cons, bounds=bnds, method=testMethod)
             #print fpar
@@ -947,7 +1000,8 @@ if __name__ == "__main__":
         print( "FIT(%d)   : %s" % (j, outstr) )
         print( "init(%d) : %s" % (j, initstr) )
         print( "Error:   : %f" % (Fits.fitSum2Err))
-        if func in ['exppulse', 'FIGrowth1']:
+        if func in ['exppulse', 'FIGrowth1', 'flattopgauss', 'flattopngauss']:
+            print "red o = data; blue line is fit; black dashed is initial guess"
             pylab.figure()
             pylab.plot(numpy.array(x), yd, 'ro-')
             pylab.hold(True)

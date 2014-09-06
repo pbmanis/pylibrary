@@ -432,8 +432,8 @@ class LayoutMaker():
         import string
        # self.widget = QtGui.QWidget()
        # self.gridLayout = QtGui.QGridLayout()
-        self.gridLayout = self.win.ci.layout  # 'central item'
-        # self.widget.setLayout(self.gridLayout)
+        self.gridLayout = self.win.ci.layout  # the window's 'central item' is the main gridlayout.
+        # self.widget.setLayout(self.gridLayout)  # don't need to put into an additional widget then
         self.gridLayout.setContentsMargins(margins, margins, margins, margins)
         self.gridLayout.setSpacing(spacing)
         self.plots = [[0 for x in xrange(self.cols)] for x in xrange(self.rows)]
@@ -492,5 +492,5 @@ if __name__ == '__main__':
     for n in range(4*2):
         layout.plot(n, x, y)
     # win.setLayout(layout.gridLayout)
-    #layout.labelEdges()
+    layout.labelEdges()
     show()
