@@ -101,9 +101,9 @@ class Fitting():
                       [1.0, 1.0, 2.0], ['A', 'mu', 'sigma'], None, None),
             'ngauss': (self.ngausseval, [1.0, 0.0, 0.5, 2., 1., 0.25], 2000, 'y', [-10., 10., 0.2],
                       [1.0, 1.0, 2.0, 0.5, 0.5, 0.1], ['A1', 'mu1', 'sigma1', 'A2', 'mu2', 'sigma2'], 2, None),
-            'flattopgauss': (self.flattop_gausseval, [1.0, 0.0, 0.5, 0.25], 2000, 'y', [-10., 10., 0.2],
+            'flattopgauss': (self.flattop_gausseval, [1.0, 0.0, 0.5, 0.5], 50000, 'y', [-10., 10., 0.01],
                       [1.0, 1.0, 2.0, 0.2], ['A', 'mu', 'sigma', 'ftwidth'], None, None),
-            'flattopngauss': (self.flattop_ngausseval, [1.0, -1.0, 0.2, 0.25, 0.5, 1.0, 0.25, 0.5], 2000, 'y', [-10., 10., 0.2],
+            'flattopngauss': (self.flattop_ngausseval, [1.0, -1.0, 0.2, 0.25, 0.5, 1.0, 0.25, 0.5], 50000, 'y', [-10., 10., 0.01],
                       [1.0, 1.0, 2.0, 0.2, 0.75, 1.0, 2.0, 0.2], ['A', 'mu', 'sigma', 'ftwidth', 'A2', 'mu2', 'sigma2', 'ftwidth2'],
                       2, None),
             'line': (self.lineeval, [1.0, 0.0], 500, 'r', [-10., 10., 0.5],
@@ -307,7 +307,7 @@ class Fitting():
         else:
             dy = y - yd
             w = numpy.ones(len(x))
-#            xp = numpy.where(x>0)
+#            xp = numpy.argwhere(x>0)
 #            w[xp] = w[xp] + 3.*x[xp]/numpy.max(x)
             if sumsq is True:
                 ss = numpy.sqrt(numpy.sum((w*dy) ** 2.0))
@@ -366,20 +366,26 @@ class Fitting():
         """
         Non-normalized version
         p[0] is amplitude
-        p[1] is central positoin
+        p[1] is central position
         p[2] is sigma
         p[3] is the half-width of the flattop region (should be >= 0.)
         """
-        pl = p[1]-p[3]
-        pr = p[1]+p[3]
-        xl = numpy.where(numpy.abs((x-pl) < 0))
-        xr = numpy.where(numpy.abs((x-pr) > 0))
+        if p[3] <= 0.0:
+            return self.gausseval(p[0:3], x, y=y, C=C, sumsq=sumsq, weights=weights)
+
+        pl = p[1] - p[3]
+        pr = p[1] + p[3]
+        u = 1./(2.0 * (p[2] * p[2]))
+        xl = numpy.argwhere(x <= pl).flatten() # all to the left of the ft
+        xr = numpy.argwhere(x >= pr).flatten() # pts to the right of the flattop
         yd = numpy.zeros(x.shape)
-        yd[xl] = p[0] * numpy.exp(-((x[xl] - pl) ** 2.0) / (2.0 * (p[2] ** 2.0)))
-        yd[xr] = p[0] * numpy.exp(-((x[xr] - pr) ** 2.0) / (2.0 * (p[2] ** 2.0)))
-        flatpts = numpy.where(numpy.abs(x-p[1]) < p[3]) # if inside the flatop interval
+        al = x[xl] - pl
+        ar = x[xr] - pr
+        yd[xl] = p[0] * numpy.exp(-(al * al) * u)
+        yd[xr] = p[0] * numpy.exp(-(ar * ar) * u)
+        flatpts = numpy.argwhere((x > pl) & (x < pr)).flatten() # if inside the flatop interval
         if len(flatpts) > 0:
-            yd[flatpts] = p[0]
+            yd[flatpts[0]:flatpts[-1]+1] = p[0]*numpy.ones(len(flatpts))
         if y == None:
             return yd
         else:
@@ -412,22 +418,21 @@ class Fitting():
     def flattop_ngausseval(self, p, x, y=None, C=2, sumsq=False, weights=None):
         # C[0] is the number of gaussians to evaluate
         # C[1] is the truncation value (usually, 1.0)
-        # p[0,1,2] are the parameters for the first gaussian
-        # p[3,4,5] are the parameters for the second
+        # p[0,1,2,3] are the parameters for the first gaussian
+        # p[4,5,6,7] are the parameters for the second
         # etc.
         #
         for i in range(int(C)):
             pn = p[(i*4):(i*4)+4]
             if i == 0:
-                yd = self.flattop_gausseval(pn, x, y=None)
+                yd = self.flattop_gausseval(pn, x, y=None, sumsq=sumsq)
             else:
-                yd += self.flattop_gausseval(pn, x, y=None)
-
+                yd += self.flattop_gausseval(pn, x, y=None, sumsq=sumsq)
         if y == None:
             return yd
         else:
             if sumsq is True:
-                return numpy.sum((y - yd) ** 2)
+                return numpy.sum((y - yd) ** 2.0)
             else:
                 return y - yd
 
