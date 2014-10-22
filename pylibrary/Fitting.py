@@ -43,6 +43,8 @@ if the current curve and the current plot instance are passed.
 import numpy
 import scipy
 import scipy.optimize
+from scipy.stats import norm
+
 openoptFound = False
 try:
     import openopt
@@ -376,16 +378,21 @@ class Fitting():
         pl = p[1] - p[3]
         pr = p[1] + p[3]
         u = 1./(2.0 * (p[2] * p[2]))
+        eu = numpy.exp(u)
         xl = numpy.argwhere(x <= pl).flatten() # all to the left of the ft
         xr = numpy.argwhere(x >= pr).flatten() # pts to the right of the flattop
-        yd = numpy.zeros(x.shape)
+        A = p[0]/(p[2]*numpy.sqrt(p[2]*2.0*numpy.pi))
+        yd = p[0]*numpy.ones(x.shape)
         al = x[xl] - pl
         ar = x[xr] - pr
-        yd[xl] = p[0] * numpy.exp(-(al * al) * u)
-        yd[xr] = p[0] * numpy.exp(-(ar * ar) * u)
-        flatpts = numpy.argwhere((x > pl) & (x < pr)).flatten() # if inside the flatop interval
-        if len(flatpts) > 0:
-            yd[flatpts[0]:flatpts[-1]+1] = p[0]*numpy.ones(len(flatpts))
+        #yd[xl] = A * norm.pdf(al, 0., p[2])
+        yd[xl] = p[0] * numpy.exp(-numpy.square(al) * u)
+        #yd[xr] = A * norm.pdf(ar, 0., p[2])
+        yd[xr] = p[0] * numpy.exp(-numpy.square(ar) * u)
+#        flatpts = numpy.argwhere((x > pl) & (x < pr)).flatten() # if inside the flatop interval
+#        if len(flatpts) > 0:
+#            yd[flatpts[0]:flatpts[-1]+1] = p[0]*numpy.ones(len(flatpts))
+#            yd[flatpts] = p[0]*numpy.ones(len(flatpts))
         if y == None:
             return yd
         else:
