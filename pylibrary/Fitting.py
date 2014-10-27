@@ -246,7 +246,7 @@ class Fitting():
         For fit to activation currents, 2nd order exp + first order exp
         """
         yd = p[0] + (p[1] * (1.0 - numpy.exp(-x / p[2])) ** 2.0 ) + (p[3] * (1.0 - numpy.exp(-x / p[4])))
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -275,7 +275,7 @@ class Fitting():
         yd[m1] = amp * (1 - numpy.exp(-(x1 - t0) / tau1)) + yOffset
         amp2 = amp * (1 - numpy.exp(-width / tau1)) ## y-value at start of decay
         yd[m2] = ((amp2) * numpy.exp(-(x2 - (width + t0)) / tau2)) + yOffset
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -304,7 +304,7 @@ class Fitting():
         yd[m1] = Fzero + x[m1]*F1amp/Ibreak
         maxyd = numpy.max(yd)
         yd[m2] = F2amp * (1.0 - numpy.exp(- (x[m2]-Ibreak) * Irate)) + maxyd
-        if y == None:
+        if y is None:
             return yd
         else:
             dy = y - yd
@@ -320,7 +320,7 @@ class Fitting():
 
     def boltzeval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] + (p[1] - p[0]) / (1.0 + numpy.exp((x - p[2]) / p[3]))
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -330,7 +330,7 @@ class Fitting():
 
     def boltzeval2(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] + p[1] / (1 + numpy.exp((x - p[2]) / p[3])) + p[4] / (1 + numpy.exp((x - p[5]) / p[6]))
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -343,7 +343,7 @@ class Fitting():
         Normalized version (area = 1)
         """
         yd = (p[0] / (p[2] * numpy.sqrt(2.0 * numpy.pi))) * numpy.exp(-((x - p[1]) ** 2.0) / (2.0 * (p[2] ** 2.0)))
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -356,7 +356,7 @@ class Fitting():
         Non-normalized version 
         """
         yd = p[0] * numpy.exp(-((x - p[1]) ** 2.0) / (2.0 * (p[2] ** 2.0)))
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -393,7 +393,7 @@ class Fitting():
 #        if len(flatpts) > 0:
 #            yd[flatpts[0]:flatpts[-1]+1] = p[0]*numpy.ones(len(flatpts))
 #            yd[flatpts] = p[0]*numpy.ones(len(flatpts))
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -414,7 +414,7 @@ class Fitting():
                 yd = self.gausseval(pn, x, y=None)
             else:
                 yd += self.gausseval(pn, x, y=None)
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -435,7 +435,7 @@ class Fitting():
                 yd = self.flattop_gausseval(pn, x, y=None, sumsq=sumsq)
             else:
                 yd += self.flattop_gausseval(pn, x, y=None, sumsq=sumsq)
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -445,7 +445,7 @@ class Fitting():
 
     def lineeval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] * x + p[1]
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -455,7 +455,7 @@ class Fitting():
 
     def poly2eval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] * x ** 2.0 + p[1] * x + p[2]
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -465,7 +465,7 @@ class Fitting():
 
     def poly3eval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] * x ** 3.0 + p[1] * x ** 2.0 + p[2] * x + p[3]
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -475,7 +475,7 @@ class Fitting():
 
     def poly4eval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] * x ** 4.0 + p[1] * x ** 3.0 + p[2] * x ** 2.0 + p[3] * x + p[4]
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -485,7 +485,7 @@ class Fitting():
 
     def sineeval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] + p[1] * numpy.sin((x * 2.0 * numpy.pi / p[2]) + p[3])
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
@@ -499,7 +499,7 @@ class Fitting():
         'DC', 'a1', 'v1', 'k1', 'a2', 'v2', 'k2'
         """
         yd = p[0] + 1.0 / (p[1] * numpy.exp((x + p[2]) / p[3]) + p[4] * numpy.exp(-(x + p[5]) / p[6]))
-        if y == None:
+        if y is None:
             return yd
         else:
             if sumsq is True:
