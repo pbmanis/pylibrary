@@ -333,7 +333,7 @@ def violin_plot(ax, data, pos, bp=False):
        # pylab.setp(bpf['whiskers'], color='black', linestyle='-')
 
 
-def labelUp(plot, xtext, ytext, title=None, label=None):
+def labelUp(plot, xtext, ytext, title=None, label=None, **kwargs):
     """
         helper to label up the plot
         Inputs: plot item
@@ -347,33 +347,29 @@ def labelUp(plot, xtext, ytext, title=None, label=None):
     plot.setLabel('bottom', xtext)
     plot.setLabel('left', ytext)
     if title is not None:
-        plot.setTitle(title="<b><large>%s</large></b>" % title)
+        plot.setTitle(title="<b><large>%s</large></b>" % title, visible=True)
+        
     else:
         plot.setTitle(title=" ")
     if label is not None:
-        plot.setPlotLabel(plotlabel="<b>%s</b>" % label)
+        setPlotLabel(plot, plotlabel="<b>%s</b>" % label, **kwargs)
     else:
-        plot.setPlotLabel(plotlabel="")
+        setPlotLabel(plot, plotlabel="")
 
-# def setPlotLabel(plot, plotlabel, **args):
-#     """
-#     Set the plotlabel of the plot. Basic HTML formatting is allowed.
-#     If plotlabel is None, then the title will be hidden.
-#     A plotlabel is just a "title", but in the upper left corner of the
-#     QGridLayout (position 0,0), which is currently unused.
-#     """
-#     plotitem = plot.getPlotItem()
-#     if plotlabel is None:
-#         plotitem.titleLabel.setVisible(False)
-#         plotitem.layout.setRowFixedHeight(0, 0)
-#         plotitem.titleLabel.setMaximumHeight(0)
-#
-#     else:
-#         plotitem.titleLabel.setMaximumHeight(30)
-#         plotitem.layout.setRowFixedHeight(0, 30)
-#         plotitem.titleLabel.setVisible(True)
-#         plotitem.titleLabel.setText(plotlabel, **args)
-#
+def setPlotLabel(plotitem, plotlabel='', **kwargs):
+    """
+    Set the plotlabel of a plotitem. Basic HTML formatting is allowed.
+    If plotlabel is None, then a blank label is used
+    A plotlabel is a text label that appears the upper left corner of the
+    QGridLayout (position 0,0) of the plotitem.
+    """
+    
+    plotitem.LabelItem = pg.LabelItem(plotlabel, **kwargs)
+    plotitem.LabelItem.setMaximumHeight(30)
+    plotitem.layout.setRowFixedHeight(0, 30)
+    plotitem.layout.addItem(plotitem.LabelItem, 0, 0)
+    plotitem.LabelItem.setVisible(True)
+
 
 class LayoutMaker():
     def __init__(self, win=None, cols=1, rows=1, letters=True, margins=4, spacing=4):
@@ -445,9 +441,10 @@ class LayoutMaker():
                 # if i == 0:
                 #     print dir(self.plots[r][c])
                 if letters:
-                    labelUp(self.plots[r][c], 'T(s)', 'Y', label=self.sequential_letters[i])
+                    labelUp(self.plots[r][c], 'T(s)', 'Y', title=self.sequential_letters[i], 
+                        label=self.sequential_letters[i], size='24pt', bold=True)
                 else:
-                    labelUp(self.plots[r][c], 'T(s)', 'Y', label=None, title=self.sequential_letters[i])
+                    labelUp(self.plots[r][c], 'T(s)', 'Y', label=None, size='12pt', title=self.sequential_letters[i])
 
                 self.rcmap[i] = (r, c)
                 i += 1
