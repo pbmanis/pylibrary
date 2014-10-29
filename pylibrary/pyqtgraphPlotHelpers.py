@@ -564,11 +564,11 @@ class LayoutMaker():
             labelAxes(self.plots[r][c], xlab, ylab, **kwargs)
             i += 1
 
-    def title(self, index, **kwargs):
+    def title(self, index, title='', **kwargs):
         """
         add a title to a specific plot (specified by index) in the layout
         """
-        labelTitles(self.getPlot(index), **kwargs)
+        labelTitles(self.getPlot(index), title=title, **kwargs)
 
 def figure(title = None, background='w'):
     if background == 'w':
@@ -590,6 +590,7 @@ def test_layout(win):
         p = layout.getPlot(n)
         if n == 0:
             crossAxes(p, xyzero=[0., 0.], density=(0.75, 1.5), tickPlacesAdd=(1, 0), pointSize=12)
+    layout.title(0, 'this title')
     show()
 
 def test_crossAxes(win):

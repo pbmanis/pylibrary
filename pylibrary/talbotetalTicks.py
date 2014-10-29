@@ -37,8 +37,7 @@ class Extended():
         """
         self._density = density
         self._figure = figure
-        self._axis = axi
-        s
+        self._axis = axis
         self.range=range
 
         if steps is None:
