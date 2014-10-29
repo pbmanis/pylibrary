@@ -377,6 +377,47 @@ def make_crossedAxes(ax, xyzero=[0., 0.], limits=[None, None, None, None], ndec=
         txt.setPos(pg.Point(x0-xtk, y))
         ax.addItem(txt) #, pos=pg.Point(x, y0-ytk))
 
+
+def talbotTicks(axl, **kwds):
+    """
+    Adjust the tick marks using the talbot et al algorithm, on an existing plot.
+    """
+    if type(axl) is not list:
+        axl = [axl]
+    for ax in axl:
+        do_talbotTicks(ax, **kwds)
+
+def do_talbotTicks(ax, ndec=3,
+                   density=(1.0, 1.0), insideMargin=0.05, pointSize=None, tickPlacesAdd=(0,0)):
+    """
+    Change the axis ticks to use the talbot algorithm for ONE axis
+    Paramerters control the ticks, """
+    # get axis limits
+    aleft = ax.getAxis('left')
+    abottom = ax.getAxis('bottom')
+    yRange = aleft.range
+    xRange =  abottom.range
+    # now create substitue tick marks and labels, using Talbot et al algorithm
+    xr = np.diff(xRange)[0]
+    yr = np.diff(yRange)[0]
+    xmin, xmax = (np.min(xRange) - xr * insideMargin, np.max(xRange) + xr * insideMargin)
+    ymin, ymax = (np.min(yRange) - yr * insideMargin, np.max(yRange) + yr * insideMargin)
+    xtick = ticks.Extended(density=density[0], figure=None, range=(xmin, xmax), axis='x')
+    ytick = ticks.Extended(density=density[1], figure=None, range=(ymin, ymax), axis='y')
+    xt = xtick()
+    yt = ytick()
+    xts = tickStrings(xt, scale=1, spacing=None, tickPlacesAdd = tickPlacesAdd[0])
+    yts = tickStrings(yt, scale=1, spacing=None, tickPlacesAdd = tickPlacesAdd[1])
+    xtickl = [[(x, xts[i]) for i, x in enumerate(xt)] , []]  # no minor ticks here
+    ytickl = [[(y, yts[i]) for i, y in enumerate(yt)] , []]  # no minor ticks here
+
+    #ticks format: [ (majorTickValue1, majorTickString1), (majorTickValue2, majorTickString2), ... ],
+    aleft.setTicks(ytickl)
+    abottom.setTicks(xtickl)
+    
+    
+    
+
 def violin_plot(ax, data, pos, bp=False):
     '''
     create violin plots on an axis
@@ -472,7 +513,7 @@ def setPlotLabel(plotitem, plotlabel='', **kwargs):
 
 
 class LayoutMaker():
-    def __init__(self, win=None, cols=1, rows=1, letters=True, labelEdges=True, margins=4, spacing=4):
+    def __init__(self, win=None, cols=1, rows=1, letters=True, labelEdges=True, margins=4, spacing=4, ticks='default'):
         self.sequential_letters = string.ascii_uppercase
         self.cols=cols
         self.rows=rows
@@ -483,6 +524,7 @@ class LayoutMaker():
         self.rcmap = [None]*cols*rows
         self.plots = None
         self.win = win
+        self.ticks = ticks
         self._makeLayout(letters=letters, margins=margins, spacing=spacing)
         #self.addLayout(win)
 
@@ -516,6 +558,8 @@ class LayoutMaker():
 
     def plot(self, index, *args, **kwargs):
         self.getPlot(index).plot(*args, **kwargs)
+        if self.ticks == 'talbot':
+            talbotTicks(self.getPlot(index))
 
     def _makeLayout(self, letters=True, titles=True, margins=4, spacing=4):
         """
@@ -582,7 +626,7 @@ def show():
     QtGui.QApplication.instance().exec_()
 
 def test_layout(win):
-    layout = LayoutMaker(cols=4,rows=2, win=win, labelEdges=True)
+    layout = LayoutMaker(cols=4,rows=2, win=win, labelEdges=True, ticks='talbot')
     x=np.arange(0, 10., 0.1)
     y = np.sin(x*3.)
     for n in range(4*2):
@@ -591,6 +635,7 @@ def test_layout(win):
         if n == 0:
             crossAxes(p, xyzero=[0., 0.], density=(0.75, 1.5), tickPlacesAdd=(1, 0), pointSize=12)
     layout.title(0, 'this title')
+    #talbotTicks(layout.getPlot(1))
     show()
 
 def test_crossAxes(win):
