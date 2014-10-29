@@ -29,6 +29,7 @@ try:
     from PyQt4 import QtCore, QtGui
 except:
     pass
+import talbotetalTicks as ticks # logical tick formatting... 
 
 def nice_plot(plotlist, spines = ['left', 'bottom'], position = 10, direction='inward', axesoff = False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot
@@ -66,7 +67,7 @@ def setY(ax1, ax2):
         
 def setX(ax1, ax2):
     if type(ax1) is list:
-        print 'PlotHelpers: cannot use list as source to set Y axis'
+        print 'PlotHelpers: cannot use list as source to set X axis'
         return
     if type(ax2) is not list:
         ax2 = [ax2]
@@ -289,7 +290,35 @@ def refline(axl, refline = None, color = [64, 64, 64], linestyle = '--' ,linewid
             xlims = x.range
             ax.plot(xlims, [refline, refline], pen=pg.mkPen(color, width=linewidth, style=style))
 
-def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
+def tickStrings(values, scale=1, spacing=None, tickPlacesAdd = 1):
+    """Return the strings that should be placed next to ticks. This method is called 
+    when redrawing the axis and is a good method to override in subclasses.
+    The method is called with a list of tick values, a scaling factor (see below), and the 
+    spacing between ticks (this is required since, in some instances, there may be only 
+    one tick and thus no other way to determine the tick spacing)
+    
+    The scale argument is used when the axis label is displaying units which may have an SI scaling prefix.
+    When determining the text to display, use value*scale to correctly account for this prefix.
+    For example, if the axis label's units are set to 'V', then a tick value of 0.001 might
+    be accompanied by a scale value of 1000. This indicates that the label is displaying 'mV', and 
+    thus the tick should display 0.001 * 1000 = 1.
+    from pyqtgraph; we need it here.
+    """
+    if spacing is None:
+        spacing = np.mean(np.diff(values))
+    places = max(0, np.ceil(-np.log10(spacing*scale))) + tickPlacesAdd
+    strings = []
+    for v in values:
+        vs = v * scale
+        if abs(vs) < .001 or abs(vs) >= 10000:
+            vstr = "%g" % vs
+        else:
+            vstr = ("%%0.%df" % places) % vs
+        strings.append(vstr)
+    return strings
+
+
+def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None], **kwds):
     """
     Make the plot(s) have crossed axes at the data points set by xyzero, and optionally
     set axes limits
@@ -297,20 +326,57 @@ def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
-#        ax.set_title('spines at data (1,2)')
-#        ax.plot(x,y)
-        ax.spines['left'].set_position(('data',xyzero[0]))
-        ax.spines['right'].set_color('none')
-        ax.spines['bottom'].set_position(('data',xyzero[1]))
-        ax.spines['top'].set_color('none')
-        ax.spines['left'].set_smart_bounds(True)
-        ax.spines['bottom'].set_smart_bounds(True)
-        ax.xaxis.set_ticks_position('bottom')
-        ax.yaxis.set_ticks_position('left')
-        if limits[0] is not None:
-            ax.set_xlim(left=limits[0], right=limits[2])
-            ax.set_ylim(bottom=limits[1], top=limits[3])
-            
+        make_crossedAxes(ax, xyzero, limits, **kwds)
+ 
+def make_crossedAxes(ax, xyzero=[0., 0.], limits=[None, None, None, None], ndec=3,
+            density=(1.0, 1.0), tickl = 0.0125, insideMargin=0.05, pointSize=12, tickPlacesAdd=(0,0)):
+    # get axis limits
+    aleft = ax.getAxis('left')
+    abottom = ax.getAxis('bottom')
+    aleft.setPos(pg.Point(3., 0.))
+    yRange = aleft.range
+    xRange =  abottom.range
+    hl = pg.InfiniteLine(pos=xyzero[0], angle=90, pen=pg.mkPen('k'))
+    ax.addItem(hl)
+    vl = pg.InfiniteLine(pos=xyzero[1], angle=0, pen=pg.mkPen('k'))
+    ax.addItem(vl)
+    ax.hideAxis('bottom')
+    ax.hideAxis('left')
+    # now create substitue tick marks and labels, using Talbot et al algorithm
+    xr = np.diff(xRange)[0]
+    yr = np.diff(yRange)[0]
+    xmin, xmax = (np.min(xRange) - xr * insideMargin, np.max(xRange) + xr * insideMargin)
+    ymin, ymax = (np.min(yRange) - yr * insideMargin, np.max(yRange) + yr * insideMargin)
+    xtick = ticks.Extended(density=density[0], figure=None, range=(xmin, xmax), axis='x')
+    ytick = ticks.Extended(density=density[1], figure=None, range=(ymin, ymax), axis='y')
+    xt = xtick()
+    yt = ytick()
+    ytk = yr*tickl
+    xtk = xr*tickl
+    y0 = xyzero[1]
+    x0 = xyzero[0]
+    tsx = tickStrings(xt, tickPlacesAdd=tickPlacesAdd[0])
+    tsy = tickStrings(yt, tickPlacesAdd=tickPlacesAdd[1])
+    for i, x in enumerate(xt):
+        t = pg.PlotDataItem(x=x*np.ones(2), y=[y0-ytk, y0+ytk], pen=pg.mkPen('k'))
+        ax.addItem(t)  # tick mark
+        # put text in only if it does not overlap the opposite line
+        if x == y0:
+            continue
+        txt = pg.TextItem(tsx[i], anchor=(0.5, 0), color=pg.mkColor('k')) #, size='10pt')
+        txt.setFont(pg.QtGui.QFont('Arial', pointSize=pointSize))
+        txt.setPos(pg.Point(x, y0-ytk))
+        ax.addItem(txt) #, pos=pg.Point(x, y0-ytk))
+    for i, y in enumerate(yt):
+        t = pg.PlotDataItem(x=np.array([x0-xtk, x0+xtk]), y=np.ones(2)*y, pen=pg.mkPen('k'))
+        ax.addItem(t)
+        if y == x0:
+            continue
+        txt = pg.TextItem(tsy[i], anchor=(1, 0.5), color=pg.mkColor('k')) # , size='10pt')
+        txt.setFont(pg.QtGui.QFont('Arial', pointSize=pointSize))
+        txt.setPos(pg.Point(x0-xtk, y))
+        ax.addItem(txt) #, pos=pg.Point(x, y0-ytk))
+
 def violin_plot(ax, data, pos, bp=False):
     '''
     create violin plots on an axis
@@ -332,36 +398,70 @@ def violin_plot(ax, data, pos, bp=False):
        # pylab.setp(bpf['boxes'], color='black')
        # pylab.setp(bpf['whiskers'], color='black', linestyle='-')
 
-
-def labelUp(plot, xtext, ytext, title=None, label=None, **kwargs):
+def labelAxes(plot, xtext, ytext, **kwargs):
     """
         helper to label up the plot
         Inputs: plot item
                 text for x axis
                 text for yaxis
-                plot title (on top)
+                plot title (on top) OR
                 plot panel label (for example, "A", "A1")
     """
 
+    plot.setLabel('bottom', xtext, **kwargs)
+    plot.setLabel('left', ytext, **kwargs)
 
-    plot.setLabel('bottom', xtext)
-    plot.setLabel('left', ytext)
-    if title is not None:
-        plot.setTitle(title="<b><large>%s</large></b>" % title, visible=True)
-        
-    else:
-        plot.setTitle(title=" ")
+
+def labelPanels(plot, label=None, **kwargs):
+    """
+        helper to label up the plot
+        Inputs: plot item
+                text for x axis
+                text for yaxis
+                plot title (on top) OR
+                plot panel label (for example, "A", "A1")
+    """
+
     if label is not None:
-        setPlotLabel(plot, plotlabel="<b>%s</b>" % label, **kwargs)
+        setPlotLabel(plot, plotlabel="%s" % label, **kwargs)
     else:
         setPlotLabel(plot, plotlabel="")
 
+def labelTitles(plot, title=None, **kwargs):
+    """
+    Set the title of a plotitem. Basic HTML formatting is allowed, along
+    with "size", "bold", "italic", etc..
+    If the title is not defined, then a blank label is used
+    A title is a text label that appears centered above the plot, in 
+    QGridLayout (position 0,2) of the plotitem.
+    params
+    -------
+    :param plotitem: The plot item to label
+    :param title: The text string to use for the label
+    :kwargs: keywords to pass to the pg.LabelItem
+    :return: None
+    
+    """
+
+    if title is not None:
+        plot.setTitle(title="<b><large>%s</large></b>" % title, visible=True, **kwargs)    
+    else:  # clear the plot title
+        plot.setTitle(title=" ")
+
 def setPlotLabel(plotitem, plotlabel='', **kwargs):
     """
-    Set the plotlabel of a plotitem. Basic HTML formatting is allowed.
-    If plotlabel is None, then a blank label is used
+    Set the plotlabel of a plotitem. Basic HTML formatting is allowed, along
+    with "size", "bold", "italic", etc..
+    If plotlabel is not defined, then a blank label is used
     A plotlabel is a text label that appears the upper left corner of the
     QGridLayout (position 0,0) of the plotitem.
+    params
+    -------
+    :param plotitem: The plot item to label
+    :param plotlabel: The text string to use for the label
+    :kwargs: keywords to pass to the pg.LabelItem
+    :return: None
+    
     """
     
     plotitem.LabelItem = pg.LabelItem(plotlabel, **kwargs)
@@ -372,11 +472,12 @@ def setPlotLabel(plotitem, plotlabel='', **kwargs):
 
 
 class LayoutMaker():
-    def __init__(self, win=None, cols=1, rows=1, letters=True, margins=4, spacing=4):
+    def __init__(self, win=None, cols=1, rows=1, letters=True, labelEdges=True, margins=4, spacing=4):
         self.sequential_letters = string.ascii_uppercase
         self.cols=cols
         self.rows=rows
         self.letters=letters
+        self.edges = labelEdges
         self.margins=margins
         self.spacing=spacing
         self.rcmap = [None]*cols*rows
@@ -416,7 +517,7 @@ class LayoutMaker():
     def plot(self, index, *args, **kwargs):
         self.getPlot(index).plot(*args, **kwargs)
 
-    def _makeLayout(self, letters=True, margins=4, spacing=4):
+    def _makeLayout(self, letters=True, titles=True, margins=4, spacing=4):
         """
         Create a multipanel plot.
         The pyptgraph elements (widget, gridlayout, plots) are stored as class variables.
@@ -426,10 +527,7 @@ class LayoutMaker():
         spacing sets the spacing between the elements of the grid
         """
         import string
-       # self.widget = QtGui.QWidget()
-       # self.gridLayout = QtGui.QGridLayout()
         self.gridLayout = self.win.ci.layout  # the window's 'central item' is the main gridlayout.
-        # self.widget.setLayout(self.gridLayout)  # don't need to put into an additional widget then
         self.gridLayout.setContentsMargins(margins, margins, margins, margins)
         self.gridLayout.setSpacing(spacing)
         self.plots = [[0 for x in xrange(self.cols)] for x in xrange(self.rows)]
@@ -437,36 +535,33 @@ class LayoutMaker():
         for r in range(self.rows):
             for c in range(self.cols):
                 self.plots[r][c] = self.win.addPlot(row=r, col=c) # pg.PlotWidget()
-                #self.gridLayout.addWidget(self.plots[r][c], r, c)
-                # if i == 0:
-                #     print dir(self.plots[r][c])
                 if letters:
-                    labelUp(self.plots[r][c], 'T(s)', 'Y', title=self.sequential_letters[i], 
-                        label=self.sequential_letters[i], size='24pt', bold=True)
-                else:
-                    labelUp(self.plots[r][c], 'T(s)', 'Y', label=None, size='12pt', title=self.sequential_letters[i])
+                    labelPanels(self.plots[r][c], label=self.sequential_letters[i], size='14pt', bold=True)
+                if titles:
+                    labelTitles(self.plots[r][c], title=self.sequential_letters[i], size='14pt', bold=False)
 
                 self.rcmap[i] = (r, c)
                 i += 1
                 if i > 25:
                     i = 0
+        self.labelAxes('T(s)', 'Y', edgeOnly=self.edges)
 
-    def labelEdges(self, xlabel='T(s)', ylabel='Y'):
+    def labelAxes(self, xlabel='T(s)', ylabel='Y', edgeOnly=True, **kwargs):
         """
         label the axes on the outer edges of the gridlayout, leaving the interior axes clean
         """
         (lastrow, lastcol) = self.rcmap[-1]
         i = 0
         for (r,c) in self.rcmap:
-            if c == 0:
+            if c == 0 or not edgeOnly:
                 ylab = ylabel
             else:
                 ylab = ''
-            if r == self.rows-1:
+            if r == self.rows-1 or not edgeOnly:
                 xlab = xlabel
             else:
                 xlab = ''
-            labelUp(self.plots[r][c], xlab, ylab, label=self.sequential_letters[i])
+            labelAxes(self.plots[r][c], xlab, ylab, **kwargs)
             i += 1
 
 
@@ -481,13 +576,31 @@ def figure(title = None, background='w'):
 def show():
     QtGui.QApplication.instance().exec_()
 
-if __name__ == '__main__':
-    win = figure(title='testing')
-    layout = LayoutMaker(cols=4,rows=2, win=win)
+def test_layout(win):
+    layout = LayoutMaker(cols=4,rows=2, win=win, labelEdges=True)
     x=np.arange(0, 10., 0.1)
     y = np.sin(x*3.)
     for n in range(4*2):
         layout.plot(n, x, y)
-    # win.setLayout(layout.gridLayout)
-    layout.labelEdges()
+        p = layout.getPlot(n)
+        if n == 0:
+            crossAxes(p, xyzero=[0., 0.], density=(0.75, 1.5), tickPlacesAdd=(1, 0), pointSize=12)
+            
     show()
+
+def test_crossAxes(win):
+    layout = LayoutMaker(cols=1,rows=1, win=win, labelEdges=True)
+    x=np.arange(-1, 1., 0.01)
+    y = np.sin(x*10.)
+    layout.plot(0, x, y)
+    p = layout.getPlot(0)
+    crossAxes(p, xyzero=[0., 0.], limits=[None, None, None, None], density=1.5, tickPlacesAdd=1, pointSize=12)
+
+    show()
+    
+
+if __name__ == '__main__':
+    win = figure(title='testing')
+    test_layout(win)
+    #test_crossAxes(win)
+    
