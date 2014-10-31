@@ -557,9 +557,10 @@ class LayoutMaker():
         return self.plots[r][c]
 
     def plot(self, index, *args, **kwargs):
-        self.getPlot(index).plot(*args, **kwargs)
+        p = self.getPlot(index).plot(*args, **kwargs)
         if self.ticks == 'talbot':
             talbotTicks(self.getPlot(index))
+        return p
 
     def _makeLayout(self, letters=True, titles=True, margins=4, spacing=4):
         """
