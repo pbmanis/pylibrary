@@ -513,19 +513,20 @@ def setPlotLabel(plotitem, plotlabel='', **kwargs):
 
 
 class LayoutMaker():
-    def __init__(self, win=None, cols=1, rows=1, letters=True, labelEdges=True, margins=4, spacing=4, ticks='default'):
+    def __init__(self, win=None, cols=1, rows=1, letters=True, titles=False, labelEdges=True, margins=4, spacing=4, ticks='default'):
         self.sequential_letters = string.ascii_uppercase
-        self.cols=cols
-        self.rows=rows
-        self.letters=letters
+        self.cols = cols
+        self.rows = rows
+        self.letters = letters
+        self.titles = titles
         self.edges = labelEdges
-        self.margins=margins
-        self.spacing=spacing
+        self.margins = margins
+        self.spacing = spacing
         self.rcmap = [None]*cols*rows
         self.plots = None
         self.win = win
         self.ticks = ticks
-        self._makeLayout(letters=letters, margins=margins, spacing=spacing)
+        self._makeLayout(letters=letters, titles=titles, margins=margins, spacing=spacing)
         #self.addLayout(win)
 
     # def addLayout(self, win=None):
