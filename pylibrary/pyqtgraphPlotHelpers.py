@@ -609,6 +609,51 @@ class LayoutMaker():
             labelAxes(self.plots[r][c], xlab, ylab, **kwargs)
             i += 1
 
+    def columnAutoScale(self, col, axis='left'): 
+        """
+        autoscale the columns according to the max value in the column.
+        Finds outside range of column data, then sets the scale of all plots
+        in the column to that range
+        """
+        atmax = None
+        atmin = None
+        for (r, c) in self.rcmap:
+            if c != col:
+                continue
+            ax = self.getPlot((r,c))
+            thisaxis = ax.getAxis(axis)
+            amin, amax = thisaxis.range
+            if atmax is None:
+                atmax = amax
+            else:
+                if amax > atmax:
+                    atmax = amax
+            if atmin is None:
+                atmin = amin
+            else:
+                if amin > atmin:
+                    atmin = amin
+            
+        self.columnSetScale(col, axis=axis, range=(atmin, atmax))
+        return(atmin, atmax)
+                
+    def columnSetScale(self, col, axis='left', range=(0., 1.)):
+        """
+        Set the column scale
+        """
+        for (r, c) in self.rcmap:
+            if c != col:
+                continue
+            ax = self.getPlot((r,c))
+            if axis == 'left':
+                ax.setYRange(range[0], range[1])
+            elif axis == 'bottom':
+                ax.setXRange(range[0], range[1])
+
+            if self.ticks == 'talbot':
+                talbotTicks(ax)
+
+        
     def title(self, index, title='', **kwargs):
         """
         add a title to a specific plot (specified by index) in the layout
@@ -637,6 +682,7 @@ def test_layout(win):
             crossAxes(p, xyzero=[0., 0.], density=(0.75, 1.5), tickPlacesAdd=(1, 0), pointSize=12)
     layout.title(0, 'this title')
     #talbotTicks(layout.getPlot(1))
+    layout.columnAutoScale(col=3, axis='left')
     show()
 
 def test_crossAxes(win):
@@ -646,7 +692,6 @@ def test_crossAxes(win):
     layout.plot(0, x, y)
     p = layout.getPlot(0)
     crossAxes(p, xyzero=[0., 0.], limits=[None, None, None, None], density=1.5, tickPlacesAdd=1, pointSize=12)
-
     show()
     
 
