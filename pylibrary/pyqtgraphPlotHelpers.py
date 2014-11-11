@@ -696,8 +696,8 @@ def test_crossAxes(win):
     show()
     
 
-if __name__ == '__main__':
-    win = figure(title='testing')
-    test_layout(win)
-    #test_crossAxes(win)
+# if __name__ == '__main__':
+#     win = figure(title='testing')
+#     test_layout(win)
+#     #test_crossAxes(win)
     
