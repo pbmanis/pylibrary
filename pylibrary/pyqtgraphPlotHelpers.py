@@ -376,7 +376,12 @@ def make_crossedAxes(ax, xyzero=[0., 0.], limits=[None, None, None, None], ndec=
         txt.setPos(pg.Point(x0-xtk, y))
         ax.addItem(txt) #, pos=pg.Point(x, y0-ytk))
 
-def polar(plot, r, theta, steps=4, rRange=None, vectors=False, sort=True, **kwds):
+def circmean(alpha, axis=None):
+    mean_angle = np.arctan2(np.mean(np.sin(alpha),axis),np.mean(np.cos(alpha),axis))
+    return mean_angle
+    
+def polar(plot, r, theta, steps=4, rRange=None, vectors=False,
+     normalize=False, sort=True, makeGrid=True, **kwds):
     """
     plot is the plot instance to plot into
     the plot will be converted to a polar graph
@@ -394,56 +399,73 @@ def polar(plot, r, theta, steps=4, rRange=None, vectors=False, sort=True, **kwds
     plot.hideAxis('left')
 
     # sort r, theta by r
-    i = np.argsort(theta)
-    r = r[i]
-    theta = theta[i]
-    if rRange is None:
-        rRange = np.max(r)
-    # Add radial grid lines (theta)
-    gridPen = pg.mkPen(width=0.5, color='k',  style=QtCore.Qt.DotLine)
-    ringPen = pg.mkPen(width=0.75, color='k',  style=QtCore.Qt.SolidLine)  
-    for th in np.linspace(0., np.pi*2, 8, endpoint=False):
-        rx = np.cos(th)
-        ry = np.sin(th)
-        plot.plot(x=[0, rRange*rx], y=[0., rRange*ry], pen=gridPen)
-        ang = th*360./(np.pi*2)
-        # anchor is odd: 0,0 is upper left corner, 1,1 is loer right corner
-        if ang < 90.:
-            x=0.
-            y=0.5
-        elif ang == 90.:
-            x=0.5
-            y=1
-        elif ang < 180:
-            x=1.0
-            y=0.5
-        elif ang == 180.:
-            x=1
-            y=0.5
-        elif ang < 270:
-            x=1
-            y=0
-        elif ang== 270.:
-            x=0.5
-            y=0
-        elif ang < 360:
-            x=0
-            y=0
-        ti = pg.TextItem("%d" % (int(ang)), color=pg.mkColor('k'), anchor=(x,y))
-        plot.addItem(ti)
-        ti.setPos(rRange*rx, rRange*ry)
-    # add polar grid lines (r)
-    for gr in np.linspace(rRange/steps, rRange, steps):
-        circle = pg.QtGui.QGraphicsEllipseItem(-gr, -gr, gr*2, gr*2)
-        if gr < rRange:
-            circle.setPen(gridPen)
-        else:
-            circle.setPen(ringPen)
-        plot.addItem(circle)
+
+    r = np.array(r)
+    theta = np.array(theta)
+    indx = np.argsort(theta)
+    rs = r
+    thetas = theta
+    if not isinstance(indx, np.int64):
+        for i,j in enumerate(indx):
+            rs[i] = r[j]
+            thetas[i] = theta[j]
+    if makeGrid:
+        if rRange is None:
+            rRange = np.max(r)
+        if normalize:
+            rRange = 1.0
+        # Add radial grid lines (theta)
+        gridPen = pg.mkPen(width=0.5, color='k',  style=QtCore.Qt.DotLine)
+        ringPen = pg.mkPen(width=0.75, color='k',  style=QtCore.Qt.SolidLine)  
+        for th in np.linspace(0., np.pi*2, 8, endpoint=False):
+            rx = np.cos(th)
+            ry = np.sin(th)
+            plot.plot(x=[0, rx], y=[0., ry], pen=gridPen)
+            ang = th*360./(np.pi*2)
+            # anchor is odd: 0,0 is upper left corner, 1,1 is loer right corner
+            if ang < 90.:
+                x=0.
+                y=0.5
+            elif ang == 90.:
+                x=0.5
+                y=1
+            elif ang < 180:
+                x=1.0
+                y=0.5
+            elif ang == 180.:
+                x=1
+                y=0.5
+            elif ang < 270:
+                x=1
+                y=0
+            elif ang== 270.:
+                x=0.5
+                y=0
+            elif ang < 360:
+                x=0
+                y=0
+            ti = pg.TextItem("%d" % (int(ang)), color=pg.mkColor('k'), anchor=(x,y))
+            plot.addItem(ti)
+            ti.setPos(rRange*rx, rRange*ry)
+        # add polar grid lines (r)
+        for gr in np.linspace(rRange/steps, rRange, steps):
+            circle = pg.QtGui.QGraphicsEllipseItem(-gr, -gr, gr*2, gr*2)
+            if gr < rRange:
+                circle.setPen(gridPen)
+            else:
+                circle.setPen(ringPen)
+            plot.addItem(circle)
 
     # Transform to cartesian and plot
-    x = r * np.cos(theta)
-    y = r * np.sin(theta)
+    if normalize:
+        rs = rs/np.max(rs)
+    x = rs * np.cos(thetas)
+    y = rs * np.sin(thetas)
+    try:
+        len(x)
+    except:
+        x  = [x]
+        y = [y]
     if vectors:  # plot r,theta as lines from origin
         for i in range(len(x)):
             plot.plot([0., x[i]], [0., y[i]], **kwds)
@@ -759,8 +781,11 @@ def test_layout(win):
         if n in [1,2]:
             if n == 1:
                 polar(p, r, theta, pen=pg.mkPen('r'))
+                
             if n == 2: 
                 polar(p, r, theta, vectors=True, pen=pg.mkPen('k', width=2.0))
+                polar(p, [np.mean(r)], [circmean(theta)], makeGrid=False,
+                 vectors=True, pen=pg.mkPen('r', width=2.0))
     layout.title(0, 'this title')
     #talbotTicks(layout.getPlot(1))
     layout.columnAutoScale(col=3, axis='left')
