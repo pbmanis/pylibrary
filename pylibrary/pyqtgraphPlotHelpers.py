@@ -394,7 +394,7 @@ def polar(plot, r, theta, steps=4, rRange=None, vectors=False, sort=True, **kwds
     plot.hideAxis('left')
 
     # sort r, theta by r
-    i = np.argsort(r)
+    i = np.argsort(theta)
     r = r[i]
     theta = theta[i]
     if rRange is None:
