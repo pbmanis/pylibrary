@@ -16,8 +16,7 @@ Created by Paul Manis on 2010-03-09.
 Copyright (c) 2010 Paul B. Manis, Ph.D.. All rights reserved.
 """
 
-import sys
-import os
+
 import string
 
 stdFont = 'Arial'
@@ -377,6 +376,79 @@ def make_crossedAxes(ax, xyzero=[0., 0.], limits=[None, None, None, None], ndec=
         txt.setPos(pg.Point(x0-xtk, y))
         ax.addItem(txt) #, pos=pg.Point(x, y0-ytk))
 
+def polar(plot, r, theta, steps=4, rRange=None, vectors=False, sort=True, **kwds):
+    """
+    plot is the plot instance to plot into
+    the plot will be converted to a polar graph
+    r is a list or array of radii
+    theta is the corresponding list of angles
+    steps is the number of grid steps in r
+    rRange is the max of r (max of data of not specified)
+    vectors False means plots line of r, theta; true means plots vectors from origin to point
+    sort allows ordered x (default)
+    **kwds are passed to the data plot call.
+    """
+
+    plot.setAspectLocked()
+    plot.hideAxis('bottom')
+    plot.hideAxis('left')
+
+    # sort r, theta by r
+    i = np.argsort(r)
+    r = r[i]
+    theta = theta[i]
+    if rRange is None:
+        rRange = np.max(r)
+    # Add radial grid lines (theta)
+    gridPen = pg.mkPen(width=0.5, color='k',  style=QtCore.Qt.DotLine)
+    ringPen = pg.mkPen(width=0.75, color='k',  style=QtCore.Qt.SolidLine)  
+    for th in np.linspace(0., np.pi*2, 8, endpoint=False):
+        rx = np.cos(th)
+        ry = np.sin(th)
+        plot.plot(x=[0, rx], y=[0., ry], pen=gridPen)
+        ang = th*360./(np.pi*2)
+        # anchor is odd: 0,0 is upper left corner, 1,1 is loer right corner
+        if ang < 90.:
+            x=0.
+            y=0.5
+        elif ang == 90.:
+            x=0.5
+            y=1
+        elif ang < 180:
+            x=1.0
+            y=0.5
+        elif ang == 180.:
+            x=1
+            y=0.5
+        elif ang < 270:
+            x=1
+            y=0
+        elif ang== 270.:
+            x=0.5
+            y=0
+        elif ang < 360:
+            x=0
+            y=0
+        ti = pg.TextItem("%d" % (int(ang)), color=pg.mkColor('k'), anchor=(x,y))
+        plot.addItem(ti)
+        ti.setPos(rRange*rx, rRange*ry)
+    # add polar grid lines (r)
+    for gr in np.linspace(rRange/steps, rRange, steps):
+        circle = pg.QtGui.QGraphicsEllipseItem(-gr, -gr, gr*2, gr*2)
+        if gr < rRange:
+            circle.setPen(gridPen)
+        else:
+            circle.setPen(ringPen)
+        plot.addItem(circle)
+
+    # Transform to cartesian and plot
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
+    if vectors:  # plot r,theta as lines from origin
+        for i in range(len(x)):
+            plot.plot([0., x[i]], [0., y[i]], **kwds)
+    else:
+        plot.plot(x, y, **kwds)
 
 def talbotTicks(axl, **kwds):
     """
@@ -676,11 +748,19 @@ def test_layout(win):
     layout = LayoutMaker(cols=4,rows=2, win=win, labelEdges=True, ticks='talbot')
     x=np.arange(0, 10., 0.1)
     y = np.sin(x*3.)
+    r = np.random.random(10)
+    theta = np.linspace(0, 2.*np.pi, 10, endpoint=False)
     for n in range(4*2):
-        layout.plot(n, x, y)
+        if n not in [1,2]:
+            layout.plot(n, x, y)
         p = layout.getPlot(n)
         if n == 0:
             crossAxes(p, xyzero=[0., 0.], density=(0.75, 1.5), tickPlacesAdd=(1, 0), pointSize=12)
+        if n in [1,2]:
+            if n == 1:
+                polar(p, r, theta, pen=pg.mkPen('r'))
+            if n == 2: 
+                polar(p, r, theta, vectors=True, pen=pg.mkPen('k', width=2.0))
     layout.title(0, 'this title')
     #talbotTicks(layout.getPlot(1))
     layout.columnAutoScale(col=3, axis='left')
@@ -696,8 +776,8 @@ def test_crossAxes(win):
     show()
     
 
-# if __name__ == '__main__':
-#     win = figure(title='testing')
-#     test_layout(win)
-#     #test_crossAxes(win)
+if __name__ == '__main__':
+    win = figure(title='testing')
+    test_layout(win)
+    #test_crossAxes(win)
     
