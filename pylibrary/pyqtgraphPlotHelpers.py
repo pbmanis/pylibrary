@@ -405,7 +405,7 @@ def polar(plot, r, theta, steps=4, rRange=None, vectors=False, sort=True, **kwds
     for th in np.linspace(0., np.pi*2, 8, endpoint=False):
         rx = np.cos(th)
         ry = np.sin(th)
-        plot.plot(x=[0, rx], y=[0., ry], pen=gridPen)
+        plot.plot(x=[0, rRange*rx], y=[0., rRange*ry], pen=gridPen)
         ang = th*360./(np.pi*2)
         # anchor is odd: 0,0 is upper left corner, 1,1 is loer right corner
         if ang < 90.:
