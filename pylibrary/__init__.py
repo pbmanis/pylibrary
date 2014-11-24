@@ -37,6 +37,9 @@ if listimports:
 import titlecase
 if listimports:
     print 'imported titlecase'
+import matplotlibexporters
+if listimports:
+    print 'import matplotlibexporters'
 # try:
 #     import RStats
 #     if listimports:
