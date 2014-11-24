@@ -109,6 +109,7 @@ def matplotlibExport(object=None, title=None, show=True):
     escs = re.compile('[\\\/_]')
     #print title
     if title is not None:
+        title = remove_html_markup(title)
         tiname = '%r' % title
         tiname = re.sub(escs, cleanRepl, tiname)[1:-1]
         fig.suptitle(r''+tiname)
@@ -149,12 +150,12 @@ def export_panel(plitem, ax):
     xlabel = plitem.axes['bottom']['item'].label.toPlainText()
     ylabel = plitem.axes['left']['item'].label.toPlainText()
     title = plitem.titleLabel.text
-    label = remove_html_markup(plitem.plotLabel.text)
+    cleantitle = remove_html_markup(plitem.plotLabel.text)
     fontsize = 12
     fn = pg.functions
     ax.clear()
     cleanAxes(ax)  # make a "nice" plot
-    ax.set_title(title)  # add the plot title here
+    ax.set_title(cleantitle)  # add the plot title here
     for item in plitem.items:  # was .curves, but let's handle all items
         # dispatch do different routines depending on what we need to plot
         if isinstance(item, pg.graphicsItems.PlotCurveItem.PlotCurveItem):
@@ -197,7 +198,7 @@ def export_curve(fn, ax, item):
     else:
         linestyle = '-'
     color = tuple([c/255. for c in fn.colorTuple(pen.color())])
-    if 'symbol' in opts:
+    if 'symbol' in opts:  # handle symbols
         symbol = opts['symbol']
         if symbol == 't':
             symbol = '^'
@@ -211,13 +212,27 @@ def export_curve(fn, ax, item):
         markeredgecolor = None
         markerfacecolor = None
         markersize = 1.0
-    if 'filllevel' in opts:
+    if 'filllevel' in opts:  # fill between level and data.
         if opts['fillLevel'] is not None and opts['fillBrush'] is not None:
             fillBrush = fn.mkBrush(opts['fillBrush'])
             fillcolor = tuple([c/255. for c in fn.colorTuple(fillBrush.color())])
             ax.fill_between(x=x, y1=y, y2=opts['fillLevel'], facecolor=fillcolor)
-
-    pl = ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(),
+    if 'stepMode' in opts and opts['stepMode']: # handle step mode (bar graph/histogram)
+        if 'fillBrush' in opts:
+            fillBrush = fn.mkBrush(opts['fillBrush'])
+            fillcolor = tuple([c/255. for c in fn.colorTuple(fillBrush.color())])
+        else:
+            fillcolor = 'k'
+        edgecolor = fillcolor
+        if len(y) > len(x):
+            y = y[:len(x)]
+        if len(x) > len(y):
+            x = x[:len(y)]
+        print 'len x,y: ', len(x), len(y)
+        pl = ax.bar(x, y, width=1.0, color=fillcolor, edgecolor=edgecolor, linewidth=pen.width())
+        #ax.bar(left, height, width=1.0, bottom=None, hold=None, **kwargs)
+    else: # any but step mode gets a regular plot
+        pl = ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(),
                  linestyle=linestyle, markeredgecolor=markeredgecolor, markerfacecolor=markerfacecolor,
                  markersize=markersize)
     return pl  # incase we need the plot that was created.
