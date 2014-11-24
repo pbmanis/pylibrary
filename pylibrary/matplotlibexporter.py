@@ -149,13 +149,13 @@ def export_panel(plitem, ax):
     # get labels from the pyqtgraph PlotItems
     xlabel = plitem.axes['bottom']['item'].label.toPlainText()
     ylabel = plitem.axes['left']['item'].label.toPlainText()
-    title = plitem.titleLabel.text
-    cleantitle = remove_html_markup(plitem.plotLabel.text)
+    title = remove_html_markup(plitem.titleLabel.text)
+    label = remove_html_markup(plitem.plotLabel.text)
     fontsize = 12
     fn = pg.functions
     ax.clear()
     cleanAxes(ax)  # make a "nice" plot
-    ax.set_title(cleantitle)  # add the plot title here
+    ax.set_title(title)  # add the plot title here
     for item in plitem.items:  # was .curves, but let's handle all items
         # dispatch do different routines depending on what we need to plot
         if isinstance(item, pg.graphicsItems.PlotCurveItem.PlotCurveItem):
