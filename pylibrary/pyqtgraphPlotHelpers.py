@@ -684,9 +684,9 @@ class LayoutMaker():
                 i += 1
                 if i > 25:
                     i = 0
-        self.labelAxes('T(s)', 'Y', edgeOnly=self.edges)
+        self.labelEdges('T(s)', 'Y', edgeOnly=self.edges)
 
-    def labelAxes(self, xlabel='T(s)', ylabel='Y', edgeOnly=True, **kwargs):
+    def labelEdges(self, xlabel='T(s)', ylabel='Y', edgeOnly=True, **kwargs):
         """
         label the axes on the outer edges of the gridlayout, leaving the interior axes clean
         """

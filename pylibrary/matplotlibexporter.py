@@ -13,6 +13,7 @@ Distributed under MIT/X11 license. See license.txt for more infofmation.
 import re
 from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
+import numpy as np
 
 try:
     import matplotlib as MP
@@ -296,10 +297,12 @@ def export_bargraph(fn, ax, item):
     opts = item.opts
     pen = fn.mkPen(opts['pen'])
     brush = fn.mkBrush(opts['brush'])
-    if pen.style() == QtCore.Qt.NoPen:
-        linestyle = ''
+#    print 'bargraph pen: ', pen
+#    print pen.style()
+    if pen.style() == QtCore.Qt.NoPen or pen.style() == 0:
+        edgecolor = 'None'
     else:
-        linestyle = '-'
+        edgecolor = [tuple([c/255. for c in fn.colorTuple(pen.color())])]
     color = [tuple([c/255. for c in fn.colorTuple(brush.color())])]
     symcolor = color
     if 'symbol' in opts:
@@ -322,7 +325,7 @@ def export_bargraph(fn, ax, item):
             fillBrush = fn.mkBrush(opts['fillBrush'])
             fillcolor = tuple([c/255. for c in fn.colorTuple(fillBrush.color())])
             ax.fill_between(x=x, y1=y, y2=opts['fillLevel'], facecolor=fillcolor)
-    pl = ax.bar(x, y, barwidth, color=symcolor)
+    pl = ax.bar(x, y, barwidth, color=symcolor, edgecolor=edgecolor)
 
 
 # for matplotlib cleanup:
@@ -397,7 +400,7 @@ if __name__ == "__main__":
         xh = np.arange(0, 10, 0.5)
         yh = np.random.randint(0, 12, 20)
         cu = pg.PlotCurveItem(xh, yh, pen=pg.mkPen('r'))
-        bg = pg.BarGraphItem(x0=xh, height=yh, width=0.25, brush='c')
+        bg = pg.BarGraphItem(x0=xh, height=yh, width=0.5, brush='c', pen=None)
         sp = pg.ScatterPlotItem(xh, 10*np.random.random(20), symbol='o', brush=pg.mkBrush('c'))
         #pl = pg.PlotWidget()
         pl1 = win.addPlot(row=0, col=0)
