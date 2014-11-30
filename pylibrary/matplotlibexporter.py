@@ -271,7 +271,7 @@ def export_scatterplot(fn, ax, item):
         markersize = 1.0
 
     pl = ax.scatter(x, y, marker=symbol, c=color, linewidth=pen.width(),
-                 linestyle=linestyle, s=markersize)
+                 linestyle=linestyle, s=markersize, edgecolors=markeredgecolor)
     return pl  # in case we need the plot that was created.
 
 def export_bargraph(fn, ax, item):
