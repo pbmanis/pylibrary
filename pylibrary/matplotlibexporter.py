@@ -102,10 +102,9 @@ def matplotlibExport(object=None, title=None, show=True, size=None):
             ltype = 'QGL'
     else:
         raise Exception("Method matplotlibExport requires Window or gridlayout as first argument (object=)")
-
-    fig = pylab.figure()  # create the matplotlib figure
     if size is not None:
-        fig.set_size_inches(size[0], size[1])
+        pylab.rcParams['figure.figsize'] = size[0], size[1]
+    fig = pylab.figure()  # create the matplotlib figure
     pylab.rcParams['text.usetex'] = False
     # escape filename information so it can be rendered by removing
     # common characters that trip up latex...:
@@ -196,6 +195,7 @@ def export_curve(fn, ax, item):
     x, y = item.getData()
     opts = item.opts
     pen = fn.mkPen(opts['pen'])
+    dashPattern = None
     linestyles={QtCore.Qt.NoPen: '',         QtCore.Qt.SolidLine: '-', 
                 QtCore.Qt.DashLine: '--',    QtCore.Qt.DotLine: ':', 
                 QtCore.Qt.DashDotLine: '-.', QtCore.Qt.DashDotDotLine: '_.',
@@ -204,6 +204,8 @@ def export_curve(fn, ax, item):
         linestyle = linestyles[pen.style()]
     else:
         linestyle = '-'
+    if len(pen.dashPattern()) > 0:  # get the dash pattern
+        dashPattern = pen.dashPattern()
     color = tuple([c/255. for c in fn.colorTuple(pen.color())])
     if 'symbol' in opts:  # handle symbols
         symbol = opts['symbol']
@@ -239,9 +241,12 @@ def export_curve(fn, ax, item):
         pl = ax.bar(x, y, width=1.0, color=fillcolor, edgecolor=edgecolor, linewidth=pen.width())
         #ax.bar(left, height, width=1.0, bottom=None, hold=None, **kwargs)
     else: # any but step mode gets a regular plot
-        pl = ax.plot(x, y, marker=symbol, color=color, linewidth=pen.width(),
+        line = MP.lines.Line2D(x, y, marker=symbol, color=color, linewidth=pen.width(),
                  linestyle=linestyle, markeredgecolor=markeredgecolor, markerfacecolor=markerfacecolor,
                  markersize=markersize)
+        if dashPattern is not None:  # add dashpattern if ther was one set...
+            line.set_dashes(dashPattern)
+        pl = ax.add_line(line)
     return pl  # incase we need the plot that was created.
 
 def export_scatterplot(fn, ax, item):

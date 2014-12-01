@@ -693,16 +693,43 @@ class LayoutMaker():
         (lastrow, lastcol) = self.rcmap[-1]
         i = 0
         for (r,c) in self.rcmap:
-            if c == 0 or not edgeOnly:
+            if c == 0:
                 ylab = ylabel
-            else:
+            elif edgeOnly:
                 ylab = ''
-            if r == self.rows-1 or not edgeOnly:
-                xlab = xlabel
             else:
+                ylab = ylabel
+            if r == self.rows-1:  # only the last row
+                xlab = xlabel
+            elif edgeOnly:  # but not other rows
                 xlab = ''
+            else:
+                xlab = xlabel  # otherwise, label it
             labelAxes(self.plots[r][c], xlab, ylab, **kwargs)
             i += 1
+
+    def axesEdges(self, edgeOnly=True):
+        """
+        text labesls only on the axes on the outer edges of the gridlayout, 
+        leaving the interior axes clean
+        """
+        (lastrow, lastcol) = self.rcmap[-1]
+        i = 0
+        for (r,c) in self.rcmap:
+            xshow = True
+            yshow = True
+            if edgeOnly and c > 0:
+                yshow = False
+            if edgeOnly and r < self.rows:  # only the last row
+                yshow = False
+            ax = self.getPlot((r,c))
+            leftaxis = ax.getAxis('left')
+            bottomaxis = ax.getAxis('bottom')
+            #print dir(self.plots[r][c])
+            leftaxis.showValues = yshow
+            bottomaxis.showValues = xshow
+            i += 1
+
 
     def columnAutoScale(self, col, axis='left'): 
         """
