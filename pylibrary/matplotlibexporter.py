@@ -76,7 +76,7 @@ def cleanRepl(matchobj):
     else:
         return ''
 
-def matplotlibExport(object=None, title=None, show=True):
+def matplotlibExport(object=None, title=None, show=True, size=None):
     """
     Constructs a matplotlib window that shows the current plots laid out in the same
     format as the pyqtgraph window
@@ -104,6 +104,8 @@ def matplotlibExport(object=None, title=None, show=True):
         raise Exception("Method matplotlibExport requires Window or gridlayout as first argument (object=)")
 
     fig = pylab.figure()  # create the matplotlib figure
+    if size is not None:
+        fig.set_size_inches(size[0], size[1])
     pylab.rcParams['text.usetex'] = False
     # escape filename information so it can be rendered by removing
     # common characters that trip up latex...:
@@ -194,8 +196,12 @@ def export_curve(fn, ax, item):
     x, y = item.getData()
     opts = item.opts
     pen = fn.mkPen(opts['pen'])
-    if pen.style() == QtCore.Qt.NoPen:
-        linestyle = ''
+    linestyles={QtCore.Qt.NoPen: '',         QtCore.Qt.SolidLine: '-', 
+                QtCore.Qt.DashLine: '--',    QtCore.Qt.DotLine: ':', 
+                QtCore.Qt.DashDotLine: '-.', QtCore.Qt.DashDotDotLine: '_.',
+                QtCore.Qt.CustomDashLine: '--'}
+    if pen.style() in linestyles.keys():
+        linestyle = linestyles[pen.style()]
     else:
         linestyle = '-'
     color = tuple([c/255. for c in fn.colorTuple(pen.color())])
