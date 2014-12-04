@@ -1,6 +1,5 @@
 #!/usr/bin/python
 """
-(evn, isamp, icoff, crit, template, predelay) = ClementsBekkers(data, samplerate, rise, decay, threshold, sign, dispflag, lpfilter, template_type, ntau)
  implement Clements and Bekkers algorithm
  Biophysical Journal, 73: 220-229, 1997.
 
@@ -26,45 +25,105 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
                     dispFlag=True, subtractMode=False, direction=1,
                     lpfilter=2000, template_type=2, ntau=5,
                     markercolor=(1, 0, 0, 1)):
-    evn = []
-    isamp = []
-    icoff = []
-    crit = []
-    nevent = 0
+    """Use Clementes-Bekkers algorithm to find events in a data vector.
 
-# fsamp = 1000.0/samplerate; # get sampling frequency
-# fco = 1600.0;		# cutoff frequency in Hz
-# wco = fco/(fsamp/2); # wco of 1 is for half of the sample rate, so set it like this...
-# if(wco < 1) # if wco is > 1 then this is not a filter!
-# [b, a] = butter(8, wco); # fir type filter... seems to work best, with highest order min distortion of dv/dt...
-# data = filter(b, a, data); # filter all the traces...
+    The Clementes-Bekkers algorithm uses a template event shape that is
+    "swept" across the data set to find potential events similar to the shape.
 
+    Parameters
+    ----------
+    data : array
+        One-dimensional array that will be searched for matching events.
+    sign : str ('+', or '-'), default '+'
+        Sign of events that will be searched.
+    samplerate : float (default 0.1)
+        the sampling rate for the data, (milliseconds)
+    rise : float (default 2.0)
+        The rise time of the events to be detected (milliseconds)
+    decay : float (default 10.0)
+        The decay time of the events to be detected (milliseconds)
+    threshold : float (default 3.5)
+        Threshold of event relative to stdev of data to pass detection.
+    dispFlag : boolean (True)
+        Controls whether or not data is displayed while searching (inactive in Python version)
+    subtractMode : boolean (False)
+        subtracts the best matched templates from the data array as we go. Used to 
+        find overlapping events.
+    direction : int (1)
+        Controls direction of the search: 1 is forward from beginning, -1 is backwards from
+        end of data array
+    lpfilter : float (2000.)
+        Low pass filter to apply to the data set before starting search. (Hz)
+    template_type : int (2)
+        The template type that will be used. Templates are:
+            1 :  alpha function (template = ((ti - predelay) / decay) * 
+                    np.exp((-(t[i] - predelay)) / decay))
+            2 : exp rise to power, exp fall
+            3 : exp rise to power, double exp fall
+            4 : average waveform (not implemented)
+            5 : 
+            (see cb_template for details)
+    ntau : int (5)
+        number of decay time constants to use when computing template
+    markerclor : (rgba) (1, 0, 0, 1)
+        color of the marker used to identify matches when dispFlag is True
+
+    Returns
+    -------
+    eventlist : np.array
+        array of event times
+    peaklist : np.array
+        array of event points in the original data
+    crit : numpy array
+        the critierion array, a waveform of the same length as the data array
+    scale : numpy array
+        the scale array, a waveform of the same length as the data array
+    cx : numpy array
+        the cx array 
+    template : numpy array
+        the template used for the matching algorithm
+    """   
+
+ 
+    # fsamp = 1000.0/samplerate; # get sampling frequency
+    # fco = 1600.0;		# cutoff frequency in Hz
+    # wco = fco/(fsamp/2); # wco of 1 is for half of the sample rate, so set it like this...
+    # if(wco < 1) # if wco is > 1 then this is not a filter!
+    # [b, a] = butter(8, wco); # fir type filter... seems to work best, with highest order min distortion of dv/dt...
+    # data = filter(b, a, data); # filter all the traces...
+
+    # generate the template
     [template, predelay] = cb_template(funcid=template_type, samplerate=samplerate,
                                        rise=rise, decay=decay, lpfilter=lpfilter, ntau=ntau)
     N = len(template)
-    if template_type is 4:  # data
+    if template_type is 4:  # use data
         Npost = len(template)
     else:
         Npost = int(decay * ntau / samplerate)
+    isign = 1
     if sign is '-':
         isign = -1.0
-    else:
-        isign = 1.0
-#	template = isign*template
+ #	template = isign*template
     sumD = 0.0
     sumD2 = 0.0
     sumT = np.sum(template)  # only need to compute once.
     sumT2 = np.sum(np.multiply(template, template))
     nData = len(data)
+    
+    # initialize arrays used in the computation
     critwave = np.zeros(nData)  # waves for internal reference
     scalewave = np.zeros(nData)
     offsetwave = np.zeros(nData)
-    crit = []  # lists of result
     cx = []
     scale = []
     pkl = []
     eventlist = []
-    minspacing = int(25.0 / samplerate)  # 2.0 msec minimum dt
+    evn = []  # list of events
+    isamp = []
+    icoff = []  # cutoff
+    crit = []  # criteria
+    nevent = 0  # number of events
+    minspacing = int(25.0 / samplerate)  # 2.0 msec minimum dt. Events cannot be closer than this
     # Measurement is done in C code in clembek. The following is just adapted from the matlab
     # originaly used to develop the C code.
     # direction determines whether detection is done in forward or reverse
@@ -102,9 +161,9 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
         sumTxD = np.sum(np.multiply(data[i:iEnd], template))
         S = (sumTxD - (sumT * sumD / fN)) / (sumT2 - (sumT * sumT / fN))
         C = (sumD - S * sumT) / fN
-# if S*isign < 0.0: # only work with correct signed matches in scaling.
-# S = 0.0   # added, pbm 7/20/09
-#		f = S*template+C
+        # if S*isign < 0.0: # only work with correct signed matches in scaling.
+        # S = 0.0   # added, pbm 7/20/09
+        # f = S*template+C
         SSE = sumD2 + (S * S * sumT2) + (fN * C * C) - 2.0 * \
             (S * sumTxD + C * sumD - S * C * sumT)
         if SSE < 0:
@@ -161,10 +220,6 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
             data[i:iEnd] = data[i:iEnd] - (S * template + C)
             il = i
             i = jEnd  # restart...
-#			print 'restart @ i = %d (il = %d)' % (i, il)
-#			print addevent
-#			print replaceevent
-
         lasti = i
 
     nevent = len(eventlist)
@@ -172,8 +227,6 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
         print 'ClementsBekkers: No Events Detected'
     else:
         print 'ClementsBekkers:  %d Events Detected' % (nevent)
-#	print dispFlag
-#	print nevent
     if dispFlag is True and nevent > 0:
         pl.figure(1)
         t = samplerate * np.arange(0, nData)
@@ -205,16 +258,39 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
 
 
 def testdata():
-    # returns [data, samplerate, rise, decay, threshold, sign, dispflag]
+    """ Generate test data for clembek algorithm.
+    
+        Compute a series of EPSCs on a noisy trace to test the
+        algorithm. 
+    
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        data : numpy array
+            the generated test trace
+        samplerate : float
+            the sample rate for the test trace
+        rise : float
+            rise time constant for the events
+        decay : float
+            decay time constant for the events
+        threshold : float
+            threshold value to use in the test
+        sign : string (1 character)
+            '-' for negative going events; '+' for positive events
+    """ 
     samplerate = 0.1
-    rise = 3.0
-    decay = 9.0
+    rise = 0.2
+    decay = 2.0
     sign = '-'
     threshold = 2.0
     data = np.zeros(12000)
     noise = np.random.randn(len(data))
     # filter the noise then put in the data array
-    data = data + 0. * noise
+    data = data + 0.1 * noise
     # fsamp = 1000.0/samplerate; # get sampling frequency
     # fco = 2000;		# cutoff frequency in Hz
     # wco = fco/(fsamp/2); # wco of 1 is for half of the sample rate, so set it like this...
@@ -251,8 +327,40 @@ def testdata():
 
 
 def cb_template(funcid=1, samplerate=0.1, rise=2.0, decay=10.0, lpfilter=2000.0,
-                ntau=5, wave=None, mindur=50.0):
-    """ returns template (a numpy array), predelay """
+                ntau=5,  mindur=50.0):
+    """ Compute the template waveform
+
+    Compute one of several possible template waveforms, possibly fitlered,
+    to be used in the Clementes-Bekkers algorithm.
+
+    Parameters
+    ----------
+    funcid : int (1)
+        Function selector:
+            1 = alpha
+            2 = exp^2 rise, exp decay
+            3 = like 2, but different (aaargh...)
+    samplerate : float (0.1)
+        Samplerate for the template - should be the same as the data
+    rise : float (2.0)
+        Rise time parameter of the template, in msec
+    decay : float (10.0)
+        Decay time parameter of the template, in msec
+    lpfilter : float (2000.)
+        Low pass filter applied to the template, corner frequency in Hz.
+    ntau : int (5)
+        Duration of the template waveform based on the decay time constant
+    mindur : float (50.0)
+        Minimum duration of the template, in msec.
+
+    Returns
+    -------
+    template : array (numpy)
+        The template waveform for use by ClementsBekkers
+    predelay : float
+        the predelay time for the waveform (baseline); usually 0.
+
+    """
     predelay = 0.0  # 3*rise
     dur = predelay + ntau * decay
     if dur < mindur:
@@ -321,6 +429,7 @@ def cb_template(funcid=1, samplerate=0.1, rise=2.0, decay=10.0, lpfilter=2000.0,
 def cb_multi(data, sign='+', samplerate=0.1, rise=[5.0, 3.0, 2.0, 0.5], decay=[30.0, 9.0, 5.0, 1.0],
                         matchflag=True, threshold=3.0,
                         dispflag=True, lpfilter=0, template_type=1, ntau=5):
+    
     """ return the best choice of fits among a set of rise and fall times using the CB method.
             the tested rise and decay times are determined by the lists of rise and decay arrays.
             if matchflag is true, then the arrays are compared in order (rise[0], decay[0]),
