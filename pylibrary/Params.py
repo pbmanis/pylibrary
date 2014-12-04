@@ -4,7 +4,8 @@
 Params.py
 
 Created by Paul Manis on 2014-01-31.
-Copyright (c) 2014 __MyCompanyName__. All rights reserved.
+Copyright 2014  Paul Manis
+Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
 import sys

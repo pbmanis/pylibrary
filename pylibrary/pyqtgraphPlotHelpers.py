@@ -6,14 +6,16 @@ pyqtgraphPlotHelpers.py
 Routines to help use pyqtgraph and make cleaner plots
 as well as get plots read for publication. 
 
-copied from PlotHelpers.py for matplotlib.
+Intially copied from PlotHelpers.py for matplotlib.
 Modified to allow us to use a list of axes, and operate on all of those,
 or to use just one axis if that's all that is passed.
 Therefore, the first argument to these calls can either be an axes object,
 or a list of axes objects.  2/10/2012 pbm.
 
 Created by Paul Manis on 2010-03-09.
-Copyright (c) 2010 Paul B. Manis, Ph.D.. All rights reserved.
+Copyright 2010-2014  Paul Manis
+Distributed under MIT/X11 license. See license.txt for more infofmation.
+
 """
 
 
@@ -422,7 +424,7 @@ def polar(plot, r, theta, steps=4, rRange=None, vectors=False,
             ry = np.sin(th)
             plot.plot(x=[0, rx], y=[0., ry], pen=gridPen)
             ang = th*360./(np.pi*2)
-            # anchor is odd: 0,0 is upper left corner, 1,1 is loer right corner
+            # anchor is odd: 0,0 is upper left corner, 1,1 is lower right corner
             if ang < 90.:
                 x=0.
                 y=0.5

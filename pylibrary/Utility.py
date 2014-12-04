@@ -10,33 +10,20 @@ Use as:
 import Utility as Utils
 then call Utils.xxxxx()
 
-"""
-# January, 2009
-# Paul B. Manis, Ph.D.
-# UNC Chapel Hill
-# Department of Otolaryngology/Head and Neck Surgery
-# Supported by NIH Grants DC000425-22 and DC004551-07 to PBM.
-# Copyright Paul Manis, 2009
-#
-"""
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+January, 2009
+Paul B. Manis, Ph.D.
+UNC Chapel Hill
+Department of Otolaryngology/Head and Neck Surgery
+Supported by NIH Grants DC000425-22 and DC004551-07 to PBM.
+Copyright 2010-2014  Paul Manis
+Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
-import sys, re, os
+import sys
+import re
+import os
 import numpy as np
 import numpy.ma as ma
-#import numpy.linalg.lstsq
 import scipy.fftpack as spFFT
 import scipy.signal as spSignal
 
@@ -44,7 +31,20 @@ from random import sample
 
 debugFlag = False
 
+
 def setDebug(debug=False):
+    """Set the general debug flag for the Utility functions.
+
+        Parameters
+        ----------
+        debug : boolean
+            True to enable debug printout
+            False to disable debug printout
+
+        Returns
+        -------
+        nothing
+        """
     if debug:
         debugFlag = True
     else:
@@ -52,6 +52,25 @@ def setDebug(debug=False):
 
 
 def pSpectrum(data=None, samplefreq=44100):
+    """Power spectrum computation.
+
+    Compute the power spectrum of a data set using standard ffts, after padding
+    the data set to the next higher power of 2. Assumes data is regularly
+    sampled in the time domain.
+
+    Parameters
+    data : list or numpy array
+            the signal for which the power spectrume will be computed
+    arg2 : float
+        The sample frequency for the data set, in Hz
+
+    Returns
+    -------
+    (powerspectrum, frequency)
+        Tuple of numpy arrays with the computed power spectrum, and
+        the associated frequency arrays (in Hz)
+
+    """
     npts = len(data)
 # we should window the data here
     if npts == 0:
@@ -86,8 +105,25 @@ def pSpectrum(data=None, samplefreq=44100):
     return(spectrum, freqAzero)
 
 def sinefit(x, y, F):
-    """ LMS fit of a sine wave with period T to the data in x and y
-        aka "cosinor" analysis. 
+     """cosinor fit of data for specific frequencies. 
+
+    LMS fit of a sine wave with period T (1/F) to the data in x and y
+    aka "cosinor" analysis. 
+
+    Parameters
+    ----------
+    x : array
+        time points for data set y
+    y : array
+        signal
+    F : float
+        Frequencies to compute the consinor over (Hz)
+    Returns
+    -------
+    (amplitude, phase)
+        tuple with amplitude and phase computed at the frequency, 
+        as numpy arrays
+
     """
     npar = 2
     w = 2.0 * np.pi * F
@@ -97,36 +133,66 @@ def sinefit(x, y, F):
     (p, residulas, rank, s) = np.linalg.lstsq(A, y)
     Amplitude = np.sqrt(p[0]**2+p[1]**2)
     Phase = np.arctan2(p[1],p[0]) # better check this... 
-#    yest=Amplitude*cos(w*x+Phase) # estimated y
+# yest=Amplitude*cos(w*x+Phase) # estimated y
 #
 #    f=np.sum((yest-np.mean(y)).^2)/np.sum((y-yest).^2)*(length(y)-3)/2
 #   P=1-fcdf(f,2,length(y)-3);
     return (Amplitude, Phase)
 
 def sinefit_precalc(x, y, A):
-    """ LMS fit of a sine wave with period T to the data in x and y
-        aka "cosinor" analysis. 
-        assumes that A (in sinefit) is precalculated
+    """sinfit with a precalculated array.
+
+    LMS fit of a sine wave with period T to the data in x and y
+    aka "cosinor" analysis. 
+    Assumes that A (in sinefit) is precalculated
+
+    Parameters
+    ----------
+    x : array
+        time points for data set y
+    y : array
+        signal
+    A : array
+        precalulated array A as used in sinefit
+
+    Returns
+    -------
+    (amplitude, phase)
+        tuple with amplitude and phase computed at a specific frequency, 
+        as numpy arrays
+
     """
     (p, residulas, rank, s) = np.linalg.lstsq(A, y)
     Amplitude = np.sqrt(p[0]**2+p[1]**2)
     Phase = np.arctan2(p[1],p[0]) # better check this... 
-#    yest=Amplitude*cos(w*x+Phase) # estimated y
+# yest=Amplitude*cos(w*x+Phase) # estimated y
 #
 #    f=np.sum((yest-np.mean(y)).^2)/np.sum((y-yest).^2)*(length(y)-3)/2
 #   P=1-fcdf(f,2,length(y)-3);
     return (Amplitude, Phase)
 
 def savitzky_golay(data, kernel = 11, order = 4):
-    """
-        applies a Savitzky-Golay filter
-        input parameters:
-        - data => data as a 1D numpy array
-        - kernel => a positiv integer > 2*order giving the kernel size
-        - order => order of the polynomal
-        returns smoothed data as a numpy array
-        invoke like:
-        smoothed = savitzky_golay(<rough>, [kernel = value], [order = value]
+    """ Applies a Savitzky-Golay filter to the data
+
+        The filter is a polynomial fitler with a kernel length
+        and a polynomial order.
+
+        Parameters
+        ----------
+        data : 1D numpy array
+            data set to be filtered
+        kernel : int (default 11)
+            a positive odd integer > 2*order giving the kernel size
+        order : int (default 4)
+            order of the polynomal (positive integer)
+        Returns
+        -------
+        smoothed_data: numpy array
+            Smoothed data as a numpy array
+        
+        Example
+        -------
+        smoothed = savitzky_golay(rawdata, kernel=value, order=value)
     """
     try:
             kernel = abs(int(kernel))
@@ -150,7 +216,7 @@ def savitzky_golay(data, kernel = 11, order = 4):
     offset_data = zip(offsets, m)
     smooth_data = list()
     # temporary data, with padded zeros (since we want the same length after smoothing)
-    #data = np.concatenate((np.zeros(half_window), data, np.zeros(half_window)))
+    # data = np.concatenate((np.zeros(half_window), data, np.zeros(half_window)))
     # temporary data, with padded first/last values (since we want the same length after smoothing)
     firstval=data[0]
     lastval=data[len(data)-1]
@@ -162,8 +228,28 @@ def savitzky_golay(data, kernel = 11, order = 4):
             smooth_data.append(value)
     return np.array(smooth_data)
 
-# filter signal with elliptical filter
 def SignalFilter(signal, LPF, HPF, samplefreq):
+    """Filter signal within a bandpass with elliptical filter
+
+    Digitally filter a signal with an elliptical filter; handles
+    bandpass filtering between two frequencies. 
+
+    Parameters
+    ----------
+    signal : array
+        The signal to be filtered.
+    LPF : float
+        The low-pass frequency of the filter (Hz)
+    HPF : float
+        The high-pass frequency of the filter (Hz)
+    samplefreq : float
+        The uniform sampling rate for the signal (in seconds)
+
+    Returns
+    -------
+    w : array
+        filtered version of the input signal
+    """
     if debugFlag:
         print "sfreq: %f LPF: %f HPF: %f" % (samplefreq, LPF, HPF)
     flpf = float(LPF)
@@ -187,8 +273,31 @@ def SignalFilter(signal, LPF, HPF, samplefreq):
         print "sig: %f-%f w: %f-%f" % (np.amin(signal), np.amax(signal), np.amin(w), np.amax(w))
     return(w)
 
-# filter with Butterworth low pass, using time-causal lfilter 
-def SignalFilter_LPFButter(signal, LPF, samplefreq, NPole = 8):
+def SignalFilter_LPFButter(signal, LPF, samplefreq, NPole=8):
+    """Filter with Butterworth low pass, using time-causal lfilter 
+    
+        Digitally low-pass filter a signal using a multipole Butterworth
+        filter. Does not apply reverse filtering so that result is causal.
+    
+        Parameters
+        ----------
+        signal : array
+            The signal to be filtered.
+        LPF : float
+            The low-pass frequency of the filter (Hz)
+        HPF : float
+            The high-pass frequency of the filter (Hz)
+        samplefreq : float
+            The uniform sampling rate for the signal (in seconds)
+        npole : int
+            Number of poles for Butterworth filter. Positive integer.
+
+        Returns
+        -------
+        w : array
+        filtered version of the input signal
+
+    """
     flpf = float(LPF)
     sf = float(samplefreq)
     wn = [flpf/(sf/2.0)]
@@ -196,17 +305,35 @@ def SignalFilter_LPFButter(signal, LPF, samplefreq, NPole = 8):
     zi = spSignal.lfilter_zi(b,a)
     out, zo = spSignal.lfilter(b, a, signal, zi=zi*signal[0])
     return(np.array(out))
-     
-# filter signal with low-pass Bessel
-def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole = 8, reduce = False):
-    """ Low pass filter a signal, possibly reducing the number of points in the
-        data array.
-        signal: a numpya array of dim = 1, 2 or 3. The "last" dimension is filtered.
-        LPF: low pass filter frequency, in Hz
-        samplefreq: sampline frequency (points/second)
-        NPole: number of poles in the filter.
-        reduce: Flag that controls whether the resulting data is subsampled or not
+    
+def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole=8, reduce=False):
+   """Low pass filter a signal with a Bessel filter
+    
+        Digitally low-pass filter a signal using a multipole Bessel filter
+        filter. Does not apply reverse filtering so that result is causal.
+        Possibly reduce the number of points in the result array.
+    
+        Parameters
+        ----------
+        signal : a numpy array of dim = 1, 2 or 3. The "last" dimension is filtered.
+            The signal to be filtered.
+        LPF : float
+            The low-pass frequency of the filter (Hz)
+        samplefreq : float
+            The uniform sampling rate for the signal (in seconds)
+        NPole : int
+            Number of poles for Butterworth filter. Positive integer.
+        reduce : boolean (default: False)
+            If True, subsample the signal to the lowest frequency needed to 
+            satisfy the Nyquist critera.
+            If False, do not subsample the signal.
+
+        Returns
+        -------
+        w : array
+            Filtered version of the input signal
     """
+
     if debugFlag:
         print "sfreq: %f LPF: %f HPF: %f" % (samplefreq, LPF)
     flpf = float(LPF)
@@ -337,15 +464,15 @@ def local_maxima(data, span=10, sign=1):
     from scipy.ndimage import minimum_filter
     from scipy.ndimage import maximum_filter
     data = np.asarray(data)
-    #print 'data size: ', data.shape
+    # print 'data size: ', data.shape
     if sign <= 0: # look for minima
         maxfits = minimum_filter(data, size=span, mode="wrap")
     else:
         maxfits = maximum_filter(data, size=span, mode="wrap")
-    #print 'maxfits shape: ', maxfits.shape
+    # print 'maxfits shape: ', maxfits.shape
     maxima_mask = np.where(data == maxfits)
     good_indices = np.arange(len(data))[maxima_mask]
-    #print 'len good index: ', len(good_indices)
+    # print 'len good index: ', len(good_indices)
     good_fits = data[maxima_mask]
     order = good_fits.argsort()
     return good_indices[order], good_fits[order]
@@ -378,7 +505,7 @@ def clementsBekkers(t, data, template, threshold=2.5, minpeakdist=5):
     # mp.plot(t, data)
     #
     # mp.plot(t, sf, 'g-')
-    # #mp.plot(t[0:len(a)], a, 'g-')
+    # mp.plot(t[0:len(a)], a, 'g-')
     # mp.plot(t[evp[u]], data[evp[u]], 'bx')
     # mp.show()
     t_start = t[evp[u]]
@@ -461,16 +588,16 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
     #     return
 
     template = template/np.max(template)
-    #N = length(template);
-    #newfigure('mini_showtemplate', 'Mini Template');
-    #plot(0:samplerate:(N-1)*samplerate', template);
+    # N = length(template);
+    # newfigure('mini_showtemplate', 'Mini Template');
+    # plot(0:samplerate:(N-1)*samplerate', template);
     return template
 
 def RichardsonSilberberg(data, tau, time = None):
     D = data.view(np.ndarray)
     rn = tau*np.diff(D) + D[:-2,:]
     rn = spSignal.savgol_filter(rn, 11, 4) # , deriv=0, delta=1.0, axis=-1, mode='interp', cval=0.0)[source]
-#    rn = SavitzyGolay(rn, kernel = 11, order = 4) # old
+# rn = SavitzyGolay(rn, kernel = 11, order = 4) # old
     if time is not None:
         vn = rn - tau * spSignal.savgol_filter(np.diff(D), 11, 4)
         return(rn, vn)
@@ -496,7 +623,7 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
     #     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
     #     from matplotlib.figure import Figure
         
-        #MP.rcParams['interactive'] = False
+        # MP.rcParams['interactive'] = False
         
     if t1 is not None and t0 is not None:
         xt = ma.masked_outside(x, t0, t1)
@@ -561,18 +688,18 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
                 st = np.append(st, x[1]) # always save the first one
 #        print "xt spike: %8.3f  vs ST way: %8.3f   diff: %8.4f" %  (xt[spk], xt[sp[0]], xt[sp[0]]-xt[spk]) 
 
-    #print 'sp: ', sp
-    #print 'spike list shape: ', st.shape
-    #print 'st: ', st
-    #diffsp = np.diff(st) # look for the jumps
+    # print 'sp: ', sp
+    # print 'spike list shape: ', st.shape
+    # print 'st: ', st
+    # diffsp = np.diff(st) # look for the jumps
     # print diffsp
-    #isd = np.where(diffsp > 0.7) # look for non-sequential points in the array
-    #stret = np.array(st[isd])
-    #stret = np.append(st, st[0])
-    #stret = np.sort(stret)
-    #for i in isd:
-    #    if xt[sp[i+1]] > st[i]+dt: # minimum interval in time
-    #        stret = np.append(stret, xt[sp[i+1]]) # build times from difference array
+    # isd = np.where(diffsp > 0.7) # look for non-sequential points in the array
+    # stret = np.array(st[isd])
+    # stret = np.append(st, st[0])
+    # stret = np.sort(stret)
+    # for i in isd:
+    # if xt[sp[i+1]] > st[i]+dt: # minimum interval in time
+    # stret = np.append(stret, xt[sp[i+1]]) # build times from difference array
 #    stret = np.sort(stret)
     return(st)
 
@@ -1005,7 +1132,7 @@ def makeRGB(ncol = 16, minc = 32, maxc = 216):
         for g in range(minc, maxc, subd):
             for b in range(minc, maxc, subd):
                 RGB.append(np.array([r,g,b]))
-    #print "# of colors: ", len(self.RGB)
+    # print "# of colors: ", len(self.RGB)
     rgb_order = np.random.permutation(len(RGB)) # randomize the order
     RGB = [RGB[x] for x in rgb_order]
     return RGB
@@ -1041,7 +1168,7 @@ if __name__ == "__main__":
     #     print di
     #
     # if options.cb: # test clements bekkers
-    #     # first generate some events
+    # first generate some events
     #     t = np.arange(0, 1000.0, 0.1)
     #     ta = np.arange(0, 50.0, 0.1)
     #     events = np.zeros(t.shape)
@@ -1053,7 +1180,7 @@ if __name__ == "__main__":
     #     f = MP.figure()
     #     MP.plot(t, sig, 'r-')
     #     MP.plot(t, events, 'k-')
-    #     # now call the finding routine, using the exact template (!)
+    # now call the finding routine, using the exact template (!)
     #     (t_start, d_start) = clementsBekkers(sig, alpha, threshold=0.5, minpeakdist=15)
     #     MP.plot(t_start, d_start, 'bs')
     #     MP.show()
@@ -1092,22 +1219,22 @@ if __name__ == "__main__":
     #             p = range(20*k, 500, 50 + int(50.0*(k/2.0)))
     #             vn = v.copy()
     #             vn[p] = 20.0
-    #             d[k, 0, :] = np.array(vn) # load up the "spike" array
+    # d[k, 0, :] = np.array(vn) # load up the "spike" array
     #         y.append(d)
-    #     tpts = range(0, len(t)) # np.arange(0, len(t)).astype(int).tolist()
-    #     #def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode=None, interpolate=False):
+    # tpts = range(0, len(t)) # np.arange(0, len(t)).astype(int).tolist()
+    # def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode=None, interpolate=False):
     #     for k in range(0, len(y)):
     #         sp = getSpikes(t, y[k], 0, tpts, tdel=0, thresh=0, selection = None, interpolate = True)
     #         print 'r: %d' % k, 'sp: ', sp
     #
-    # # test the sine fitting routine
+    # test the sine fitting routine
     # if options.sinefit:
     #     from np.random import normal
     #     F = 1.0/8.0
     #     phi = 0.2
     #     A = 2.0
     #     t = np.arange(0.0, 60.0, 1.0/7.5)
-    #     # check over a range of values (is phase correct?)
+    # check over a range of values (is phase correct?)
     #     for phi in np.arange(-2.0*np.pi, 2.0*np.pi, np.pi/8.0):
     #         y = A * np.sin(2.*np.pi*t*F+phi) + normal(0.0, 0.5, len(t))
     #         (a, p) = sinefit(t, y, F)

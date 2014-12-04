@@ -7,37 +7,14 @@ getFunctions returns the list of function names (dictionary keys)
 FitRegion performs the fitting
 Note that FitRegion will plot on top of the current data using MPlots routines
 if the current curve and the current plot instance are passed.
+January, 2009
+Paul B. Manis, Ph.D.
+UNC Chapel Hill
+Department of Otolaryngology/Head and Neck Surgery
+Supported by NIH Grants DC000425-22 and DC004551-07 to PBM.
 
-"""
-# January, 2009
-# Paul B. Manis, Ph.D.
-# UNC Chapel Hill
-# Department of Otolaryngology/Head and Neck Surgery
-# Supported by NIH Grants DC000425-22 and DC004551-07 to PBM.
-# Copyright Paul Manis, 2009
-#
-"""
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+MIT License (See LICENSE.txt for details)
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-    Additional Terms:
-    The author(s) would appreciate that any modifications to this program, or
-    corrections of erros, be reported to the principal author, Paul Manis, at
-    pmanis@med.unc.edu, with the subject line "Fitting Modifications".
-
-    Note: This program also relies on the TrollTech Qt libraries for the GUI.
-    You must obtain these libraries from TrollTech directly, under their license
-    to use the program.
 """
 
 import numpy

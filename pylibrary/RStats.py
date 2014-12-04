@@ -6,6 +6,8 @@ Wrappers for using R for data anlsysis
 Currently implements 1-way ANOVA for 3, 4, and 5 groups with all-way posttests
 Created by Paul Manis on 2014-06-26.
 
+Copyright 2010-2014  Paul Manis
+Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 import scipy.stats
 
