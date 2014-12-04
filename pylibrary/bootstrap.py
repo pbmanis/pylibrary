@@ -19,20 +19,20 @@
 #   Rationale:
 #
 #   This programs performs a statistical analysis of multiple
-#   treatments, comparing either a set of treatments against a first, 
+#   treatments, comparing either a set of treatments against a first,
 #   reference treatment, or comparing all treatments against each other.
 #   It will calculate the probability that the observed differences can be
 #   explained by random luck only, and notify when this is so low as to be
 #   very unlikely.
 #
-#   It is robust towards data that is not normally distributed or has 
-#   differing variances, and can correct for the multiple comparisons 
+#   It is robust towards data that is not normally distributed or has
+#   differing variances, and can correct for the multiple comparisons
 #   performed while maintaining good statistical power.
 #
 #   The main goal is to serve as an aid during algorithmic optimization
 #   of software, particularly when very small improvements, or improvements
 #   causing widely varying performance need to be tested. It has been
-#   successfully used for applications ranging from psychoacoustic audio 
+#   successfully used for applications ranging from psychoacoustic audio
 #   encoders to artificial intelligence software.
 #
 #   This version is a complete rewrite of http://ff123.net/bootstrap
@@ -41,40 +41,40 @@
 #   Usage:
 #
 #   Provide the measurements in the form of a text file, with each treatment
-#   being a separate column, and put each measurement on a row. Lines 
+#   being a separate column, and put each measurement on a row. Lines
 #   starting with a % are considered to be comments. Example:
-#   
+#
 #   % test of rendering performance (fps)
 #   ref   shader1 shader2 shader3
 #   100     105     110     101
 #    50      55      60      51
 #    75      74      80      76
 #   150     160     165     155
-#   
+#
 #   By default, all treatments are compared with the first. If you want to
 #   compare all treatments among each other, specify the --compare-all option.
 #
 #   By default, the program assumes the measurements are random and not
-#   related inside a row. If measurements on the same row are related, for 
+#   related inside a row. If measurements on the same row are related, for
 #   example because they represent the same input data, the same tester,
 #   hardware, etc, then one should specify the --blocked option. In the
 #   example data above, this is the case.
 #
 #   By default, the program will check the differences between the means
 #   of each treatment. If the data is particularly nonstandard such that
-#   comparing the means is misleading or meaningless, the comparison can be 
-#   based on the median instead. Note that one doesn't need to switch to the 
-#   median only because the data is not normally distributed: the used 
+#   comparing the means is misleading or meaningless, the comparison can be
+#   based on the median instead. Note that one doesn't need to switch to the
+#   median only because the data is not normally distributed: the used
 #   algorithms are robust against this.
 #
 #   Note that because the program uses a Monte Carlo approximation during
-#   the resampling analysis, the results are not exact and may vary slightly 
+#   the resampling analysis, the results are not exact and may vary slightly
 #   from run to run.
 #
 #   Requirements:
 #
 #   Python v2.5 or later (not compatible with Python 3)
-#   
+#
 #   Version history:
 #
 #   v1.0 2011-02-03: Initial public release
@@ -85,9 +85,11 @@ REVISION = "v1.0 2011-02-03"
 import optparse
 import random
 
+
 def transpose(data):
     """Transpose a 2-dimensional list."""
     return zip(*data)
+
 
 def comparisons(labels, compareall):
     """Return a list of tuples representing the treatments to
@@ -96,31 +98,36 @@ def comparisons(labels, compareall):
        are done."""
     if compareall:
         return [(x, y) for x in range(len(labels))
-                       for y in range(len(labels))
-                       if y < x]
+                for y in range(len(labels))
+                if y < x]
     else:
         return [(x, 0) for x in range(len(labels)) if x != 0]
+
 
 def means(data):
     """Return the list of means corresponding to the data passed
        in table form."""
-    return [sum(x)/len(x) for x in transpose(data)]
+    return [sum(x) / len(x) for x in transpose(data)]
+
 
 def medians(data):
     """Return the list of medians corresponding to the data passed
        in table form. For an even number of items, the median is
        defined as the element just before the halfway point."""
-    return [srow[len(srow)//2] for srow in 
+    return [srow[len(srow) // 2] for srow in
             [sorted(row) for row in transpose(data)]]
+
 
 def diffmean(xl, yl):
     """Return the difference between the means of 2 lists."""
-    return abs(sum(xl)/len(xl) - sum(yl)/len(yl))
+    return abs(sum(xl) / len(xl) - sum(yl) / len(yl))
+
 
 def variance(xl):
     """Return the variance of a list."""
-    mean = sum(xl)/len(xl)
-    return sum([(x - mean)**2 for x in xl])/(len(xl)-1)
+    mean = sum(xl) / len(xl)
+    return sum([(x - mean) ** 2 for x in xl]) / (len(xl) - 1)
+
 
 def welcht(xl, yl):
     """Welch t-test for independant samples. This is similar
@@ -129,20 +136,22 @@ def welcht(xl, yl):
     # Denominator in the Welch's t statistic. This is a
     # variance estimate based on the available sample.
     # See also: Behrens-Fisher problem."""
-    denom = (variance(xl)/len(xl) + variance(yl)/len(yl))**0.5
+    denom = (variance(xl) / len(xl) + variance(yl) / len(yl)) ** 0.5
     # Avoid division by zero if both lists are identical
     denom = denom + 1e-35
-    return diffmean(xl, yl)/denom
+    return diffmean(xl, yl) / denom
+
 
 def student_paired(xl, yl):
     """Student t-test for paired samples. Arguments are two lists of
     measurements. Returns the test statistic."""
     diffs = [x - y for x, y in zip(xl, yl)]
-    meandiff = abs(sum(diffs)/len(diffs))
-    ssd = variance(diffs)**0.5
+    meandiff = abs(sum(diffs) / len(diffs))
+    ssd = variance(diffs) ** 0.5
     # Avoid division by zero if both lists are identical
     ssd = ssd + 1e-35
-    return meandiff/(ssd*(len(diffs)**0.5))
+    return meandiff / (ssd * (len(diffs) ** 0.5))
+
 
 def wilcoxon(xl, yl):
     """Performs a Wilcoxon signed-rank test for paired samples,
@@ -171,7 +180,8 @@ def wilcoxon(xl, yl):
             w_minus += startrank + rank
     # invert by making high values more significant,
     # simplifies rest of code
-    return 1.0/(1.0+min(w_plus, w_minus))
+    return 1.0 / (1.0 + min(w_plus, w_minus))
+
 
 def mann_whitney(xl, yl):
     """Mann-Whitney-Wilcoxon U test for independant samples. This is
@@ -190,16 +200,18 @@ def mann_whitney(xl, yl):
             uniqrank[value] = rank
         if series == 0:
             x_ranksum += rank
-    u_1 = x_ranksum - ((len(xl)*(len(xl)+1))/2)
-    u_2 = (len(xl)*len(yl)) - u_1
+    u_1 = x_ranksum - ((len(xl) * (len(xl) + 1)) / 2)
+    u_2 = (len(xl) * len(yl)) - u_1
     # invert to make higher more significant
-    return 1.0/(1.0+min(u_1, u_2))
+    return 1.0 / (1.0 + min(u_1, u_2))
+
 
 def get_stats(func, data, compars):
     """Apply the test statistic passed as 'func' to the 'data' for
        the pairs to compare in 'compars'."""
     tdata = transpose(data)
     return [func(tdata[x], tdata[y]) for x, y in compars]
+
 
 def permute(data, blocked=False):
     """Perform a resampling WITHOUT replacement to the table in 'data'.
@@ -212,6 +224,7 @@ def permute(data, blocked=False):
         permuted = random.sample(flat, len(flat))
         return [[permuted.pop() for _ in row] for row in data]
 
+
 def bootstrap(data, blocked=False):
     """Perform a resampling WITH replacement to the table in 'data'.
        If 'blocked' is true, resamplings only happen within rows.
@@ -221,6 +234,7 @@ def bootstrap(data, blocked=False):
     else:
         flat = [x for row in data for x in row]
         return [[random.choice(flat) for _ in row] for row in data]
+
 
 def resample_pvals(data, compars, options):
     """Given a set of data and a test statistic in options.teststat,
@@ -236,7 +250,8 @@ def resample_pvals(data, compars, options):
         phits = [phits[z] + int(teststat[z] <= pteststat[z])
                  for z in range(len(compars))]
 
-    return [phit/float(options.permutes) for phit in phits]
+    return [phit / float(options.permutes) for phit in phits]
+
 
 def stepdown_adjust(data, compars, options):
     """Calculate a set of p-values for 'data', and adjust them for the 
@@ -262,7 +277,7 @@ def stepdown_adjust(data, compars, options):
 
     # the new p-value is the ratio with which such an extremal
     # statistic was observed in the resampled data
-    new_pval = [phit/float(options.stepdown) for phit in phits]
+    new_pval = [phit / float(options.stepdown) for phit in phits]
 
     # ensure monotonicity of p-values
     maxp = 0.0
@@ -271,6 +286,7 @@ def stepdown_adjust(data, compars, options):
         new_pval[idx] = maxp
 
     return new_pval
+
 
 def display_attrib(attrib, labels):
     """Display the given attribute list with the given list of labels."""
@@ -281,6 +297,7 @@ def display_attrib(attrib, labels):
         print "%8.3f " % val,
     print
     print
+
 
 def display_pvals(pvals, attrib, compars, labels, threshold=0.05):
     """Construct the matrix of comparisons and print the p-value for 
@@ -310,7 +327,7 @@ def display_pvals(pvals, attrib, compars, labels, threshold=0.05):
                     print "%1.3f    " % pv,
             else:
                 print "-        ",
-        print        
+        print
     print
     for x, y in compars:
         if attrib[x] > attrib[y]:
@@ -322,6 +339,7 @@ def display_pvals(pvals, attrib, compars, labels, threshold=0.05):
             print "%s is %s than %s (p=%1.3f)" % (labels[x],
                                                   direction, labels[y], pval)
     print
+
 
 def main(options, filename):
     labels = None
@@ -393,7 +411,7 @@ if __name__ == "__main__":
                       help="Use medians as the comparison metric")
     parser.add_option("--paired", "--blocked", action="store_true",
                       dest="blocked",
-                      help="Use paired/blocked comparisons (use when input " 
+                      help="Use paired/blocked comparisons (use when input "
                            "data on the same row is related)")
     parser.add_option("--compare-all", action="store_true",
                       dest="compareall",

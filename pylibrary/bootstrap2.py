@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as npr
 
 def bootstrap(data, num_samples, statistic, alpha):
+    
     """Returns bootstrap estimate of 100.0*(1-alpha) CI for statistic."""
     n = len(data)
     idx = npr.randint(0, n, (num_samples, n))
@@ -21,8 +22,8 @@ if __name__ == '__main__':
     # make plots
     pylab.figure(figsize=(8,4))
     pylab.subplot(121)
-    pylab.hist(x, 50, histtype='step')
     pylab.title('Historgram of data')
+    pylab.hist(x, 50, histtype='step')
     pylab.subplot(122)
     pylab.plot([-0.03,0.03], [np.mean(x), np.mean(x)], 'r', linewidth=2)
     pylab.scatter(0.1*(npr.random(len(x))-0.5), x)
