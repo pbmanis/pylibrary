@@ -4,13 +4,14 @@
 Params.py
 
 Created by Paul Manis on 2013-12-16.
-Copyright (c) 2013 __MyCompanyName__. All rights reserved.
+Copyright 2010-2014  Paul Manis
+Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
 import sys
 import os
 import pickle
-import numpy
+import numpy as np
 import lmfit
 
 def main():

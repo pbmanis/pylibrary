@@ -12,7 +12,8 @@ Therefore, the first argument to these calls can either be an axes object,
 or a list of axes objects.  2/10/2012 pbm.
 
 Created by Paul Manis on 2010-03-09.
-Copyright (c) 2010 Paul B. Manis, Ph.D.. All rights reserved.
+Copyright 2010-2014  Paul Manis
+Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
 import sys
