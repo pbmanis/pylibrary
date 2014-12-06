@@ -45,19 +45,12 @@ import sys
 #import lib.util
 
 
-<<<<<<< HEAD
-NVP = 2  # total number of variables per data pts
-ALFA = 0.1  # reflection coeficient > 0
-BETA = 0.5  # contraction coeficient 0 to 1
-GAMMA = 2.0  # expansion coeficient >1
-ROOT2 = numpy.sqrt(2)
-=======
+
 NVP = 2   #total number of variables per data pts
 ALFA = 0.1 # reflection coeficient > 0
 BETA = 0.5 # contraction coeficient 0 to 1
 GAMMA = 2.0# expansion coeficient >1
 ROOT2 = np.sqrt(2)
->>>>>>> e2779f5df7d7edd851696c958a3450415d21362e
 N = 2
 
 dx = []
@@ -94,8 +87,14 @@ niter = 1
 maxer = 0.0
 
 
-#   compute sum of square of difference between equation/model and data
 def sum_res(func, x):
+    """  compute the residual
+
+    The residual is sum of square of difference between equation/model and data,
+    after clipping data x to the bounds
+
+
+    """
     global lb, hb, dx, dy, quiet
     # impose limits on x[i] for acceptable values for computation, if necessary
 
@@ -116,7 +115,7 @@ def sum_res(func, x):
 
         vrt=np.array(vr[0:ldy])
     d = (vrt - dyt)**2
-#   if(mask_flag > 0) vxv_s(vt, vt, vb, npts)       # zero the masked points so we don't use them in the
+#   if(mask_flag > 0) vxv_s(vt, vt, vb, npts)  # zero the masked points so we don't use them in the
     x[m] = np.sum(d) # sum of squared difference is total lms error
     if not quiet:
         print "Sumres\nPars", x
@@ -141,16 +140,21 @@ def order():
 
 
 def first():
+    """ print starting values of the simplex function
+    """
     global n, m, simp, ncount
     print "Starting simplex"
     ncount = 1
-    for j in range(0, n):
-        print "Simp [%2d]  " % (j)
-        for i in range(0, n):
-            print"%9.3g  " % (simp[j][i])
+    if not quiet:
+        for j in range(0, n):
+            print "Simp [%2d]  " % (j)
+            for i in range(0, n):
+                print"%9.3g  " % (simp[j][i])
 
 
 def new_vertex():
+    """ Create a new vertex for the simplex
+    """
     global niter, ndisp, n, m, anext, lb, hb, simp, error, quiet
     if not np.mod(niter, ndisp) and not quiet:
        print "-- New Vertex for Simplex Iteration %5d --" % (niter)
@@ -162,13 +166,16 @@ def new_vertex():
                 anext[i] = hb[i]
 
         simp[h[m]][i] = anext[i]
-        if(~(niter % ndisp)) and not quiet :
+        if(~(niter % ndisp)) and not quiet:
             if(i < (n-1)):
                 print "n[%1d]    %8.3g    %8.3e" %(i, anext[i], error[i])
             else:
                 print "lms:    %8.3g" % (anext[n-1]) # for that last one
+
+
 def report(func):
-    """ reports the final fit results """
+    """ report the final fit results
+    """
     global mean, m, n, simp, error, niter, quiet, npx
     i = j = 0
 
@@ -199,6 +206,8 @@ def report(func):
 
 def simplex(func, ipars, X, Y, lbound=None, hbound=None, maxiters=1000,
        silent=False, watch=False):
+    """ Perform the simplex, after initializing parameters
+    """
     global dx, dy, N, m, n, p, q, step, center, anext, mean, error, maxerr, ssfirst, recalcflag
     global lb, hb, simp, maxiter, quiet, npx
     global curve, curve2, pw, watchit
@@ -254,27 +263,26 @@ def simplex(func, ipars, X, Y, lbound=None, hbound=None, maxiters=1000,
     return(simp[0])
 
 
-"""
-        Simplex function
-"""
-
-
 def _simplex_fit(func):
+    """ The simplex fit function 
+    """
     global dx, dy, N, m, n, p, q, step, center, anext, mean, error, maxerr, ssfirst, recalcflag
     global lb, hb, simp, l, h, niter, maxiter
     global curve, curve2, curve3, pw, watchit
     npts = len(dy)
-    print simp
     sum_res(func, simp[0])  # first vertex is the initial guess
-    print 'Initial ', simp
-    print 'step ', step
+    if not quiet:
+        print 'simp: ', simp
+        print 'Initial ', simp
+        print 'step ', step
     #   maxerr[m] = 0.0
 
     for i in range(0, m): #  compute the offset of the vertex of the starting simplex
         p[i] = step[i] * (np.sqrt(float(n)) + float(m) -  1.0) / (float(m)*ROOT2) #* (np.random.randn()+1)
         q[i] = step[i] * (np.sqrt(float(n)) - 1.0) / (float(m)*ROOT2) #* (np.random.randn()+1)
-    print 'P ', p
-    print 'Q ', q
+    if not quiet:
+        print 'P ', p
+        print 'Q ', q
     nerr_condx = 0
     for i in range(0, n):
         if maxerr[i] > 0.0:
@@ -284,7 +292,8 @@ def _simplex_fit(func):
             simp[i][j] = simp[0][j] + q[j]
         simp[i][i - 1] = simp[0][i - 1] + p[i - 1]
         sum_res(func, simp[i])  # and their residuals
-    print simp
+    if not quiet:
+        print 'simp: ', simp
     # preset
     l = [1] * N
     h = [1] * N
@@ -357,10 +366,12 @@ def _simplex_fit(func):
     report(func)
 
 
-def testf(p, x):
-    x=np.array(x)
+def testf(p, x, noise=0.):
+    x = np.array(x)
     y = p[0]*(1.0 - np.exp(-x/p[1]))*np.exp(-x/p[2])+p[3]
-    return (np.array(y), np.mean(diff(x)))
+    if noise > 0.:
+        y = y + np.random.normal(loc=0., scale=noise, size=y.shape[0])
+    return (np.array(y), np.mean(np.diff(x)))
 
 
 if __name__ == "__main__":
@@ -368,16 +379,17 @@ if __name__ == "__main__":
 #    import matplotlib.pylab as MP
     #app = QtGui.QApplication(sys.argv)
 
-    x = np.arange(0, 10, 0.01);
-    p = [2, 2.5, 9.0, 0.25]
-    (y, dt) = testf(p, x)
-    pnew = simplex(testf, p0, x, y, lbound=[0, 0, 0, 0], hbound=[10, 10, 10, 10],
-                   silent=True, watch=, maxiters=1000)
+    x = np.arange(0, 50, 0.01);
+    p0 = [2, 1, 3., -60]
+    (y, dt) = testf(p0, x, noise=0.05)
+    pnew = simplex(testf, p0, x, y, lbound=[0, 0.01, 0.01, -100], hbound=[10, 10, 10, 10],
+                   silent=True, watch=False, maxiters=1000)
+    print ('final parmaters: ', pnew)
     import matplotlib.pylab as MP
     MP.figure()
-    MP.plot(x, y, 'k')
-    (ys, dt) = testf(p0, x)
-    MP.plot(x, ys, 'k--', linewidth=0.5)
+    MP.plot(x, y, 'k')  # original functoin
+    #(ys, dt) = testf(p0, x)
+    #MP.plot(x, ys, 'g', linewidth=2)  # initial guess
     (yf, dt) = testf(pnew, x)
-    MP.plot(x, yf, 'r--', linewidth=1.0)
+    MP.plot(x, yf, 'r--', linewidth=2.0)  # converged solution
     MP.show()
