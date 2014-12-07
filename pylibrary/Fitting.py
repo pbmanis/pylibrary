@@ -312,7 +312,7 @@ class Fitting():
             else:
                 return y - yd
 
-    def boltzevl2(self, p, x, y=None, C=None, sumsq=False, weights=None):
+    def boltzeval2(self, p, x, y=None, C=None, sumsq=False, weights=None):
         yd = p[0] + p[1] / (1 + numpy.exp((x - p[2]) / p[3])
                             ) + p[4] / (1 + numpy.exp((x - p[5]) / p[6]))
         if y is None:
