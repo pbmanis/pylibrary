@@ -1,24 +1,26 @@
 #!/usr/bin/python
 """
- implement Clements and Bekkers algorithm
- Biophysical Journal, 73: 220-229, 1997.
+ Implements Clements and Bekkers algorithm for finding events (EPSCs, IPSCS) in 
+ a trace.
+ Clements, J., and Bekkers, Biophysical Journal, 73: 220-229, 1997.
 
- incoming data is raw data (or filtered)
- rise and decay determine the template that 
+ Incoming data is either raw or filtered data
+ Rise and decay parameters determine the template that 
  is the matching template to work against the data at each point
  threshold sets the detection limit.
- the returned eventlist is a list of indices to the events detected.
+ The returned eventlist is a list of indices to the events detected.
 
  This code uses the optimizations discussed in the article.
 
  19 June 2002 Paul B. Manis, Ph.D. pmanis@med.unc.edu
 
- Modified for Python from Matlab versoin, July 16 and 17, 2009 Paul B. Manis.
+ Modified for Python from Matlab version, July 16 and 17, 2009 Paul B. Manis.
+ Pure python implementation.
 
 """
 import numpy as np
 import numpy.ma as ma
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as mpl
 
 
 def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, threshold=3.5,
@@ -27,14 +29,14 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
                     markercolor=(1, 0, 0, 1)):
     """Use Clementes-Bekkers algorithm to find events in a data vector.
 
-    The Clementes-Bekkers algorithm uses a template event shape that is
-    "swept" across the data set to find potential events similar to the shape.
+    The Clementes-Bekkers algorithm uses a template event shape (set by `template_type`) that is
+    "swept" across the `data` set to find potential events similar to the template.
 
     Parameters
     ----------
     data : array
         One-dimensional array that will be searched for matching events.
-    sign : str ('+', or '-'), default '+'
+    sign : str {'+', '-'}, default '+'
         Sign of events that will be searched.
     samplerate : float (default 0.1)
         the sampling rate for the data, (milliseconds)
@@ -123,11 +125,9 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
     icoff = []  # cutoff
     crit = []  # criteria
     nevent = 0  # number of events
-    minspacing = int(25.0 / samplerate)  # 2.0 msec minimum dt. Events cannot be closer than this
-    # Measurement is done in C code in clembek. The following is just adapted from the matlab
-    # originaly used to develop the C code.
-    # direction determines whether detection is done in forward or reverse
-    # time.
+    minspacing = int(25.0 / samplerate)  # 2.0 msec minimum dt. Events cannot 
+    # be closer than this direction determines whether detection is done in 
+    # forward or reverse time.
     if direction == 1:
         start = 0
         finish = nData - N
@@ -228,33 +228,33 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
     else:
         print 'ClementsBekkers:  %d Events Detected' % (nevent)
     if dispFlag is True and nevent > 0:
-        pl.figure(1)
+        mpl.figure(1)
         t = samplerate * np.arange(0, nData)
-        pl.subplot(4, 1, 1)
-        pl.plot(t, data, 'k')
-        pl.hold(True)
-        pl.plot(t[pkl], data[pkl], marker='o',
+        mpl.subplot(4, 1, 1)
+        mpl.plot(t, data, 'k')
+        mpl.hold(True)
+        mpl.plot(t[pkl], data[pkl], marker='o',
                 markerfacecolor=markercolor, linestyle='')
-        pl.plot(t[eventlist], data[eventlist], marker='s',
+        mpl.plot(t[eventlist], data[eventlist], marker='s',
                 markerfacecolor=markercolor, linestyle='')
         for i in range(0, len(eventlist)):
             tev = t[eventlist[i]: eventlist[i] + len(template)]
-            pl.plot(tev, cx[i] + scale[i] * template, color=markercolor)
-        pl.subplot(4, 1, 2)
-        pl.plot(t, critwave, color=markercolor)
-        pl.hold(True)
-        pl.plot([t[0], t[-1]], [threshold, threshold], 'k-')
-        pl.plot([t[0], t[-1]], [-threshold, -threshold], 'k-')
-        pl.subplot(4, 1, 3)
-        pl.plot(t, scalewave, color=markercolor, linestyle='-')
-        pl.hold(True)
-        pl.plot(t, offsetwave, color=markercolor, linestyle='--')
+            mpl.plot(tev, cx[i] + scale[i] * template, color=markercolor)
+        mpl.subplot(4, 1, 2)
+        mpl.plot(t, critwave, color=markercolor)
+        mpl.hold(True)
+        mpl.plot([t[0], t[-1]], [threshold, threshold], 'k-')
+        mpl.plot([t[0], t[-1]], [-threshold, -threshold], 'k-')
+        mpl.subplot(4, 1, 3)
+        mpl.plot(t, scalewave, color=markercolor, linestyle='-')
+        mpl.hold(True)
+        mpl.plot(t, offsetwave, color=markercolor, linestyle='--')
         tt = samplerate * np.arange(0, len(template))
-        pl.subplot(4, 2, 7)
-        pl.plot(tt, template, color=markercolor)
-        pl.draw()
-    return(np.array(eventlist), np.array(pkl), np.array(crit),  np.array(scale), np.array(cx),
-           np.array(template))
+        mpl.subplot(4, 2, 7)
+        mpl.plot(tt, template, color=markercolor)
+        mpl.draw()
+    return(np.array(eventlist), np.array(pkl), np.array(crit),  
+           np.array(scale), np.array(cx), np.array(template))
 
 
 def testdata():
@@ -287,7 +287,8 @@ def testdata():
     decay = 2.0
     sign = '-'
     threshold = 2.0
-    data = np.zeros(12000)
+    offset = -102.0
+    data = np.ones(12000)*offset
     noise = np.random.randn(len(data))
     # filter the noise then put in the data array
     data = data + 0.1 * noise
@@ -295,14 +296,15 @@ def testdata():
     # fco = 2000;		# cutoff frequency in Hz
     # wco = fco/(fsamp/2); # wco of 1 is for half of the sample rate, so set it like this...
     # if(wco < 1) # if wco is > 1 then this is not a filter!
-    # [b, a] = butter(8, wco); # fir type filter... seems to work best, with highest order min distortion of dv/dt...
+    # fir type filter... seems to work best, with highest order min distortion of dv/dt...
+    # [b, a] = butter(8, wco); 
     # data = filter(b, a, data); # filter all the traces...
 
     #noise2 = 6*randn(length(data), 1);
     # fco = 30;		# cutoff frequency in Hz
-    # wco = fco/(fsamp/2); # wco of 1 is for half of the sample rate, so set it like this...
+    # wco = fco/(fsamp/2); # wco of 1 is for half of the sample rate
     # if(wco < 1) # if wco is > 1 then this is not a filter!
-    # [b, a] = butter(8, wco); # fir type filter... seems to work best, with highest order min distortion of dv/dt...
+    # [b, a] = butter(8, wco);
     # noise2 = filter(b, a, noise2); # filter all the traces...
     # end
     # data = data + noise2; # adding low frequency noise
@@ -330,8 +332,8 @@ def cb_template(funcid=1, samplerate=0.1, rise=2.0, decay=10.0, lpfilter=2000.0,
                 ntau=5,  mindur=50.0):
     """ Compute the template waveform
 
-    Compute one of several possible template waveforms, possibly fitlered,
-    to be used in the Clementes-Bekkers algorithm.
+    Compute one of several possible template waveforms chosen by `funcid`, possibly 
+    low pass filtered as set by `lpfilter`, to be used in the Clements-Bekkers algorithm.
 
     Parameters
     ----------
@@ -433,7 +435,9 @@ def cb_multi(data, sign='+', samplerate=0.1, rise=[5.0, 3.0, 2.0, 0.5], decay=[3
     """ return the best choice of fits among a set of rise and fall times using the CB method.
             the tested rise and decay times are determined by the lists of rise and decay arrays.
             if matchflag is true, then the arrays are compared in order (rise[0], decay[0]),
-            (rise[1], decay[1]). if matchflag is false, then all pairwise comparisons are made"""
+            (rise[1], decay[1]). if matchflag is false, then all pairwise comparisons are made
+
+    """
 
     clist = [(1, 0, 0, 1), (0, 1, 0, 1), (0, 0, 1, 1), (1, 1, 0, 1), (1, 0, 1, 1), (0, 1, 1, 1),
              (1, 0.5, 0, 5, 1), (0.5, 1, 0.5, 1), (0.5, 0.5, 1, 1), (0, 0, 0, 1)]
@@ -508,31 +512,33 @@ def cb_multi(data, sign='+', samplerate=0.1, rise=[5.0, 3.0, 2.0, 0.5], decay=[3
     ioff = ma.compressed(ma.array(ioff, mask=selmask))
     itj = ma.compressed(ma.array(itj, mask=selmask))
     itk = ma.compressed(ma.array(itk, mask=selmask))
-    pl.figure(2)
+    mpl.figure(2)
     t = samplerate * np.arange(0, len(data))
-    pl.subplot(1, 1, 1)
-    pl.plot(t, data, 'k', zorder=0)
-    pl.hold(True)
+    mpl.subplot(1, 1, 1)
+    mpl.plot(t, data, 'k', zorder=0)
+    mpl.hold(True)
     ipts = icand.astype(int).tolist()
     ippts = peaks.astype(int).tolist()
     ijp = itj.astype(int).tolist()
     cols = []
     for p in range(0, len(ippts)):
         cols.append(clist[ijp[p]])  # plots below were t[ipts], data[ipts]
-    pl.scatter(t[ipts], ioff, s=49, c=cols, marker='s', zorder=1)
-    pl.scatter(t[ippts], iscamp, s=49, c=cols, marker='o', zorder=2)
-    pl.show()
+    mpl.scatter(t[ipts], ioff, s=49, c=cols, marker='s', zorder=1)
+    mpl.scatter(t[ippts], iscamp, s=49, c=cols, marker='o', zorder=2)
+    mpl.show()
 
     return(icand, peaks, crit, iscamp, ioff)
 
 
 def test():
+    """ Provide a test of the Clements-Bekkers algorithm
+    """
     (data, samplerate, rise, decay, threshold, sign) = testdata()
     ClementsBekkers(data, dispFlag=True, samplerate=samplerate,
                     subtractMode=True, direction=-1,
                     template_type=1, rise=rise, decay=decay, threshold=4.0,
                     ntau=8, sign=sign)
-    pl.show()
+    mpl.show()
 
 if __name__ == "__main__":
     test()

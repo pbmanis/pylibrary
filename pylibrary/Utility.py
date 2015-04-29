@@ -105,7 +105,7 @@ def pSpectrum(data=None, samplefreq=44100):
     return(spectrum, freqAzero)
 
 def sinefit(x, y, F):
-     """cosinor fit of data for specific frequencies. 
+    """cosinor fit of data for specific frequencies. 
 
     LMS fit of a sine wave with period T (1/F) to the data in x and y
     aka "cosinor" analysis. 
@@ -307,12 +307,12 @@ def SignalFilter_LPFButter(signal, LPF, samplefreq, NPole=8):
     return(np.array(out))
     
 def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole=8, reduce=False):
-   """Low pass filter a signal with a Bessel filter
-    
+    """Low pass filter a signal with a Bessel filter
+
         Digitally low-pass filter a signal using a multipole Bessel filter
         filter. Does not apply reverse filtering so that result is causal.
         Possibly reduce the number of points in the result array.
-    
+
         Parameters
         ----------
         signal : a numpy array of dim = 1, 2 or 3. The "last" dimension is filtered.
