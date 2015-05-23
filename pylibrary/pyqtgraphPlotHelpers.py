@@ -381,48 +381,39 @@ def make_crossedAxes(ax, xyzero=[0., 0.], limits=[None, None, None, None], ndec=
 def circmean(alpha, axis=None):
     mean_angle = np.arctan2(np.mean(np.sin(alpha),axis),np.mean(np.cos(alpha),axis))
     return mean_angle
+
     
-def polar(plot, r, theta, steps=4, rRange=None, vectors=False,
-     normalize=False, sort=True, makeGrid=True, **kwds):
+class polarPlot():
     """
-    plot is the plot instance to plot into
-    the plot will be converted to a polar graph
-    r is a list or array of radii
-    theta is the corresponding list of angles
-    steps is the number of grid steps in r
-    rRange is the max of r (max of data of not specified)
-    vectors False means plots line of r, theta; true means plots vectors from origin to point
-    sort allows ordered x (default)
-    **kwds are passed to the data plot call.
+    Create a polar plot, as a PlotItem for pyqtgraph.
     """
+    def __init__(self, plot=None):
+        if plot is None:
+            self.plotItem = pg.PlotItem()  # create a plot item for the plot
+        else:
+            self.plotItem = plot
+        self.plotItem.setAspectLocked()
+        self.plotItem.hideAxis('bottom')
+        self.plotItem.hideAxis('left')
+        self.gridSet = False
 
-    plot.setAspectLocked()
-    plot.hideAxis('bottom')
-    plot.hideAxis('left')
-
-    # sort r, theta by r
-
-    r = np.array(r)
-    theta = np.array(theta)
-    indx = np.argsort(theta)
-    rs = r
-    thetas = theta
-    if not isinstance(indx, np.int64):
-        for i,j in enumerate(indx):
-            rs[i] = r[j]
-            thetas[i] = theta[j]
-    if makeGrid:
+    def setAxes(self, steps=4, rRange=None, vectors=False, makeGrid=True, normalize=False):
+        """
+        Make the polar plot axes
+        """
+        if makeGrid is False or self.gridSet:
+            return
         if rRange is None:
-            rRange = np.max(r)
+            rRange = 1.0
         if normalize:
             rRange = 1.0
-        # Add radial grid lines (theta)
-        gridPen = pg.mkPen(width=0.5, color='k',  style=QtCore.Qt.DotLine)
+        # Add radial grid lines (theta markers)
+        gridPen = pg.mkPen(width=0.55, color='k',  style=QtCore.Qt.DotLine)
         ringPen = pg.mkPen(width=0.75, color='k',  style=QtCore.Qt.SolidLine)  
         for th in np.linspace(0., np.pi*2, 8, endpoint=False):
-            rx = np.cos(th)
-            ry = np.sin(th)
-            plot.plot(x=[0, rx], y=[0., ry], pen=gridPen)
+            rx = np.cos(th)*rRange
+            ry = np.sin(th)*rRange
+            self.plotItem.plot(x=[0, rx], y=[0., ry], pen=gridPen)
             ang = th*360./(np.pi*2)
             # anchor is odd: 0,0 is upper left corner, 1,1 is lower right corner
             if ang < 90.:
@@ -447,8 +438,8 @@ def polar(plot, r, theta, steps=4, rRange=None, vectors=False,
                 x=0
                 y=0
             ti = pg.TextItem("%d" % (int(ang)), color=pg.mkColor('k'), anchor=(x,y))
-            plot.addItem(ti)
-            ti.setPos(rRange*rx, rRange*ry)
+            self.plotItem.addItem(ti)
+            ti.setPos(rx, ry)
         # add polar grid lines (r)
         for gr in np.linspace(rRange/steps, rRange, steps):
             circle = pg.QtGui.QGraphicsEllipseItem(-gr, -gr, gr*2, gr*2)
@@ -456,23 +447,62 @@ def polar(plot, r, theta, steps=4, rRange=None, vectors=False,
                 circle.setPen(gridPen)
             else:
                 circle.setPen(ringPen)
-            plot.addItem(circle)
+            self.plotItem.addItem(circle)
+            ti = pg.TextItem("%d" % (int(gr)), color=pg.mkColor('k'), anchor=(1, 1))
+            ti.setPos(gr, 0.)
+            self.plotItem.addItem(ti)
+        self.gridSet = True
 
-    # Transform to cartesian and plot
-    if normalize:
-        rs = rs/np.max(rs)
-    x = rs * np.cos(thetas)
-    y = rs * np.sin(thetas)
-    try:
-        len(x)
-    except:
-        x  = [x]
-        y = [y]
-    if vectors:  # plot r,theta as lines from origin
-        for i in range(len(x)):
-            plot.plot([0., x[i]], [0., y[i]], **kwds)
-    else:
-        plot.plot(x, y, **kwds)
+    
+    def plot(self, r, theta, vectors=False, arrowhead=True, normalize=False, sort=True, makeGrid=True, **kwds):
+        """
+        plot puts the data into a polar plot.
+        the plot will be converted to a polar graph
+        r is a list or array of radii
+        theta is the corresponding list of angles
+        steps is the number of grid steps in r
+        rRange is the max of r (max of data if not specified)
+        vectors False means plots line of r, theta; true means plots vectors from origin to point
+        sort allows ordered x (default)
+        **kwds are passed to the data plot call.
+        """
+
+        # sort r, theta by r
+
+        rs = np.array(r)
+        theta = np.array(theta)
+        indx = np.argsort(theta)
+
+        thetas = theta
+        if not isinstance(indx, np.int64):
+            for i, j in enumerate(indx):
+                rs[i] = r[j]
+                thetas[i] = theta[j]
+
+
+        # Transform to cartesian and plot
+        if normalize:
+            rs = rs/np.max(rs)
+        x = rs * np.cos(thetas)
+        y = rs * np.sin(thetas)
+        try:
+            len(x)
+        except:
+            x = [x]
+            y = [y]
+        if vectors:  # plot r,theta as lines from origin
+            for i, xi in enumerate(x):
+    #            print x[i], y[i]
+                if arrowhead:
+                    arrowAngle = -(thetas[i]*360/(2*np.pi)+180) # convert to degrees, and correct orientation
+                    arrow = pg.ArrowItem(angle=arrowAngle, tailLen=0, tailWidth=1.5, **kwds)
+                    arrow.setPos(x[i], y[i])
+                    self.plotItem.addItem(arrow)
+                self.plotItem.plot([0., x[i]], [0., y[i]], **kwds)
+                    
+        else:
+            self.plotItem.plot(x, y, **kwds)
+
 
 def talbotTicks(axl, **kwds):
     """
@@ -510,30 +540,70 @@ def do_talbotTicks(ax, ndec=3,
     #ticks format: [ (majorTickValue1, majorTickString1), (majorTickValue2, majorTickString2), ... ],
     aleft.setTicks(ytickl)
     abottom.setTicks(xtickl)
-    
-    
-    
+    # now set the point size (this may affect spacing from axis, and that would have to be adjusted - see the pyqtgraph google groups)
+    if pointSize is not None:
+        b=QtGui.QFont()
+        b.setPixelSize(pointSize)
+        aleft.tickFont = b
+        abottom.tickFont = b
 
-def violin_plot(ax, data, pos, bp=False):
+def violin_plot(ax, data, pos, dist=.0, bp=False):
     '''
     create violin plots on an axis
     '''
+
+    if data is None or len(data) == 0:
+        return  # skip trying to do the plot
+
     dist = max(pos)-min(pos)
     w = min(0.15*max(dist,1.0),0.5)
-    for d,p in zip(data,pos):
-        k = gaussian_kde(d) #calculates the kernel density
+    for i, d in enumerate(data):
+        if d == [] or len(d) == 0:
+            continue
+        k = scipy.stats.gaussian_kde(d) #calculates the kernel density
         m = k.dataset.min() #lower bound of violin
         M = k.dataset.max() #upper bound of violin
-        x = np.arange(m, M, (M-m)/100.) # support for violin
-        v = k.evaluate(x) #violin profile (density curve)
+        y = np.arange(m, M, (M-m)/100.) # support for violin
+        v = k.evaluate(y) #violin profile (density curve)
         v = v / v.max() * w #scaling the violin to the available space
-       # ax.fill_betweenx(x, p, v+p, facecolor='y', alpha=0.3)
-       # ax.fill_betweenx(x, p, -v+p, facecolor='y', alpha=0.3)
+        c1 = pg.PlotDataItem(y=y, x=pos[i]+v, pen=pg.mkPen('k', width=0.5))
+        c2 = pg.PlotDataItem(y=y, x=pos[i]-v, pen=pg.mkPen('k', width=0.5))
+        #mean = k.dataset.mean()
+        #vm = k.evaluate(mean)
+        #vm = vm * w
+        #ax.plot(x=np.array([pos[i]-vm[0], pos[i]+vm[0]]), y=np.array([mean, mean]), pen=pg.mkPen('k', width=1.0))
+        ax.addItem(c1)
+        ax.addItem(c2)
+        #ax.addItem(hbar)
+        f = pg.FillBetweenItem(curve1=c1, curve2=c2, brush=pg.mkBrush((255, 255, 0, 96)))
+        ax.addItem(f)
+
     if bp:
        pass
        # bpf = ax.boxplot(data, notch=0, positions=pos, vert=1)
        # pylab.setp(bpf['boxes'], color='black')
        # pylab.setp(bpf['whiskers'], color='black', linestyle='-')
+       
+# def violin_plot(ax, data, pos, bp=False):
+#     '''
+#     create violin plots on an axis
+#     '''
+#     dist = max(pos)-min(pos)
+#     w = min(0.15*max(dist,1.0),0.5)
+#     for d,p in zip(data,pos):
+#         k = gaussian_kde(d) #calculates the kernel density
+#         m = k.dataset.min() #lower bound of violin
+#         M = k.dataset.max() #upper bound of violin
+#         x = np.arange(m, M, (M-m)/100.) # support for violin
+#         v = k.evaluate(x) #violin profile (density curve)
+#         v = v / v.max() * w #scaling the violin to the available space
+#        # ax.fill_betweenx(x, p, v+p, facecolor='y', alpha=0.3)
+#        # ax.fill_betweenx(x, p, -v+p, facecolor='y', alpha=0.3)
+#     if bp:
+#        pass
+#        # bpf = ax.boxplot(data, notch=0, positions=pos, vert=1)
+#        # pylab.setp(bpf['boxes'], color='black')
+#        # pylab.setp(bpf['whiskers'], color='black', linestyle='-')
 
 def labelAxes(plot, xtext, ytext, **kwargs):
     """
@@ -667,9 +737,14 @@ class LayoutMaker():
         if letters is true, then the plot is labeled "A, B, C..." Indices move horizontally first, then vertically
         margins sets the margins around the outside of the plot
         spacing sets the spacing between the elements of the grid
+        If a window was specified (self.win is not None) then the grid layout will derive from that window's central 
+        item; otherwise we just make a gridLayout that can be put into another container somewhere.
         """
         import string
-        self.gridLayout = self.win.ci.layout  # the window's 'central item' is the main gridlayout.
+        if self.win is not None:
+            self.gridLayout = self.win.ci.layout  # the window's 'central item' is the main gridlayout.
+        else:
+            self.gridLayout = QtGui.QGridLayout()  # just create the grid layout to add to another item
         self.gridLayout.setContentsMargins(margins, margins, margins, margins)
         self.gridLayout.setSpacing(spacing)
         self.plots = [[0 for x in xrange(self.cols)] for x in xrange(self.rows)]
@@ -792,8 +867,10 @@ def figure(title = None, background='w'):
     win = pg.GraphicsWindow(title=title)
     return win
 
+
 def show():
     QtGui.QApplication.instance().exec_()
+
 
 def test_layout(win):
     layout = LayoutMaker(cols=4,rows=2, win=win, labelEdges=True, ticks='talbot')
@@ -820,6 +897,7 @@ def test_layout(win):
     layout.columnAutoScale(col=3, axis='left')
     show()
 
+
 def test_crossAxes(win):
     layout = LayoutMaker(cols=1,rows=1, win=win, labelEdges=True)
     x=np.arange(-1, 1., 0.01)
@@ -828,10 +906,26 @@ def test_crossAxes(win):
     p = layout.getPlot(0)
     crossAxes(p, xyzero=[0., 0.], limits=[None, None, None, None], density=1.5, tickPlacesAdd=1, pointSize=12)
     show()
+
+
+def test_polarPlot(win):
+    layout = LayoutMaker(cols=1,rows=1, win=win, labelEdges=True)
+    po = polarPlot(layout.getPlot((0,0)))  # convert rectangular plot to polar
+    po.setAxes(steps=4, rRange=100, makeGrid=True)  # build the axes
+    nvecs = 20
+    th = np.linspace(0, np.pi*2-np.pi*2/nvecs, nvecs)
+    r = np.linspace(10, 100, nvecs)
+    po.plot(r, th, vectors=True, arrowhead=True, symbols='o', pen=pg.mkPen('k', width=1.5))  # plot with arrowheads
+    nvecs=8
+    th = np.linspace(0, np.pi*2-np.pi*2/nvecs, nvecs)
+    r = np.linspace(10, 100, nvecs)
+    po.plot(r, th, vectors=True, arrowhead=False, symbols='o', pen=pg.mkPen('r', width=1.5))  # plot with just lines
+    
+    show()
     
 
 if __name__ == '__main__':
     win = figure(title='testing')
-    test_layout(win)
+    #test_layout(win)
     #test_crossAxes(win)
-    
+    test_polarPlot(win)
