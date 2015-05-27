@@ -9,11 +9,11 @@ as well as get plots read for publication.
 Intially copied from PlotHelpers.py for matplotlib.
 Modified to allow us to use a list of axes, and operate on all of those,
 or to use just one axis if that's all that is passed.
-Therefore, the first argument to these calls can either be an axes object,
+Therefore, the first argument to these calls can either be a pyqtgraph axis object,
 or a list of axes objects.  2/10/2012 pbm.
 
 Created by Paul Manis on 2010-03-09.
-Copyright 2010-2014  Paul Manis
+Copyright 2010-2015  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 
 """
@@ -37,18 +37,24 @@ Basic functions:
 """
 
 
-def nice_plot(plotlist, spines = ['left', 'bottom'], position = 10, direction='inward', axesoff = False):
+def nice_plot(plotlist, spines=['left', 'bottom'], position=10, direction='inward', axesoff = False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot
         Also allow quickaccess to things we like to do for publication plots, including:
            using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
            inserting a reference line (grey, 3pt dashed, 0.5pt, at refline = y position)
-        params
-        ------
-        plotlist : a plot handle or list of plot handles to which the "niceplot" will be applied
-        spines : a list of which axes should have spines. Not relevant for pyqtgraph
-        position: not relevant for pyqtgraph
-        direction: need to implement for pyqtgraph
-        axesoff: boolean flag that forces plots to turn axes off
+        
+        Paramaetrs
+        ----------
+        plotlist : list
+            a plot handle or list of plot handles to which the "niceplot" will be applied
+        spines : list
+            a list of which axes should have spines. Not relevant for pyqtgraph
+        position : int
+            not relevant for pyqtgraph
+        direction : string
+            need to implement for pyqtgraph
+        axesoff : boolean
+            flag that forces plots to turn axes off
         
     """
     if type(plotlist) is not list:
@@ -61,6 +67,13 @@ def nice_plot(plotlist, spines = ['left', 'bottom'], position = 10, direction='i
 
 def noaxes(plotlist, whichaxes = 'xy'):
     """ take away all the axis ticks and the lines
+    
+    Parameters
+    ----------
+        plotlist : list
+            list of plot handles
+        whichaxes : string
+            string describing which axes to remove: 'x', 'y', or 'xy' for both
     
     """
     if type(plotlist) is not list:
@@ -75,6 +88,12 @@ def noaxes(plotlist, whichaxes = 'xy'):
 def setY(ax1, ax2):
     """
     Set the Y axis of all the plots in ax2 to be like ax1
+    
+    Parameters
+    ----------
+        ax1 : pyqtgraph plot instance
+        ax2 : list
+            list of target plots that will have the axes properties of ax1
     """
     if type(ax1) is list:
         print 'PlotHelpers: cannot use list as source to set Y axis'
@@ -90,6 +109,12 @@ def setY(ax1, ax2):
 def setX(ax1, ax2):
     """
     Set the X axis of all the plots in ax2 to be like ax1
+
+    Parameters
+    ----------
+        ax1 : pyqtgraph plot instance
+        ax2 : list
+            list of target plots that will have the axes properties of ax1
     """
     if type(ax1) is list:
         print 'PlotHelpers: cannot use list as source to set X axis'
@@ -104,6 +129,20 @@ def setX(ax1, ax2):
 
 def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
     """
+    Label the panels like a specific panel
+    
+    Parameters
+    ----------
+    axl : dict or list
+    axlist : list, optional
+         list of labels to use for the axes, defaults to None
+    font : str, optional
+        Font to use for the labels, defaults to Arial
+    fontsize : int, optional
+        Font size in points for the labels, defaults to 18
+    weight : str, optional
+        Font weight to use, defaults to 'normal'
+    
     """
     if type(axl) is dict:
         axt = [axl[x] for x in axl]
@@ -125,6 +164,16 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
 def listAxes(axd):
     """
     make a list of the axes from the dictionary of axes
+    
+    Parameters
+    ----------
+    axd : dict
+        a dict of axes, whose values are returned in a list
+    
+    Returns
+    -------
+    list : a list of the axes
+    
     """
     if type(axd) is not dict:
         if type(axd) is list:
@@ -259,23 +308,30 @@ def adjust_spines(axl, spines = ('left', 'bottom'), direction = 'outward', dista
 def calbar(plotlist, calbar=None, axesoff=True, orient='left', unitNames=None):
     """ draw a calibration bar and label it up. The calibration bar is defined as:
         [x0, y0, xlen, ylen]
-        params
-        ------
-        plotlist : a plot item or a list of plot items for which a calbar will be applied
-        calbar : a list with 4 elements, describing the calibration bar
+        
+        Parameters
+        ----------
+        plotlist : list
+            a plot item or a list of plot items for which a calbar will be applied
+        calbar : list, optional
+            a list with 4 elements, describing the calibration bar
                 [xposition, yposition, xlength, ylength] in units of the data inthe plot
-        axesoff : boolean
-                Set true to turn off the standard axes
-        orient : text
+                defaults to None
+        axesoff : boolean, optional
+                Set true to turn off the standard axes, defaults to True
+        orient : text, optional
                 'left': put vertical part of the bar on the left
                 'right': put the vertical part of the bar on the right
-        unitnames: text (string)
+                defaults to 'left'
+        unitnames: str, optional
                 a dictionary with the names of the units to append to the calibration bar
                 lengths. Example: {'x': 'ms', 'y': 'nA'}
-        returns
+                defaults to None
+        Returns
         -------
         Nothing
     """
+    
     if type(plotlist) is not list:
         plotlist = [plotlist]
     for pl in plotlist:
@@ -319,22 +375,25 @@ def calbar(plotlist, calbar=None, axesoff=True, orient='left', unitNames=None):
             pl.addItem(Htxt)
             pl.addItem(Vtxt)
 
-def refline(axl, refline = None, color = [64, 64, 64], linestyle = '--' ,linewidth = 0.5):
+
+def refline(axl, refline=None, color=[64, 64, 64], linestyle='--' ,linewidth=0.5):
     """
-    draw a reference line at a particular level of the data on the y axis
+    Draw a reference line at a particular level of the data on the y axis
     
-    params
-    ------
-    axl : axis handle or list of axis handles
-    refline : float
-            the position of the reference line
-    color : list [r,g,b], default [64, 64, 64] (faint grey line)
-            the RGB color list for the line
-    linestyle : string
+    Parameters
+    ----------
+    axl : list
+        axis handle or list of axis handles
+    refline : float, optional
+            the position of the reference line, defaults to None
+    color : list, optional
+            the RGB color list for the line, in format [r,g,b], defaults to [64, 64, 64] (faint grey line)
+    linestyle : str, optional
             defines the linestyle to be used: -- for dash, . for doted, - for solid, -. for dash-dot,
             -.. for -.., etc.
-    linewidth : float
-            width of the line (default 0.5)
+            defaults to '--' (dashed)
+    linewidth : float, optional
+            width of the line, defaults to 0.5
     """
     if type(axl) is not list:
         axl = [axl]
@@ -357,19 +416,32 @@ def refline(axl, refline = None, color = [64, 64, 64], linestyle = '--' ,linewid
             ax.plot(xlims, [refline, refline], pen=pg.mkPen(color, width=linewidth, style=style))
 
 
-def tickStrings(values, scale=1, spacing=None, tickPlacesAdd = 1):
+def tickStrings(values, scale=1, spacing=None, tickPlacesAdd=1):
     """Return the strings that should be placed next to ticks. This method is called 
     when redrawing the axis and is a good method to override in subclasses.
-    The method is called with a list of tick values, a scaling factor (see below), and the 
-    spacing between ticks (this is required since, in some instances, there may be only 
-    one tick and thus no other way to determine the tick spacing)
+    
+    Parameters
+    ----------
+    values : array or list
+         An array or list of tick values
+    scale : float, optional
+        a scaling factor (see below), defaults to 1
+    spacing : float, optional
+        spaceing between ticks (this is required since, in some instances, there may be only 
+    one tick and thus no other way to determine the tick spacing). Defaults to None
+    tickPlacesToAdd : int, optional
+        the number of decimal places to add to the ticks, default is 1
+    
+    Returns
+    -------
+    list : a list containing the tick strings
     
     The scale argument is used when the axis label is displaying units which may have an SI scaling prefix.
     When determining the text to display, use value*scale to correctly account for this prefix.
     For example, if the axis label's units are set to 'V', then a tick value of 0.001 might
     be accompanied by a scale value of 1000. This indicates that the label is displaying 'mV', and 
     thus the tick should display 0.001 * 1000 = 1.
-    from pyqtgraph; we need it here.
+    Copied rom pyqtgraph; we needed it here.
     """
     if spacing is None:
         spacing = np.mean(np.diff(values))
@@ -389,14 +461,54 @@ def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None], **kwds):
     """
     Make the plot(s) have crossed axes at the data points set by xyzero, and optionally
     set axes limits
+    
+    Parameters
+    ----------
+    axl : pyqtgraph plot/axes instance or list
+        the plot to modify
+    xyzero : list
+        A 2-element list for the placement of x=0 and y=0, defaults to [0., 0.]
+    limits : list
+        A 4-element list with the min and max limits of the axes, defaults to all None
+    **kwds : keyword arguments to pass to make_crossedAxes
+    
     """
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
         make_crossedAxes(ax, xyzero, limits, **kwds)
+
  
 def make_crossedAxes(ax, xyzero=[0., 0.], limits=[None, None, None, None], ndec=3,
             density=(1.0, 1.0), tickl = 0.0125, insideMargin=0.05, pointSize=12, tickPlacesAdd=(0,0)):
+    """
+    Parameters
+    ----------
+    axl : pyqtgraph plot/axes instance or list
+        the plot to modify
+    xyzero : list
+        A 2-element list for the placement of x=0 and y=0, defaults to [0., 0.]
+    limits : list
+        A 4-element list with the min and max limits of the axes, defaults to all None
+    ndec : int
+        Number of decimals (would be passed to talbotTicks if that was being called)
+    density : tuple
+        tick density (for talbotTicks), defaults to (1.0, 1.0)
+    tickl : float
+        Tick length, defaults to 0.0125
+    insideMargin : float
+        Inside margin space for plot, defaults to 0.05 (5%)
+    pointSize : int
+         point size for tick text, defaults to 12
+    tickPlacesAdd : tuple
+        number of decimal places to add in tickstrings for the ticks, pair for x and y axes, defaults to (0,0)
+    
+    Returns
+    -------
+    Nothing
+    
+    
+    """
     # get axis limits
     aleft = ax.getAxis('left')
     abottom = ax.getAxis('bottom')
@@ -445,13 +557,23 @@ def make_crossedAxes(ax, xyzero=[0., 0.], limits=[None, None, None, None], ndec=
         ax.addItem(txt) #, pos=pg.Point(x, y0-ytk))
 
 
-
-
 class polarPlot():
     """
     Create a polar plot, as a PlotItem for pyqtgraph.
+    
+    
     """
     def __init__(self, plot=None):
+        """
+        Instantiate a plot as a polar plot
+        
+        Parmeters
+        ---------
+        plot : pyqtgraph plotItem
+            the plot that will be converted to a polar plot, defaults to None
+            if None, then a new PlotItem will be created, accessible
+            as polarPlot.plotItem
+        """
         if plot is None:
             self.plotItem = pg.PlotItem()  # create a plot item for the plot
         else:
@@ -460,15 +582,31 @@ class polarPlot():
         self.plotItem.hideAxis('bottom')
         self.plotItem.hideAxis('left')
         self.gridSet = False
+        self.data = None
+        self.rMax = None
 
     def setAxes(self, steps=4, rMax=None, makeGrid=True):
         """
         Make the polar plot axes
+        
+        Parameters
+        ----------
+        steps : int, optional
+            The number of radial steps for the grid, defaults to 4
+        rMax : float, optional
+            The maximum radius of the plot, defaults to None (the rMax is 1)
+        makeGrid : boolean, optional
+            Whether the grid will actually be plotted or not, defaults to True
+            
         """
         if makeGrid is False or self.gridSet:
             return
         if rMax is None:
-            rMax = 1.0
+            if self.data is None:
+                rMax = 1.0
+            else:
+                rMax = np.max(self.data['y'])
+        self.rMax = rMax
         # Add radial grid lines (theta markers)
         gridPen = pg.mkPen(width=0.55, color='k',  style=QtCore.Qt.DotLine)
         ringPen = pg.mkPen(width=0.75, color='k',  style=QtCore.Qt.SolidLine)  
@@ -520,11 +658,23 @@ class polarPlot():
         """
         plot puts the data into a polar plot.
         the plot will be converted to a polar graph
-        r is a list or array of radii
-        theta is the corresponding list of angles
-        vectors False means plots line of r, theta; true means plots vectors from origin to point
-        sort allows ordered x (default)
+        
+        Parameters
+        ----------
+        r : list or numpy array
+            a list or array of radii
+        theta : list or numpy array
+            a list or array of angles (in radians) corresponding to the values in r
+        vectors : boolean, optional
+            vectors True means that plot is composed of vectors to each point radiating from the origin, defaults to False
+        arrowhead : boolean, optional
+            arrowhead True plots arrowheads at the end of the vectors, defaults to True
+        normalize : boolean, optional
+            normalize forces the plot to be scaled to the max values in r, defaults to False
+        sort : boolean, optional
+            causes data r, theta to be sorted by theta, defaults to False
         **kwds are passed to the data plot call.
+
         """
 
         # sort r, theta by r
@@ -563,8 +713,75 @@ class polarPlot():
                     
         else:
             self.plotItem.plot(x, y, **kwds)
+        self.rMax = np.max(y)
+        self.data = {'x': x, 'y': y}
+
+    def hist(self, r, theta, binwidth=np.pi/6., normalize=False, density=False, mode='straight', **kwds):
+        """
+        plot puts the data into a polar plot as a histogram of the number of observations
+        within a wedge
+        the plot will be converted to a polar graph
+        
+        Parameters
+        ----------
+        r : list or numpy array
+            a list or array of radii
+        theta : list or numpy array
+            a list or array of angles (in radians) corresponding to the values in r
+        binwidth : bin width, in radians optional
+            vectors True means that plot is composed of vectors to each point radiating from the origin, defaults to 30 degrees (np.pi/6)
+        normalize : boolean, optional
+            normalize forces the plot to be scaled to the max values in r, defaults to False
+        density : boolean, optional
+            plot a count histogram, or a density histogram weighted by r values, defaults to False
+        mode : str, optional
+            'straight' selects straight line between bars. 'arc' makes the end of the bar an arc (truer representation), defaults to 'straight'
+        **kwds are passed to the data plot call.
+
+        """
+
+        rs = np.array(r)
+        thetas = np.array(theta)
+        bins = np.arange(0, np.pi*2+1e-12, binwidth)
+        # compute histogram
+        (rhist, rbins) = np.histogram(theta, bins=bins, weights=rs, density=density)
+        # Transform to cartesian and plot
+        if normalize:
+            rhist = rhist/np.max(rhist)
+        xo = rhist * np.cos(bins[:-1])  # get cartesian form
+        xp = rhist * np.cos(bins[:-1] + binwidth)
+        yo = rhist * np.sin(bins[:-1])
+        yp = rhist * np.sin(bins[:-1] + binwidth)
+        arcinc = np.pi/100.  # arc increments
+        for i in range(len(xp)):
+            if mode is 'arc':
+                self.plotItem.plot([xo[i], 0., xp[i]], [yo[i], 0., yp[i]], **kwds) # "v" segement
+                arcseg = np.arange(bins[i], bins[i+1], arcinc)
+                x = np.array(rhist[i] * np.cos(arcseg))
+                y = np.array(rhist[i] * np.sin(arcseg))
+                self.plotItem.plot(x, y, **kwds)
+                
+            else:
+                self.plotItem.plot([0., xo[i], xp[i], 0.], [0., yo[i], yp[i], 0.], **kwds)
+        self.data = {'x': xo, 'y': yo}
+        self.rMax = np.max(yo)
+
 
     def circmean(self, alpha, axis=None):
+        """
+        Compute the circular mean of a set of angles along the axis
+        
+        Parameters
+        ----------
+        alpha : numpy array
+            the angles to compute the circular mean of
+        axis : int
+            The axis of alpha for the computatoin, defaults to None
+        
+        Returns
+        -------
+        float : the mean angle
+        """
         mean_angle = np.arctan2(np.mean(np.sin(alpha),axis),np.mean(np.cos(alpha),axis))
         return mean_angle
 
@@ -583,7 +800,24 @@ def do_talbotTicks(ax, ndec=3,
                    density=(1.0, 1.0), insideMargin=0.05, pointSize=None, tickPlacesAdd=(0,0)):
     """
     Change the axis ticks to use the talbot algorithm for ONE axis
-    Paramerters control the ticks, """
+    Paramerters control the ticks
+    
+    Parameters
+    ----------
+    ax : pyqtgraph axis instance
+        the axis to change the ticks on
+    ndec : int
+        Number of decimals (would be passed to talbotTicks if that was being called)
+    density : tuple
+        tick density (for talbotTicks), defaults to (1.0, 1.0)
+    insideMargin : float
+        Inside margin space for plot, defaults to 0.05 (5%)
+    pointSize : int
+         point size for tick text, defaults to 12
+    tickPlacesAdd : tuple
+        number of decimal places to add in tickstrings for the ticks, pair for x and y axes, defaults to (0,0)
+    
+    """
     # get axis limits
     aleft = ax.getAxis('left')
     abottom = ax.getAxis('bottom')
@@ -616,10 +850,20 @@ def do_talbotTicks(ax, ndec=3,
 def violinPlotScatter(ax, data, symbolColor='k', symbolSize=4, symbol='o'):
     """
     Plot data as violin plot with scatter and error bar
-    ax is the axs to plot into
-    data is a dictionary:
-    {pos1: data1, pos2: data2} etc
-    symcolor is the color of the symbols...
+    
+    Parameters
+    ----------
+    ax : pyqtgraph plot instance
+        is the axs to plot into
+    data : dict
+        dictionary containing {pos1: data1, pos2: data2}, where pos is the x position for the data in data. Each data
+        set iis plotted as a separate column
+    symcolor : string, optional
+        color of the symbols, defaults to 'k' (black)
+    symbolSize : int, optional
+        Size of the symbols in the scatter plot, points, defaults to 4
+    symbol : string, optoinal
+        The symbol to use, defaults to 'o' (circle)
     """
 
     y = []
@@ -643,8 +887,7 @@ def violinPlotScatter(ax, data, symbolColor='k', symbolSize=4, symbol='o'):
     ax.addItem(bar)
     ticks = [[(v, k) for v, k in enumerate(data.keys())], []]
     ax.getAxis('bottom').setTicks(ticks)
-    return
-    
+
 
 def violin_plot(ax, data, pos, dist=.0, bp=False):
     '''
@@ -686,12 +929,17 @@ def violin_plot(ax, data, pos, dist=.0, bp=False):
 
 def labelAxes(plot, xtext, ytext, **kwargs):
     """
-        helper to label up the plot
-        Inputs: plot item
-                text for x axis
-                text for yaxis
-                plot title (on top) OR
-                plot panel label (for example, "A", "A1")
+    helper to label up the plot
+    
+    Parameters
+    -----------
+    plot : plot item
+    xtext : string
+        text for x axis
+    ytext : string
+        text for y axis
+    **kwargs : keywords
+        additional arguments to pass to pyqtgraph setLabel
     """
 
     plot.setLabel('bottom', xtext, **kwargs)
@@ -955,19 +1203,23 @@ def show():
 
 
 def test_layout(win):
+    """
+    Test the various plot types and modifications provided by the helpers above,
+    in the context of a layout with various kinds of plots.
+    """
     layout = LayoutMaker(cols=4,rows=2, win=win, labelEdges=True, ticks='talbot')
     x=np.arange(0, 10., 0.1)
-    y = np.sin(x*3.)
-    r = np.random.random(10)
-    theta = np.linspace(0, 2.*np.pi, 10, endpoint=False)
+    y = np.sin(x*3.)  # make an interesting signal
+    r = np.random.random(10)  # and a random signal
+    theta = np.linspace(0, 2.*np.pi, 10, endpoint=False)  # r, theta for polar plots
     for n in range(4*2):
-        if n not in [1,2,3]:
+        if n not in [1,2,3,4]:
             layout.plot(n, x, y)
         p = layout.getPlot(n)
-        if n == 0:
+        if n == 0:  # crossed axes plot
             crossAxes(p, xyzero=[5., 0.], density=(0.75, 1.5), tickPlacesAdd=(1, 0), pointSize=12)
             layout.title(n, 'Crossed Axes')
-        if n in [1,2]:
+        if n in [1,2,3]:  # two differnt forms of polar plots
             if n == 1:
                 po = polarPlot(p)
                 po.setAxes(rMax=np.max(r))
@@ -981,13 +1233,20 @@ def test_layout(win):
                 po.plot([np.mean(r)], [po.circmean(theta)],
                  vectors=True, pen=pg.mkPen('r', width=2.0))
                 layout.title(n, 'Polar Arrows')
-        if n == 3:
+            if n == 3:
+                po = polarPlot(p)
+                po.hist(r, theta, binwidth=np.pi/6., normalize=False, density=False, pen='r')
+                po.hist(r, theta, binwidth=np.pi/6., normalize=False, density=False, mode='arc', pen='b')
+                po.setAxes(rMax=None)
+                layout.title(n, 'Polar Histogram')
+                
+        if n == 4:  # violin plot with scatter plot data
             data = {2: [3,5,7,9,2,4,6,8,7,2,3,1,2.5], 3: [5, 6, 7, 9, 2, 8, 10, 9.5, 11]}
             violinPlotScatter(p, data, symbolColor='r')
             p.setYRange(0, 12)
             layout.title(n, 'Violin Plots with PseudoScatter')
             
-        if n == 4:
+        if n == 5:  # clean plot for physiology with baseline reference and a calibration bar
             calbar(p, calbar=[7.0, -1.5, 2.0, 0.5], axesoff=True, orient='left', unitNames={'x': 'ms', 'y': 'nA'})
             refline(p, refline=0., color = [64, 64, 64], linestyle = '--' ,linewidth = 0.5)
             layout.title(n, 'Calbar and Refline')
