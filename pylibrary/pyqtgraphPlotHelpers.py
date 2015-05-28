@@ -738,13 +738,24 @@ class polarPlot():
             'straight' selects straight line between bars. 'arc' makes the end of the bar an arc (truer representation), defaults to 'straight'
         **kwds are passed to the data plot call.
 
+        Returns
+        -------
+        tuple : (list of rHist, list of bins)
+            The histogram that was plotted (use for statistical comparisions)
         """
 
         rs = np.array(r)
         thetas = np.array(theta)
+        twopi = np.pi*2.0
+        for i, t in enumerate(thetas):  # restrict to positive half plane [0....2*pi]
+            while t < 0.0:
+                t += twopi
+            while t > twopi:
+                t -= twopi
+            thetas[i] = t
         bins = np.arange(0, np.pi*2+1e-12, binwidth)
         # compute histogram
-        (rhist, rbins) = np.histogram(theta, bins=bins, weights=rs, density=density)
+        (rhist, rbins) = np.histogram(thetas, bins=bins, weights=rs, density=density)
         # Transform to cartesian and plot
         if normalize:
             rhist = rhist/np.max(rhist)
@@ -765,6 +776,7 @@ class polarPlot():
                 self.plotItem.plot([0., xo[i], xp[i], 0.], [0., yo[i], yp[i], 0.], **kwds)
         self.data = {'x': xo, 'y': yo}
         self.rMax = np.max(yo)
+        return (rhist, rbins)
 
 
     def circmean(self, alpha, axis=None):
