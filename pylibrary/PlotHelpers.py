@@ -21,14 +21,16 @@ import os
 import string
 
 stdFont = 'Arial'
+import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.font_manager import FontProperties
 from mpl_toolkits.axes_grid.anchored_artists import AnchoredText
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, DrawingArea, HPacker
 from scipy.stats import gaussian_kde
-import numpy
-import matplotlib.pyplot as pylab
-
+import numpy as np
+import matplotlib.pyplot as mpl
+seaborn.set_style('white')
+seaborn.set_style('ticks')
 
 def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward', axesoff = False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot
@@ -116,8 +118,9 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
     if type(axl) is not list:
         axl = [axl]
     if axlist is None:
-        axlist = string.uppercase(1,len(axl))
+        axlist = string.uppercase[len(axl)]
         # assume we wish to go in sequence
+        assert len(axlist) == len(axl)
     font = FontProperties()
     font.set_family('sans-serif')
     font.set_weight=weight
@@ -126,12 +129,18 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
     for i, ax in enumerate(axl):
         if ax is None:
             continue
-        at = TextArea(axlist[i], textprops=dict(color="k", verticalalignment='bottom',
-            weight=weight, horizontalalignment='right', fontsize=fontsize, family='sans-serif'))
-        box = HPacker(children=[at], align="left", pad=0, sep=2)
-        ab = AnchoredOffsetbox(loc=3, child=box, pad=0., frameon=False, bbox_to_anchor=(-0.08, 1.1),
-            bbox_transform=ax.transAxes, borderpad=0.)
-        ax.add_artist(ab)
+        ax.annotate(axlist[i], xy=(-1.05, 1.05), xycoords='axes fraction',
+                annotation_clip=False,
+                color="k", verticalalignment='bottom',weight=weight, horizontalalignment='right',
+                fontsize=fontsize, family='sans-serif',
+                )
+        # ax.annotate
+        # at = TextArea(axlist[i], textprops=dict(color="k", verticalalignment='bottom',
+        #     weight=weight, horizontalalignment='right', fontsize=fontsize, family='sans-serif'))
+        # box = HPacker(children=[at], align="left", pad=0, sep=2)
+        # ab = AnchoredOffsetbox(loc=3, child=box, pad=0., frameon=False, bbox_to_anchor=(-0.08, 1.1),
+        #     bbox_transform=ax.transAxes, borderpad=0.)
+        # ax.add_artist(ab)
         #text(-0.02, 1.05, axlist[i], verticalalignment='bottom', ha='right', fontproperties = font)
 
 
@@ -170,7 +179,7 @@ def cleanAxes(axl):
         update_font(ax)
 
 
-def setTicks(axl, axis='x', ticks=numpy.arange(0, 1.1, 1.0)):
+def setTicks(axl, axis='x', ticks=np.arange(0, 1.1, 1.0)):
     if type(axl) is dict:
         axl = [axl[x] for x in axl.keys()]
     if type(axl) is not list:
@@ -218,8 +227,8 @@ def autoFormatTicks(axl, axis='xy', font='Arial'):
 
 
 def setFormatter(ax, x0, x1, axis='x'):
-    datarange = numpy.abs(x0-x1)
-    mdata = numpy.ceil(numpy.log10(datarange))
+    datarange = np.abs(x0-x1)
+    mdata = np.ceil(np.log10(datarange))
     if mdata > 0 and mdata <= 4:
         majorFormatter = FormatStrFormatter('%d')
     elif mdata > 4:
@@ -406,16 +415,33 @@ def violin_plot(ax, data, pos, bp=False, median = False):
         k = gaussian_kde(d)  #calculates the kernel density
         m = k.dataset.min()  #lower bound of violin
         M = k.dataset.max()  #upper bound of violin
-        x = numpy.arange(m, M, (M-m)/100.)  # support for violin
+        x = np.arange(m, M, (M-m)/100.)  # support for violin
         v = k.evaluate(x)  #violin profile (density curve)
         v = v / v.max() * w  #scaling the violin to the available space
         ax.fill_betweenx(x, p, v+p, facecolor='y', alpha=0.3)
         ax.fill_betweenx(x, p, -v+p, facecolor='y', alpha=0.3)
         if median:
-            ax.plot([p-0.5, p+0.5], [numpy.median(d), numpy.median(d)], '-')
+            ax.plot([p-0.5, p+0.5], [np.median(d), np.median(d)], '-')
     if bp:
         bpf = ax.boxplot(data, notch=0, positions=pos, vert=1)
-        pylab.setp(bpf['boxes'], color='black')
-        pylab.setp(bpf['whiskers'], color='black', linestyle='-')
+        mpl.setp(bpf['boxes'], color='black')
+        mpl.setp(bpf['whiskers'], color='black', linestyle='-')
 
+
+if __name__ == '__main__':
+    from collections import OrderedDict
+    hfig, ax = mpl.subplots(2, 3)
+    axd = OrderedDict()
+    for i, a in enumerate(ax.flatten()):
+        label = string.uppercase[i]
+        axd[label] = a
+    for a in axd:
+        axd[a].plot(np.random.random(10), np.random.random(10))
+    nice_plot([axd[a] for a in axd])
+    cleanAxes([axd['B'], axd['C']])
+    calbar([axd['B'], axd['C']], calbar=[0.5, 0.5, 0.2, 0.2])
+    labelPanels([axd[a] for a in axd], axd.keys())
+    mpl.tight_layout(pad=2, w_pad=0.5, h_pad=2.0)
+    mpl.show()
+    
                
