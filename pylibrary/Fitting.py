@@ -353,10 +353,10 @@ class Fitting():
     def flattop_gausseval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         """
         Non-normalized version
-        p[0] is amplitude
-        p[1] is central position
-        p[2] is sigma
-        p[3] is the half-width of the flattop region (should be >= 0.)
+        p[0] is amplitude (a)
+        p[1] is central position (x0)
+        p[2] is sigma (signma)
+        p[3] is the half-width of the flattop region (w) (should be >= 0.)
         """
         if p[3] <= 0.0:
             return self.gausseval(p[0:3], x, y=y, C=C, sumsq=sumsq, weights=weights)
@@ -364,11 +364,11 @@ class Fitting():
         pl = p[1] - p[3]
         pr = p[1] + p[3]
         u = 1. / (2.0 * (p[2] * p[2]))
-        eu = numpy.exp(u)
+#        eu = numpy.exp(u)
         xl = numpy.argwhere(x <= pl).flatten()  # all to the left of the ft
         # pts to the right of the flattop
         xr = numpy.argwhere(x >= pr).flatten()
-        A = p[0] / (p[2] * numpy.sqrt(p[2] * 2.0 * numpy.pi))
+#        A = p[0] # / (numpy.sqrt(p[2] * 2.0 * numpy.pi))  # no need to scale... 
         yd = p[0] * numpy.ones(x.shape)
         al = x[xl] - pl
         ar = x[xr] - pr

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pylibrary',
-      version='0.14',
+      version='0.15',
       description='Paul Manis,  Python Utility Library',
       url='',
       author='Paul B. Manis, Ph.D.',

@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+
+# Use Semantic Versioning, http://semver.org/
+version_info = (0, 1, 5, '')
+__version__ = '%d.%d.%d%s' % version_info
+
 listimports = False
 import bootstrap
 if listimports:

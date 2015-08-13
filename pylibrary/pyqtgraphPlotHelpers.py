@@ -376,7 +376,7 @@ def calbar(plotlist, calbar=None, axesoff=True, orient='left', unitNames=None):
             pl.addItem(Vtxt)
 
 
-def refline(axl, refline=None, color=[64, 64, 64], linestyle='--' ,linewidth=0.5):
+def refline(axl, refline=None, color=[64, 64, 64], linestyle='--' ,linewidth=0.5, orient='horizontal'):
     """
     Draw a reference line at a particular level of the data on the y axis
     
@@ -409,11 +409,18 @@ def refline(axl, refline=None, color=[64, 64, 64], linestyle='--' ,linewidth=0.5
         style = QtCore.Qt.DashDotDotLine
     else:
         style = QtCore.Qt.SolidLine # default is solid
-    for ax in axl:
-        if refline is not None:
-            x = ax.getAxis('bottom')
-            xlims = x.range
-            ax.plot(xlims, [refline, refline], pen=pg.mkPen(color, width=linewidth, style=style))
+    if orient is 'horizontal':
+        for ax in axl:
+            if refline is not None:
+                x = ax.getAxis('bottom')
+                xlims = x.range
+                ax.plot(xlims, [refline, refline], pen=pg.mkPen(color, width=linewidth, style=style))
+    if orient is 'vertical':
+        for ax in axl:
+            if refline is not None:
+                y = ax.getAxis('left')
+                ylims = y.range
+                ax.plot([refline, refline], [ylims[0]+0.5, ylims[1]-0.5], pen=pg.mkPen(color, width=linewidth, style=style))
 
 
 def tickStrings(values, scale=1, spacing=None, tickPlacesAdd=1):

@@ -9,7 +9,7 @@ Created by Paul Manis on 2014-06-26.
 Copyright 2010-2014  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
-import scipy.stats
+import scipy.stats as Stats
 import numpy as np
 
 # connect to R via RPy2
@@ -53,7 +53,7 @@ def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
     for i in range(NGroups):
         dn[i]=dataDict[labels[i]]
     dataargs = ', '.join([('dn[{:d}]'.format(d)) for d in range(NGroups)])
-    (F, p) = eval('scipy.stats.f_oneway(%s)' % dataargs)
+    (F, p) = eval('Stats.f_oneway(%s)' % dataargs)
     print '\nOne-way Anova (Scipy.stats), %d Groups for check: F=%f, p = %8.4f'% (NGroups, F, p)
     if R_imported is False:
         'R not found, skipping'
@@ -79,11 +79,11 @@ def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
 
     if mode == 'parametric':
         for i in range(len(data)):
-            w, p = scipy.stats.shapiro(data[i])
+            w, p = Stats.shapiro(data[i])
             if p > 0.05:
-                print ('***** Data Set <{:s}> failed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i]))
+                print ('***** Data Set <{:s}> failed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i], p, w))
             else:
-                print ('Data Set <{:s}> passed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i]))
+                print ('Data Set <{:s}> passed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i], p, w))
         aov = robjects.r("aov(Yd ~ Equation, data=vData)")
         print aov
         robjects.globalenv["aov"] = aov
@@ -102,281 +102,59 @@ def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
         loc = robjects.r('Equation=factor(rep(c(%s), times=c(%s)))' % (clargs, clenargs))
         kwmc = robjects.r('pairwise.wilcox.test(Yd, Equation, p.adj="bonferroni")')
         print "PostTest: pairwise wilcox\n", kwmc
-    #rprint = robjects.globalenv.get("print")
-    # the boxplot is redundant, but worth checking out
-    #bp = robjects.r("boxplot(Yd ~ Group, data=vData)")
-    #rprint(bp)
-#        import time
-#        time.sleep(10)
-#
-#
-#
-# def OneWayAnova3(dataDict=None, dataLabel='data', mode='parametric'):
-#     """
-#     Perform a one way ANOVA with 3 groups
-#     :param dataDict: Dictionary holding data in format
-#         {'group1': [dataset], 'group2': [dataset], 'group3': [dataset]}
-#     :param dataLabel: title to use for print out of data
-#     :param mode: 'parametric' (default) uses R aov. anything else uses Kruskal-Wallis
-#     Prints resutls and post-hoc tests...
-#     :return: Nothing
-#     """
-#     labels = dataDict.keys()
-#     data = [[]]*len(labels)
-#     for i, d in enumerate(labels):
-#         data[i] = dataDict[d]
-#     if len(data) < 3:
-#         print "Need 3 groups to run One Way Anova here"
-#         return
-#     print 'OneWayAnova for %s' % (dataLabel)
-#     da1=dataDict[labels[0]]
-#     da2=dataDict[labels[1]]
-#     da3=dataDict[labels[2]]
-#     (F, p) = scipy.stats.f_oneway(da1, da2, da3)
-#     print '\nOne-way Anova (Scipy.stats): F=%f, p = %8.4f'% (F, p)
-#     if R_imported is False:
-#         print 'R not found, skipping'
-#         return
-#     print '\nR yields (anova3): '
-#     g1 = FloatVector(da1)
-#     g2 = FloatVector(da2)
-#     g3 = FloatVector(da3)
-#     robjects.globalenv['g1'] = g1
-#     robjects.globalenv['g2'] = g2
-#     robjects.globalenv['g3'] = g3
-#     #print da1
-#     #print dir(da1)
-#     robjects.globalenv['d1'] = FloatVector(da1)
-#     robjects.globalenv['d2'] = FloatVector(da2)
-#     robjects.globalenv['d3'] = FloatVector(da3)
-#     robjects.globalenv['d3'] = da3
-#     robjects.globalenv['l1'] = labels[0]
-#     robjects.globalenv['l2'] = labels[1]
-#     robjects.globalenv['l3'] = labels[2]
-#     x=robjects.r("Yd <- c(g1, g2, g3)") # could do inside call, but here is convenient for testing values
-#     vData = robjects.r("""vData <- data.frame( Yd,
-#                 Group=factor(rep(c(l1, l2, l3), times=c(length(g1), length(g2), length(g3)))))""")
-# # OLD code for blanaced groups:
-#     #groups = RBase.gl(3, len(d3), len(d3)*3, labels=labels)
-#     #robjects.globalenv["vData"] = vData
-#     #weight = g1 + g2 + g3 # !!! Order is important here, get it right!
-#    # robjects.globalenv["weight"] = weight
-#    # robjects.globalenv["group"] = groups
-#
-#     if mode == 'parametric':
-#         for i in range(len(data)):
-#             w, p = scipy.stats.shapiro(data[i])
-#             if p > 0.05:
-#                 print ('***** Data Set <{:s}> failed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i]))
-#             else:
-#                 print ('Data Set <{:s}> passed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i]))
-#         aov = robjects.r("aov(Yd ~ Group, data=vData)")
-#         print aov
-#         robjects.globalenv["aov"] = aov
-#         sum = robjects.r("summary(aov)")
-#         print sum
-#         drop = robjects.r('drop1(aov, ~., test="F")')
-#         print drop
-#         #x=RStats.anova(aov)
-#         #print x
-#         print 'Post Hoc (Tukey HSD): '
-#         y=robjects.r("TukeyHSD(aov)")
-#         print y
-#     else:
-#         kw = robjects.r("kruskal.test(Yd ~ Group, data=vData)")
-#         print kw
-#         loc = robjects.r('Group=factor(rep(c(l1, l2, l3), times=c(length(g1), length(g2), length(g3))))')
-#         kwmc = robjects.r('pairwise.wilcox.test(Yd, Group, p.adj="bonferroni")')
-#         print "PostTest: pairwise wilcox\n", kwmc
-#     #rprint = robjects.globalenv.get("print")
-#     # the boxplot is redundant, but worth checking out
-#     #bp = robjects.r("boxplot(Yd ~ Group, data=vData)")
-#     #rprint(bp)
-# #        import time
-# #        time.sleep(10)
-#
-#
-# def OneWayAnova4(dataDict=None, dataLabel='data', mode='parametric'):
-#     """
-#     Perform a one way ANOVA with 4 groups
-#     :param dataDict: Dictionary holding data in format
-#         {'group1': [dataset], 'group2': [dataset], 'group3': [dataset]}
-#     :param dataLabel: title to use for print out of data
-#     :param mode: 'parametric' (default) uses R aov. anything else uses Kruskal-Wallis
-#     Prints resutls and post-hoc tests...
-#     :return: Nothing
-#     """
-#     labels = dataDict.keys()
-#     data = [[]]*len(labels)
-#     for i, d in enumerate(labels):
-#         data[i] = dataDict[d]
-#     if len(data) < 4:
-#         print "Need 4 groups to run One Way Anova 4 here"
-#         return
-#     print 'OneWayAnova for %s' % (dataLabel)
-#     d1=dataDict[labels[0]]
-#     d2=dataDict[labels[1]]
-#     d3=dataDict[labels[2]]
-#     d4=dataDict[labels[3]]
-#     (F, p) = scipy.stats.f_oneway(d1, d2, d3, d4)
-#     print '\nOne-way Anova (Scipy.stats), for check: F=%f, p = %8.4f'% (F, p)
-#     if R_imported is False:
-#         'R not found, skipping'
-#         return
-#     print '\nR yields: '
-#     g1 = FloatVector(d1)
-#     g2 = FloatVector(d2)
-#     g3 = FloatVector(d3)
-#     g4 = FloatVector(d4)
-#     robjects.globalenv['g1'] = g1
-#     robjects.globalenv['g2'] = g2
-#     robjects.globalenv['g3'] = g3
-#     robjects.globalenv['g4'] = g4
-#     robjects.globalenv['d1'] = d1
-#     robjects.globalenv['d2'] = d2
-#     robjects.globalenv['d3'] = d3
-#     robjects.globalenv['d4'] = d4
-#     robjects.globalenv['l1'] = labels[0]
-#     robjects.globalenv['l2'] = labels[1]
-#     robjects.globalenv['l3'] = labels[2]
-#     robjects.globalenv['l4'] = labels[3]
-#     x=robjects.r("Yd <- c(g1, g2, g3, g4)") # could do inside call, but here is convenient for testing values
-#     vData = robjects.r("""vData <- data.frame( Yd,
-#                 Equation=factor(rep(c(l1, l2, l3, l4), times=c(length(g1), length(g2), length(g3), length(g4)))))""")
-# # OLD code for blanaced groups:
-#     #groups = RBase.gl(3, len(d3), len(d3)*3, labels=labels)
-#     #robjects.globalenv["vData"] = vData
-#     #weight = g1 + g2 + g3 # !!! Order is important here, get it right!
-#    # robjects.globalenv["weight"] = weight
-#    # robjects.globalenv["group"] = groups
-#
-#     if mode == 'parametric':
-#         for i in range(len(data)):
-#             w, p = scipy.stats.shapiro(data[i])
-#             if p > 0.05:
-#                 print ('***** Data Set <{:s}> failed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i]))
-#             else:
-#                 print ('Data Set <{:s}> passed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i]))
-#         aov = robjects.r("aov(Yd ~ Equation, data=vData)")
-#         print aov
-#         robjects.globalenv["aov"] = aov
-#         sum = robjects.r("summary(aov)")
-#         print sum
-#        # drop = robjects.r('drop1(aov, ~., test="F")')
-#         #print drop
-#         #x=RStats.anova(aov)
-#         #print x
-#         print 'Post Hoc (Tukey HSD): '
-#         y=robjects.r("TukeyHSD(aov)")
-#         print y
-#     else:
-#         kw = robjects.r("kruskal.test(Yd ~ Equation, data=vData)")
-#         print kw
-#         loc = robjects.r('Equation=factor(rep(c(l1, l2, l3, l4), times=c(length(g1), length(g2), length(g3), length(g4))))')
-#         kwmc = robjects.r('pairwise.wilcox.test(Yd, Equation, p.adj="bonferroni")')
-#         print "PostTest: pairwise wilcox\n", kwmc
-#     #rprint = robjects.globalenv.get("print")
-#     # the boxplot is redundant, but worth checking out
-#     #bp = robjects.r("boxplot(Yd ~ Group, data=vData)")
-#     #rprint(bp)
-# #        import time
-# #        time.sleep(10)
-#
-# def OneWayAnova5(dataDict=None, dataLabel='data', mode='parametric'):
-#     """
-#     Perform a one way ANOVA with 5 groups
-#     :param dataDict: Dictionary holding data in format
-#         {'group1': [dataset], 'group2': [dataset], 'group3': [dataset]}
-#     :param dataLabel: title to use for print out of data
-#     :param mode: 'parametric' (default) uses R aov. anything else uses Kruskal-Wallis
-#     Prints resutls and post-hoc tests...
-#     :return: Nothing
-#     """
-#     labels = dataDict.keys()
-#     data = [[]]*len(labels)
-#     for i, d in enumerate(labels):
-#         data[i] = dataDict[d]
-#     if len(data) < 4:
-#         print "Need 4 groups to run One Way Anova 4 here"
-#         return
-#     print 'OneWayAnova for %s' % (dataLabel)
-#     d1=dataDict[labels[0]]
-#     d2=dataDict[labels[1]]
-#     d3=dataDict[labels[2]]
-#     d4=dataDict[labels[3]]
-#     d5=dataDict[labels[4]]
-#     (F, p) = scipy.stats.f_oneway(d1, d2, d3, d4, d5)
-#     print '\nOne-way Anova (Scipy.stats), for check: F=%f, p = %8.4f'% (F, p)
-#     if R_imported is False:
-#         'R not found, skipping'
-#         return
-#     print '\nR yields: '
-#     g1 = FloatVector(d1)
-#     g2 = FloatVector(d2)
-#     g3 = FloatVector(d3)
-#     g4 = FloatVector(d4)
-#     g5 = FloatVector(d5)
-#     robjects.globalenv['g1'] = g1
-#     robjects.globalenv['g2'] = g2
-#     robjects.globalenv['g3'] = g3
-#     robjects.globalenv['g4'] = g4
-#     robjects.globalenv['g5'] = g5
-#     robjects.globalenv['d1'] = d1
-#     robjects.globalenv['d2'] = d2
-#     robjects.globalenv['d3'] = d3
-#     robjects.globalenv['d4'] = d4
-#     robjects.globalenv['d5'] = d5
-#     robjects.globalenv['l1'] = labels[0]
-#     robjects.globalenv['l2'] = labels[1]
-#     robjects.globalenv['l3'] = labels[2]
-#     robjects.globalenv['l4'] = labels[3]
-#     robjects.globalenv['l5'] = labels[4]
-#     x=robjects.r("Yd <- c(g1, g2, g3, g4, g5)") # could do inside call, but here is convenient for testing values
-#     vData = robjects.r("""vData <- data.frame( Yd,
-#                 Equation=factor(rep(c(l1, l2, l3, l4, l5), times=c(length(g1), length(g2), length(g3), length(g4), length(g5)))))""")
-# # OLD code for blanaced groups:
-#     #groups = RBase.gl(3, len(d3), len(d3)*3, labels=labels)
-#     #robjects.globalenv["vData"] = vData
-#     #weight = g1 + g2 + g3 # !!! Order is important here, get it right!
-#    # robjects.globalenv["weight"] = weight
-#    # robjects.globalenv["group"] = groups
-#
-#     if mode == 'parametric':
-#         for i in range(len(data)):
-#             w, p = scipy.stats.shapiro(data[i])
-#             if p > 0.05:
-#                 print ('***** Data Set <{:s}> failed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i]))
-#             else:
-#                 print ('Data Set <{:s}> passed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i]))
-#
-#
-#         aov = robjects.r("aov(Yd ~ Equation, data=vData)")
-#         print aov
-#         robjects.globalenv["aov"] = aov
-#         sum = robjects.r("summary(aov)")
-#         print sum
-#        # drop = robjects.r('drop1(aov, ~., test="F")')
-#         #print drop
-#         #x=RStats.anova(aov)
-#         #print x
-#         print 'Post Hoc (Tukey HSD): '
-#         y=robjects.r("TukeyHSD(aov)")
-#         print y
-#     else:
-#         kw = robjects.r("kruskal.test(Yd ~ Equation, data=vData)")
-#         print kw
-#         loc = robjects.r('Equation=factor(rep(c(l1, l2, l3, l4, l5), times=c(length(g1), length(g2), length(g3), length(g4), length(g5))))')
-#         kwmc = robjects.r('pairwise.wilcox.test(Yd, Equation, p.adj="bonferroni")')
-#         print "PostTest: pairwise wilcox\n", kwmc
-#     #rprint = robjects.globalenv.get("print")
-#     # the boxplot is redundant, but worth checking out
-#     #bp = robjects.r("boxplot(Yd ~ Group, data=vData)")
-#     #rprint(bp)
-# #        import time
-# #        time.sleep(10)
 
+
+
+def permTS(dataDict=None, dataLabel='data', mode='exact.ce'):
+    """
+    perform a two-sample permutation test using the perm package in R
+    Uses the monte-carlo simulation method - not necessarily the fastest, but is "exact"
+    This routine is a wrapper for permTS in R.
+    
+    Params
+    ------
+    dataDict: Dictionary holding data in format
+        {'group1': [dataset], 'group2': [dataset]}.
+    dataLabel: str
+        title to use for print out of data
+    mode: str
+        test mode (see manual. Usually 'exact.ce' for "complete enumeration", or 
+        'exact.mc' for montecarlo)
+    Returns
+    -------
+    (p, n) : tuple
+        p value for test (against null hypothesis), and n, number of mc replications or 0 for other tests
+    """
+    labels = dataDict.keys()
+    NGroups = len(labels)
+    if NGroups != 2:
+        print "Need at exactly 2 groups to run Two Sample permutation test (permTS)"
+        return
+    cmdx = 'X=c(%s)' % ', '.join(str(x) for x in dataDict[labels[0]])
+    cmdy = 'Y=c(%s)' % ', '.join(str(y) for y in dataDict[labels[1]])
+    importr('perm')
+    robjects.r(cmdx)
+    robjects.r(cmdy)
+    u = robjects.r("permTS(X, Y, method='%s')" % mode)
+
+    pvalue = float(u[3][0])
+    if mode == 'exact.mc':
+        nmc = int(u[10][0])
+    else:
+        nmc = 0
+    estdiffu = u[1] # get diff estimate
+    d = u[1].items()  # stored as a generator (interesting...)
+    estdiff = d.next()  # gets the tuple with what was measured, and the value
+    if dataLabel is not None:
+        print '\nPermutation Test (R permTS). Dataset = %s' % (dataLabel)
+        print(u'  Test statistic: ({:s}): {:8.4f}'.format(estdiff[0], estdiff[1]))
+        print(u'  p={:8.6f}, Nperm={:8d} [mode={:s}]'.format(float(pvalue), int(nmc), mode))
+    return (pvalue, nmc)  # return the p value for this test, and the number of mc replicatess
 
 def permutation(data, dataLabel=None, nperm=10000, decimals=4):
+    """
+    Brute force permutation test
+    """
     k = data.keys()
     if len(k) > 2:
         raise ValueError('Permutation can only compare 2 groups: use KW (anova) for more than 2 groups')
@@ -385,9 +163,7 @@ def permutation(data, dataLabel=None, nperm=10000, decimals=4):
     g2 = data[k[1]]
     (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
     (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
-    if p1 > 0.05 or p2 > 0.05:
-        print(u'Some data are NOT normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
-        print (u'    (Permutation test does not depend on distribution)')
+
     combined = np.concatenate((g1, g2))
     diffobs = np.mean(g2)-np.mean(g1)
     diffs = np.zeros(nperm)
@@ -402,17 +178,23 @@ def permutation(data, dataLabel=None, nperm=10000, decimals=4):
         diffs[i] = np.mean(br) - np.mean(ar)
     pvalue = np.sum(np.abs(diffs) >= np.abs(diffobs)) / float(nperm)
     if dataLabel is not None:
-        print 'Permutation Test. Dataset = %s (N = %d)' % (dataLabel, nperm)
+        print '\nPermutation Test. Dataset = %s (N = %d)' % (dataLabel, nperm)
+        if p1 < 0.05 and p2 < 0.05:
+            print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+        else:
+            print(u'  ****At least one Data set is NOT normally distributed****\n      Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+        print (u'    (Permutation test does not depend on distribution)')
+
         n = max([len(l) for l in k])
         print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f} (mean, SD)'.format(k[0].rjust(n), np.mean(g1), np.std(g1), pc=decimals))
         print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f} (mean, SD)'.format(k[1].rjust(n), np.mean(g2), np.std(g2), pc=decimals))
-        print(u'   p={:8.6f}, N={:8d}'.format(float(pvalue), int(nperm)))
         summarizeData(data, decimals=decimals)
         # iqr1 = np.subtract(*np.percentile(g1, [75, 25]))
         # iqr2 = np.subtract(*np.percentile(g2, [75, 25]))
         # print(u'  {:s}: median={:8.4f}  IQR={:8.4f}'.format(k[0].rjust(n), np.median(g1), iqr1))
         # print(u'  {:s}: median={:8.4f}  IQR={:8.4f}'.format(k[1].rjust(n), np.median(g2), iqr2))
-        print(u'Observed difference: {:8.4f}'.format(diffobs))
+        print(u'  Observed difference: {:8.4f}\n'.format(diffobs))
+        print(u'  p={:8.6f}, Nperm={:8d}'.format(float(pvalue), int(nperm)))
     return(pvalue, nperm)
 
 def ttest(data, dataLabel=None, decimals=4):
@@ -431,19 +213,12 @@ def ttest(data, dataLabel=None, decimals=4):
     n2 = len(g2)
     (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
     (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
-    if p1 < 0.05 and p2 < 0.05:
-        print(u'Data appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
-    else:
-        print(u'****Data are NOT normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f} *****'.format(p1, p2))
-        print (u'(performing test anyway, as requested)')
     Tb, pb = Stats.bartlett(g1, g2)  # do bartletss for equal variance
-    if pb < 0.05:
-        equalvar = True
-        print(u'  Variances are equivalent (Bartletts test, p = %.3f)'.format(pb))
+    if pb > 0.05:
+        equalVar = True
     else:
-        equalvar = False
-        print(u'  Variances are unequal (Bartletts test, p = %.3f); not assuming equal variances'.format(pb))
-    (t, p) = Stats.ttest_ind(g1, g2, equal_var=False)
+        equalVar = False
+    (t, p) = Stats.ttest_ind(g1, g2, equal_var=equalVar)
     g1mean = np.mean(g1)
     g1std = np.std(g1)
     g2mean = np.mean(g2)
@@ -453,7 +228,16 @@ def ttest(data, dataLabel=None, decimals=4):
     df = (g1std**2/n1 + g2std**2/n2)**2 / (((g1std**2 / n1)**2 / (n1 - 1) + ((g2std**2 / n2)**2 / (n1 - 1))))
     if dataLabel is not None:
         n = max([len(l) for l in k])
-        print 'T-test, data set = %s' % (dataLabel)
+        print '\nT-test, data set = %s' % (dataLabel)
+        if p1 < 0.05 and p2 < 0.05:
+            print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+        else:
+            print(u'  ****At least one Data set is NOT normally distributed****\n      Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+            print (u'    (performing test anyway, as requested)')
+        if equalVar:
+            print(u'  Variances are equivalent (Bartletts test, p = {:.3f})'.format(pb))
+        else:
+            print(u'  Variances are unequal (Bartletts test, p = {:.3f}); not assuming equal variances'.format(pb))
         print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f}  (mean, SD)'.format(k[0].rjust(n), g1mean, g1std, pc=decimals))
         print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f}  (mean, SD)'.format(k[1].rjust(n), g2mean, g2std, pc=decimals))
         print(u'  t({:6.2f})={:8.4f}   p={:8.6f}'.format(df, float(t), float(p)))
@@ -480,14 +264,15 @@ def ranksums(data, dataLabel=None, decimals=4):
     g2std = np.std(g2)
     (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
     (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
-    if p1 > 0.05 or p2 > 0.05:
-        print(u'Some data appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
-        print (u'    (Nonparametric does not assume normal distribution)')
-    else:
-        print(u'Both data sets are normally distributed by Shapiro-Wilk test; could use t-test')
     if dataLabel is not None:
         n = max([len(l) for l in k])
-        print 'Wilcoxon Rank Sums test, data set = %s' % dataLabel
+        print '\nWilcoxon Rank Sums test, data set = %s' % dataLabel
+        if p1 < 0.05 and p2 < 0.05:
+            print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+        else:
+            print(u'  ****At least one Data set is NOT normally distributed****\n      Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+            print (u'    (RankSums does not assume normal distribution)')
+
         print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f} (mean, SD)'.format(k[0].rjust(n), g1mean, g1std, pc=decimals))
         print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f} (mean, SD)'.format(k[1].rjust(n), g2mean, g2std, pc=decimals))
         summarizeData(data, decimals=decimals)
@@ -495,7 +280,7 @@ def ranksums(data, dataLabel=None, decimals=4):
         # iqr2 = np.subtract(*np.percentile(g2, [75, 25]))
         # print(u'  {:s}: median={:8.4f}  IQR={:8.4f}'.format(k[0].rjust(n), np.median(g1), iqr1))
         # print(u'  {:s}: median={:8.4f}  IQR={:8.4f}'.format(k[1].rjust(n), np.median(g2), iqr2))
-        print(u'   z={:8.4f}   p={:8.6f}'.format(float(z), float(p)))
+        print(u'  z={:8.4f}   p={:8.6f}'.format(float(z), float(p)))
     return(float(z), float(p))    
 
 
@@ -519,7 +304,7 @@ def test(ngroups=3):
     """
     data={'Control': [54, 23, 45, 54, 45, 47], 'Treated': [87, 98, 64, 77, 89], 
     'TreatedAntagonist': [45, 39, 51, 49, 50, 55]}
-    OneWayAnova3(dataDict=data, dataLabel='3Groups', mode='parametric')
+    OneWayAnova(dataDict=data, dataLabel='3Groups', mode='parametric')
     print '-'*80
     print 'Compare to Prism output: '
     print """
@@ -573,6 +358,27 @@ def test(ngroups=3):
     "  Treated vs. Treated+Antagonist"	83.00	48.17	34.83	6.218	5	6	7.923	14
 
     """
+
+def test2Samp():
+
+    sigmax = 1.0
+    sigmay = 3.0
+    mux = 0.0
+    muy = 3.0
+    nx = 10
+    ny = 8
+    np.random.RandomState(0)  # set seed to 0
+    datax = sigmax * np.random.randn(nx) + mux   
+    datay = sigmay * np.random.randn(ny) + muy   
+    datadict = {'x': datax, 'y': datay}
+    ranksums(datadict, dataLabel='Test Rank Sums')
+    permutation(datadict, dataLabel='Test simple permute')
+    ttest(datadict, dataLabel='Standard t-test')
+    (p, n) = permTS(datadict, dataLabel='R permTS')
+
+    
+    
 if __name__ == '__main__':
-    test()
+    #test()
+    test2Samp()
     

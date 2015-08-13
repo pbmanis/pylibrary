@@ -110,7 +110,7 @@ def setX(ax1, ax2):
         ax.set_xlim(refx)
 
 
-def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
+def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-1.05, 1.05)):
     if type(axl) is dict:
         axt = [axl[x] for x in axl]
         axlist = axl.keys()
@@ -129,7 +129,7 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
     for i, ax in enumerate(axl):
         if ax is None:
             continue
-        ax.annotate(axlist[i], xy=(-1.05, 1.05), xycoords='axes fraction',
+        ax.annotate(axlist[i], xy=xy, xycoords='axes fraction',
                 annotation_clip=False,
                 color="k", verticalalignment='bottom',weight=weight, horizontalalignment='right',
                 fontsize=fontsize, family='sans-serif',
