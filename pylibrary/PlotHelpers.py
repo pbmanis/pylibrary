@@ -248,7 +248,7 @@ def setFormatter(ax, x0, x1, axis='x'):
 def update_font(axl, size=9, font=stdFont):
     if type(axl) is not list:
         axl = [axl]
-    fontProperties = {'family':'sans-serif','sans-serif': font,
+    fontProperties = {'family':'sans-serif', #'sans-serif': font,
             'weight' : 'normal', 'size' : size}
     for ax in axl:
         if ax is None:
