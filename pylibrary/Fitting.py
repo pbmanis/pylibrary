@@ -270,7 +270,7 @@ class Fitting():
             else:
                 return y - yd
 
-    def FIGrowth1(self, p, x, y=None, C=None, sumsq=False, weights=None):
+    def FIGrowth1(self, p, x, y=None, C=None, sumsq=True, weights=None):
         """
         Frequency versus current intensity (FI plot) fit
         Linear fit from 0 to breakpoint
@@ -280,7 +280,7 @@ class Fitting():
         for I < break:
             F = Fzero + I*F1amp
         for I >= break:
-            F = F(break)+ F2amp(1-exp^(-t/Irate))
+            F = F(break)+ F2amp(1-exp^(-t * Irate))
         """
         Fzero, Ibreak, F1amp, F2amp, Irate = p
         yd = numpy.zeros(x.shape)

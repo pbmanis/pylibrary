@@ -110,7 +110,7 @@ def setX(ax1, ax2):
         ax.set_xlim(refx)
 
 
-def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-1.05, 1.05)):
+def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05)):
     if type(axl) is dict:
         axt = [axl[x] for x in axl]
         axlist = axl.keys()
@@ -441,7 +441,7 @@ if __name__ == '__main__':
     cleanAxes([axd['B'], axd['C']])
     calbar([axd['B'], axd['C']], calbar=[0.5, 0.5, 0.2, 0.2])
     labelPanels([axd[a] for a in axd], axd.keys())
-    mpl.tight_layout(pad=2, w_pad=0.5, h_pad=2.0)
+    #mpl.tight_layout(pad=2, w_pad=0.5, h_pad=2.0)
     mpl.show()
     
                
