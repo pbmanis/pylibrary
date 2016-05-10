@@ -346,16 +346,32 @@ def ranksums(data, dataLabel=None, paired=False, decimals=4):
             '\nUse KW (anova) for more than 2 groups')
 
     k = data.keys()
+    labels = data.keys()
     g1 = data[k[0]]
     g2 = data[k[1]]
     n1 = len(g1)
     n2 = len(g2)
+
+    cmdx = '%s=c(%s)' % (labels[0], ', '.join(str(x) for x in data[labels[0]]))
+    cmdy = '%s=c(%s)' % (labels[1], ', '.join(str(y) for y in data[labels[1]]))
+    importr('coin')
+    #importr('wilcox.test')
+    robjects.r(cmdx)
+    robjects.r(cmdy)
+
     if paired:
         (z, p) = Stats.wilcoxon(g1, g2)
-        testtype = "Wilcoxon singed-rank"
+        res = robjects.r("wilcox.test(%s, %s, pair=T)" % (labels[0], labels[1]))
+#        print 'R: Wilcox (paired) p: ', u[u.names.index('p.value')][0]
+        testtype = "Wilcoxon signed-rank"
+        pairedtype = "Paired"
     else:
         (z, p) = Stats.ranksums(g1, g2)
         testtype = "Rank-sums test"
+        res = robjects.r("wilcox.test(%s, %s, pair=F)" % (labels[0], labels[1]))
+        pairedtype = "Independent"
+#        print 'R: Wilcox (unpaired) p: ', u[u.names.index('p.value')][0]
+        
     g1mean = np.mean(g1)
     g1std = np.std(g1)
     g2mean = np.mean(g2)
@@ -366,19 +382,21 @@ def ranksums(data, dataLabel=None, paired=False, decimals=4):
         n = max([len(l) for l in k])
         print '\n%s test, data set = %s' % (testtype, dataLabel)
         if p1 < 0.05 and p2 < 0.05:
-            print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+            print(u'  Both data sets appear normally distributed: \n    Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
         else:
             print(u'  ****At least one Data set is NOT normally distributed****\n      Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
-            print (u'    (RankSums does not assume normal distribution)')
+            print(u'    (RankSums does not assume normal distribution)')
 
-        print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f} (mean, SD)'.format(k[0].rjust(n), g1mean, g1std, pc=decimals))
-        print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f} (mean, SD)'.format(k[1].rjust(n), g2mean, g2std, pc=decimals))
+        print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f}, {:d} (mean, SD, N)'.format(k[0].rjust(n), g1mean, g1std, len(g1), pc=decimals))
+        print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f}, {:d} (mean, SD, N)'.format(k[1].rjust(n), g2mean, g2std, len(g2), pc=decimals))
         summarizeData(data, decimals=decimals)
         # iqr1 = np.subtract(*np.percentile(g1, [75, 25]))
         # iqr2 = np.subtract(*np.percentile(g2, [75, 25]))
         # print(u'  {:s}: median={:8.4f}  IQR={:8.4f}'.format(k[0].rjust(n), np.median(g1), iqr1))
         # print(u'  {:s}: median={:8.4f}  IQR={:8.4f}'.format(k[1].rjust(n), np.median(g2), iqr2))
-        print(u'  z={:8.4f}   p={:8.6f}\n'.format(float(z), float(p)))
+        print(u'  z={:8.4f}   p={:8.6f}   <scipy.Stats: {:20s}, {:11s}>'.format(float(z), float(p), testtype, pairedtype))
+        print(u'  z={:8.4f}   p={:8.6f}   <R Stats    : {:20s}, {:11s}>\n'.format(res[res.names.index('statistic')][0], float(res[res.names.index('p.value')][0]),
+                testtype, pairedtype))
     return(float(z), float(p))    
 
 
@@ -490,6 +508,7 @@ def test2Samp():
     muy = 3.0
     nx = 10
     ny = 10
+    # Update
     np.random.RandomState(0)  # set seed to 0
     datax = sigmax * np.random.randn(nx) + mux
     datay = sigmay * np.random.randn(ny) + muy
