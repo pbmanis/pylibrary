@@ -118,7 +118,7 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     if type(axl) is not list:
         axl = [axl]
     if axlist is None:
-        axlist = string.uppercase[len(axl)]
+        axlist = string.uppercase[0:len(axl)]
         # assume we wish to go in sequence
         assert len(axlist) == len(axl)
     font = FontProperties()
