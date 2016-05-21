@@ -160,23 +160,27 @@ def permTS(dataDict=None, dataLabel='data', mode='exact.ce'):
     NGroups = len(labels)
     cmdx = 'X=c(%s)' % ', '.join(str(x) for x in dataDict[labels[0]])
     cmdy = 'Y=c(%s)' % ', '.join(str(y) for y in dataDict[labels[1]])
-    importr('perm')
+# package "perm" not available on mac os x, use coin instead
+#    importr('perm')
     robjects.r(cmdx)
     robjects.r(cmdy)
-    u = robjects.r("permTS(X, Y, method='%s')" % mode)
+    
+    (pvalue, nmc) = permutation(dataDict, dataDict.keys())
+    
+#    u = robjects.r("permTS(X, Y, method='%s')" % mode)
 
-    pvalue = float(u[3][0])
-    if mode == 'exact.mc':
-        nmc = int(u[10][0])
-    else:
-        nmc = 0
-    estdiffu = u[1] # get diff estimate
-    d = u[1].items()  # stored as a generator (interesting...)
-    estdiff = d.next()  # gets the tuple with what was measured, and the value
-    if dataLabel is not None:
-        print '\nPermutation Test (R permTS). Dataset = %s' % (dataLabel)
-        print(u'  Test statistic: ({:s}): {:8.4f}'.format(estdiff[0], estdiff[1]))
-        print(u'  p={:8.6f}, Nperm={:8d} [mode={:s}]'.format(float(pvalue), int(nmc), mode))
+    # pvalue = float(u[3][0])
+    # if mode == 'exact.mc':
+    #     nmc = int(u[10][0])
+    # else:
+    #     nmc = 0
+    # estdiffu = u[1] # get diff estimate
+    # d = u[1].items()  # stored as a generator (interesting...)
+    #estdiff = d.next()  # gets the tuple with what was measured, and the value
+    # if dataLabel is not None:
+    #     print '\nPermutation Test (R permTS). Dataset = %s' % (dataLabel)
+    #     print(u'  Test statistic: ({:s}): {:8.4f}'.format(estdiff[0], estdiff[1]))
+    #     print(u'  p={:8.6f}, Nperm={:8d} [mode={:s}]'.format(float(pvalue), int(nmc), mode))
     return (pvalue, nmc)  # return the p value for this test, and the number of mc replicatess
 
 
