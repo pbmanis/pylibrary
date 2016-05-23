@@ -4,7 +4,7 @@
 PlotHelpers.py
 
 Routines to help use matplotlib and make cleaner plots
-as well as get plots read for publication. 
+as well as get plots ready for publication. 
 
 Modified to allow us to use a list of axes, and operate on all of those, 
 or to use just one axis if that's all that is passed.
@@ -12,8 +12,9 @@ Therefore, the first argument to these calls can either be an axes object,
 or a list of axes objects.  2/10/2012 pbm.
 
 Created by Paul Manis on 2010-03-09.
-Copyright 2010-2014  Paul Manis
+Copyright 2010-2016  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
+
 """
 
 import sys
@@ -33,10 +34,33 @@ seaborn.set_style('white')
 seaborn.set_style('ticks')
 
 def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward', axesoff = False):
-    """ Adjust a plot so that it looks nicer than the default matplotlib plot
+    """ Adjust a plot so that it looks nicer than the default matplotlib plot.
         Also allow quickaccess to things we like to do for publication plots, including:
            using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
            inserting a reference line (grey, 3pt dashed, 0.5pt, at refline = y position)
+    
+    Parameters
+    ----------
+    axl : list of axes objects
+        If a single axis object is present, it will be converted to a list here.
+    
+    spines : list of strings (default : ['left', 'bottom'])
+        Sets whether spines will occur on particular axes. Choices are 'left', 'right',
+        'bottom', and 'top'
+    
+    position : float (default : 10)
+        Determines position of spines in points, typically outward by x points. The
+        spines are the main axes lines, not the tick marks
+        
+    direction : string (default : 'inward')
+        Sets the direction of spines. Choices are 'inward' and 'outward'
+
+    axesoff : boolean (default : False)
+        If true, forces the axes to be turned completely off.
+    
+    Returns
+    -------
+        Nothing.
     """
     if type(axl) is not list:
         axl = [axl]
@@ -74,7 +98,22 @@ def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward
 
 
 def noaxes(axl, whichaxes = 'xy'):
-    """ take away all the axis ticks and the lines"""
+    """ take away all the axis ticks and the lines
+    
+    Parameters
+    ----------
+    
+    axl : list of axes objects
+        If a single axis object is present, it will be converted to a list here.
+    
+    whichaxes : string (default : 'xy')
+        Sets which axes are turned off. The presence of an 'x' in 
+        the string turns off x, the presence of 'y' turns off y.
+    
+    Returns
+    -------
+        Nothing
+    """
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
@@ -89,6 +128,24 @@ def noaxes(axl, whichaxes = 'xy'):
 
 
 def setY(ax1, ax2):
+    """
+    Set the Y limits for an axes from a source axes to 
+    the target axes.
+    
+    Parameters
+    ----------
+    
+    ax1 : axis object
+        The source axis object
+    ax2 : list of axes objects
+        If a single axis object is present, it will be converted to a list here.
+        These are the target axes objects that will take on the limits of the source.
+    
+    Returns
+    -------
+        Nothing
+    
+    """
     if type(ax1) is list:
         print 'PlotHelpers: cannot use list as source to set Y axis'
         return
@@ -100,6 +157,24 @@ def setY(ax1, ax2):
 
 
 def setX(ax1, ax2):
+    """
+    Set the X limits for an axes from a source axes to 
+    the target axes.
+    
+    Parameters
+    ----------
+    
+    ax1 : axis object
+        The source axis object
+    ax2 : list of axes objects
+        If a single axis object is present, it will be converted to a list here.
+        These are the target axes objects that will take on the limits of the source.
+    
+    Returns
+    -------
+        Nothing
+    
+    """
     if type(ax1) is list:
         print 'PlotHelpers: cannot use list as source to set Y axis'
         return
@@ -111,6 +186,36 @@ def setX(ax1, ax2):
 
 
 def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05)):
+    """
+    Provide labeling of panels in a figure with multiple subplots (axes)
+    
+    Parameters
+    ----------
+    axl : list of axes objects
+        If a single axis object is present, it will be converted to a list here.
+    
+    axlist : list of string labels (default : None)
+        Contains a list of the string labels. If the default value is provided,
+        the axes will be lettered in alphabetical sequence. 
+    
+    font : string (default : 'Arial')
+        Name of a valid font to use for the panel labels
+    
+    fontsize : float (default : 18, in points)
+        Font size to use for axis labeling
+    
+    weight : string (default : 'normal')
+        Font weight to use for labels. 'Bold', 'Italic', and 'Normal' are options
+    
+    xy : tuple (default : (-0.05, 1.05))
+        A tuple (x,y) indicating where the label should go relative to the axis frame.
+        Values are normalized as a fraction of the frame size.
+    
+    Returns
+    -------
+        Nothing
+
+    """
     if type(axl) is dict:
         axt = [axl[x] for x in axl]
         axlist = axl.keys()
