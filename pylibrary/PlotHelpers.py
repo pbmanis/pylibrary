@@ -316,7 +316,42 @@ def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', dista
             else:
                 spine.set_color('none')  # don't draw spine
 
-        
+
+def getLayoutDimensions(n, pref='height'):
+    """
+    Return a tuple of optimized layout dimensions for n axes
+    
+    Parameters
+    ----------
+    n : int (no default):
+        Number of plots needed
+    pref : string (default : 'height')
+        prefered way to organized the plots (height, or width)
+    
+    Returns
+    -------
+    (h, w) : tuple
+        height (rows) and width (columns)
+    
+    """
+    nopt = np.sqrt(n)
+    inoptw = int(nopt)
+    inopth = int(nopt)
+    while inoptw*inopth < n:
+        if pref == 'width':
+            inoptw += 1
+            if inoptw * inopth > (n-inopth):
+                inoptw -= 1
+                inopth += 1
+        else:
+            inopth += 1
+            if inoptw * inopth > (n-inoptw):
+                inopth -= 1
+                inoptw += 1
+            
+    return(inopth, inoptw)
+    
+
 def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
     """
         draw a calibration bar and label it. The calibration bar is defined as:
