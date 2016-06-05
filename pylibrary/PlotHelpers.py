@@ -405,6 +405,7 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
 def refline(axl, refline = None, color = '0.33', linestyle = '--' ,linewidth = 0.5):
     """
     draw a reference line at a particular level of the data on the y axis
+    returns the line object.
     """
     if type(axl) is not list:
         axl = [axl]
@@ -413,8 +414,9 @@ def refline(axl, refline = None, color = '0.33', linestyle = '--' ,linewidth = 0
             continue
         if refline is not None:
             xlims = ax.get_xlim()
-            ax.plot([xlims[0], xlims[1]], [refline, refline], color = color, linestyle=linestyle, linewidth=linewidth)
-
+            rl = ax.plot([xlims[0], xlims[1]], [refline, refline],
+                 color = color, linestyle=linestyle, linewidth=linewidth)
+    return rl
 
 def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
     """
