@@ -655,7 +655,7 @@ class Fitting():
                     print 'method %s not recognized, please check Fitting.py' % (method)
                     return
                 # min(tx), max(tx), (max(tx)-min(tx))/100.0)
-                xfit = numpy.arange(t0, t1, (t1 - t0) / 100.)
+                xfit = numpy.linspace(t0, t1, num=100, endpoint=True)
                 yfit = func[0](plsq, xfit, C=fixedPars)
                 yy = func[0](plsq, tx, C=fixedPars)  # calculate function
                 self.fitSum2Err = numpy.sum((dy - yy) ** 2)
