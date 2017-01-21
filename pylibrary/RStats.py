@@ -213,8 +213,8 @@ def permutation(data, dataLabel=None, nperm=10000, decimals=4):
         
     g1 = data[k[0]]
     g2 = data[k[1]]
-    (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
-    (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
+    # (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
+    # (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
 
     combined = np.concatenate((g1, g2))
     diffobs = np.mean(g2)-np.mean(g1)
@@ -230,16 +230,16 @@ def permutation(data, dataLabel=None, nperm=10000, decimals=4):
         diffs[i] = np.mean(br) - np.mean(ar)
     pvalue = np.sum(np.abs(diffs) >= np.abs(diffobs)) / float(nperm)
     if dataLabel is not None:
-        print '\nPermutation Test. Dataset = %s (N = %d)' % (dataLabel, nperm)
-        if p1 < 0.05 and p2 < 0.05:
-            print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
-        else:
-            print(u'  ****At least one Data set is NOT normally distributed****\n      Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
-        print (u'    (Permutation test does not depend on distribution)')
+        print '\n%s:  Permutation Test (Nperm = %d)' % (dataLabel, nperm)
+        # if p1 < 0.05 and p2 < 0.05:
+        #     print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+        # else:
+        #     print(u'  ****At least one Data set is NOT normally distributed****\n      Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+        # print (u'    (Permutation test does not depend on distribution)')
 
         n = max([len(l) for l in k])
-        print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f} (mean, SD)'.format(k[0].rjust(n), np.mean(g1), np.std(g1), pc=decimals))
-        print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f} (mean, SD)'.format(k[1].rjust(n), np.mean(g2), np.std(g2), pc=decimals))
+        print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f}, {:d} (mean, SD, N)'.format(k[0].rjust(n), np.mean(g1), np.std(g1), len(g1), pc=decimals))
+        print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f}, {:d} (mean, SD, N)'.format(k[1].rjust(n), np.mean(g2), np.std(g2), len(g2), pc=decimals))
         summarizeData(data, decimals=decimals)
         # iqr1 = np.subtract(*np.percentile(g1, [75, 25]))
         # iqr2 = np.subtract(*np.percentile(g2, [75, 25]))
@@ -254,6 +254,13 @@ def ttest(data, dataLabel=None, paired=False, decimals=4):
     """
     Perform a t-test using Scipy.stats
     
+    Comment: This routine first tests the equal varaince assumption.
+    There are reasons that this might be viewed askance. 
+    Therefore, a simple test just using Welch's test, and assuming unequal variance
+    may be prefered (Ruxton, G. Behav. Ecol., 17:688, 2006)
+    The current version no longer performs a prior test for equal variances, nor does it report
+    the results for that test.
+    We always assume variances are unequal.
     Parameters
     ----------
     data : Dictionary (default: None)
@@ -275,7 +282,7 @@ def ttest(data, dataLabel=None, paired=False, decimals=4):
     
     # test calling values
     if data is None or not isinstance(data, dict) or len(data.keys()) != 2:
-        raise ValueError('RStats.permutation: data must be a dictionary with at exactly 2 keys' +
+        raise ValueError('RStats.ttest: data must be a dictionary with at exactly 2 keys' +
             '\nUse KW (anova) for more than 2 groups')
             
     k = data.keys()
@@ -283,17 +290,16 @@ def ttest(data, dataLabel=None, paired=False, decimals=4):
     g2 = data[k[1]]
     n1 = len(g1)
     n2 = len(g2)
-    (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
-    (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
-    Tb, pb = Stats.bartlett(g1, g2)  # do bartletss for equal variance
-    if pb > 0.05:
-        equalVar = True
-    else:
-        equalVar = False
+    # (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
+    # (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
+    # Tb, pb = Stats.bartlett(g1, g2)  # do bartletss for equal variance
+    equalVar = False
+    
     if paired:
-        (t, p) = Stats.ttest_rel(g1, g2, equal_var=equalVar)
+        print (len(g1), len(g2))
+        (t, p) = Stats.ttest_rel(g1, g2)
     else:
-        (t, p) = Stats.ttest_ind(g1, g2,)
+        (t, p) = Stats.ttest_ind(g1, g2, equal_var=equalVar)
     g1mean = np.mean(g1)
     g1std = np.std(g1)
     g2mean = np.mean(g2)
@@ -306,19 +312,19 @@ def ttest(data, dataLabel=None, paired=False, decimals=4):
         if paired:
             testtype = 'Paired'
         n = max([len(l) for l in k])
-        print '\n%s T-test, data set = %s' % (testtype, dataLabel)
-        if p1 < 0.05 and p2 < 0.05:
-            print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
-        else:
-            print(u'  ****At least one Data set is NOT normally distributed****\n      Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
-            print (u'    (performing test anyway, as requested)')
-        if equalVar:
-            print(u'  Variances are equivalent (Bartletts test, p = {:.3f})'.format(pb))
-        else:
-            print(u'  Variances are unequal (Bartletts test, p = {:.3f}); not assuming equal variances'.format(pb))
-        print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f}  (mean, SD)'.format(k[0].rjust(n), g1mean, g1std, pc=decimals))
-        print(u'  {:s}={:8.{pc}f}\u00B1{:.{pc}f}  (mean, SD)'.format(k[1].rjust(n), g2mean, g2std, pc=decimals))
-        print(u'  t({:6.2f})={:8.4f}   p={:8.6f}\n'.format(df, float(t), float(p)))
+        print '\n%s\n  %s T-test, Welch correction' % (dataLabel, testtype)
+        # if p1 < 0.05 and p2 < 0.05:
+        #     print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+        # else:
+        #     print(u'  ****At least one Data set is NOT normally distributed****\n      Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
+        #     print (u'    (performing test anyway, as requested)')
+        # if equalVar:
+        #     print(u'  Variances are equivalent (Bartletts test, p = {:.3f})'.format(pb))
+        # else:
+        #     print(u'  Variances are unequal (Bartletts test, p = {:.3f}); not assuming equal variances'.format(pb))
+        print(u'  {:s}={:8.{pc}f} (SD {:.{pc}f}, N = {:d})'.format(k[0].rjust(n), g1mean, g1std, len(g1), pc=decimals))
+        print(u'  {:s}={:8.{pc}f} (SD {:.{pc}f}, N = {:d})'.format(k[1].rjust(n), g2mean, g2std, len(g2), pc=decimals))
+        print(u'  t({:6.2f})={:8.4f}  p={:8.6f}\n'.format(df, float(t), float(p)))
     return(df, float(t), float(p))
 
 

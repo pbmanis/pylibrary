@@ -33,7 +33,7 @@ import matplotlib.pyplot as mpl
 seaborn.set_style('white')
 seaborn.set_style('ticks')
 
-def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward', axesoff = False):
+def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', axesoff=False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot.
         Also allow quickaccess to things we like to do for publication plots, including:
            using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
@@ -51,6 +51,7 @@ def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward
     position : float (default : 10)
         Determines position of spines in points, typically outward by x points. The
         spines are the main axes lines, not the tick marks
+        if the position is dict, then interpret as such.
         
     direction : string (default : 'inward')
         Sets the direction of spines. Choices are 'inward' and 'outward'
@@ -69,7 +70,10 @@ def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward
             continue
         for loc, spine in ax.spines.iteritems():
             if loc in spines:
-                spine.set_position(('outward', position))
+                if type(position) is int:
+                    spine.set_position(('axes', position))
+                if type(position) is dict:
+                    spine.set_position(('axes', position[loc]))
                 # outward by 10 points
             else:
                 spine.set_color('none')
@@ -96,7 +100,48 @@ def nice_plot(axl, spines = ['left', 'bottom'], position = 10, direction='inward
             ax.tick_params(axis='y', direction='out')
             ax.tick_params(axis='x', direction='out')
 
+def show_figure_grid(fig, figx=10., figy=10.):
+    """
+    Create a background grid with major and minor lines like graph paper
+    if using default figx and figy, the grid will be in units of the 
+    overall figure on a [0,1,0,1] grid
+    if figx and figy are in units of inches or cm, then the grid
+    will be on that scale.
+    
+    Parameters
+    ----------
+    
+    fig : Matplotlib figure handle (no default):
+        The figure to which the grid will be applied
+    
+    figx : float (default: 10)
+        # of major lines along the X dimension
+    
+    figy : float (default: 10)
+        # of major lines along the Y dimension
+    
+    """
+    backGrid = fig.add_axes([0,0,1,1], frameon=False)
+    backGrid.set_ylim(0., figy)
+    backGrid.set_xlim(0., figx)
+    backGrid.grid(True)
 
+    backGrid.set_yticks(np.arange(0., figy+0.01, 1.))
+    backGrid.set_yticks(np.arange(0., figy+0.01, 0.1), minor=True)
+    backGrid.set_xticks(np.arange(0., figx+0.01, 1.))
+    backGrid.set_xticks(np.arange(0., figx+0.01, 0.1), minor=True)
+#            backGrid.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+#            backGrid.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+    backGrid.grid(b=True, which='major', color='g', alpha=0.6, linewidth=1.0)
+    backGrid.grid(b=True, which='minor', color='g', alpha=0.7, linewidth=0.2)
+    return backGrid
+
+def hide_figure_grid(fig, grid):
+    grid.grid(False)
+
+def delete_figure_grid(fig, grid):
+    mpl.delete(grid)
+    
 def noaxes(axl, whichaxes = 'xy'):
     """ take away all the axis ticks and the lines
     
@@ -185,7 +230,8 @@ def setX(ax1, ax2):
         ax.set_xlim(refx)
 
 
-def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05)):
+def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05), 
+        horizontalalignment='right', verticalalignment='bottom', rotation=0.):
     """
     Provide labeling of panels in a figure with multiple subplots (axes)
     
@@ -236,8 +282,8 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
             continue
         ax.annotate(axlist[i], xy=xy, xycoords='axes fraction',
                 annotation_clip=False,
-                color="k", verticalalignment='bottom',weight=weight, horizontalalignment='right',
-                fontsize=fontsize, family='sans-serif',
+                color="k", verticalalignment=verticalalignment,weight=weight, horizontalalignment=horizontalalignment,
+                fontsize=fontsize, family='sans-serif', rotation=rotation
                 )
         # ax.annotate
         # at = TextArea(axlist[i], textprops=dict(color="k", verticalalignment='bottom',
@@ -457,7 +503,7 @@ def getLayoutDimensions(n, pref='height'):
     return(inopth, inoptw)
     
 
-def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
+def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None, fontsize=11):
     """
         draw a calibration bar and label it. The calibration bar is defined as:
         [x0, y0, xlen, ylen]
@@ -485,14 +531,14 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
                     color = 'k', linestyle = '-', linewidth = 1.5)
                 ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3], Hfmt % calbar[3], 
                     horizontalalignment = 'left', verticalalignment = 'center',
-                    fontsize = 11)
+                    fontsize = fontsize)
             elif orient == 'right':  # vertical part goes on the right
                 ax.plot([calbar[0] + calbar[2], calbar[0]+calbar[2], calbar[0]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
                     color = 'k', linestyle = '-', linewidth = 1.5)
                 ax.text(calbar[0]+calbar[2]-0.05*calbar[2], calbar[1]+0.5*calbar[3], Hfmt % calbar[3], 
                     horizontalalignment = 'right', verticalalignment = 'center',
-                    fontsize = 11)
+                    fontsize = fontsize)
             else:
                 print "PlotHelpers.py: I did not understand orientation: %s" % (orient)
                 print "plotting as if set to left... "
@@ -501,26 +547,29 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None):
                     color = 'k', linestyle = '-', linewidth = 1.5)
                 ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3], Hfmt % calbar[3], 
                     horizontalalignment = 'left', verticalalignment = 'center',
-                    fontsize = 11)
+                    fontsize = fontsize)
             ax.text(calbar[0]+calbar[2]*0.5, calbar[1]-0.1*calbar[3], Vfmt % calbar[2], 
                 horizontalalignment = 'center', verticalalignment = 'top',
-                fontsize = 11)
+                fontsize = fontsize)
 
-
-def refline(axl, refline = None, color = '0.33', linestyle = '--' ,linewidth = 0.5):
+def refline(axl, refline=None, limits=None, color='0.33', linestyle='--' ,linewidth=0.5):
     """
     draw a reference line at a particular level of the data on the y axis
     returns the line object.
     """
     if type(axl) is not list:
         axl = [axl]
+    if refline is None:
+        refline = 0.
     for ax in axl:
         if ax is None:
             continue
-        if refline is not None:
+        if limits is None or type(limits) is not list or len(limits) != 2:
             xlims = ax.get_xlim()
-            rl = ax.plot([xlims[0], xlims[1]], [refline, refline],
-                 color = color, linestyle=linestyle, linewidth=linewidth)
+        else:
+            xlims = limits
+        rl = ax.plot([xlims[0], xlims[1]], [refline, refline],
+             color=color, linestyle=linestyle, linewidth=linewidth)
     return rl
 
 def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):

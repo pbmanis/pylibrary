@@ -2,7 +2,7 @@
 
 
 # Use Semantic Versioning, http://semver.org/
-version_info = (0, 1, 5, '')
+version_info = (0, 1, 6, '')
 __version__ = '%d.%d.%d%s' % version_info
 
 listimports = False
@@ -21,6 +21,9 @@ if listimports:
 import Params
 if listimports:
     print 'imported Params'
+# import RStats
+# if listimports:
+#     print 'imported RStats'
 import pyqtgraphPlotHelpers
 if listimports:
     print 'imported pyqtgraphPlotHelpers'
