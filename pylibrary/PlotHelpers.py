@@ -11,6 +11,9 @@ or to use just one axis if that's all that is passed.
 Therefore, the first argument to these calls can either be an axes object,
 or a list of axes objects.  2/10/2012 pbm.
 
+Plotter class: a simple class for managing figures with multiple plots.
+Uses gridspec to build sets of axes. 
+
 Created by Paul Manis on 2010-03-09.
 Copyright 2010-2016  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
@@ -30,6 +33,8 @@ from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, DrawingArea, HPack
 from scipy.stats import gaussian_kde
 import numpy as np
 import matplotlib.pyplot as mpl
+import matplotlib.gridspec as gridspec
+
 seaborn.set_style('white')
 seaborn.set_style('ticks')
 
@@ -46,7 +51,7 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
     
     spines : list of strings (default : ['left', 'bottom'])
         Sets whether spines will occur on particular axes. Choices are 'left', 'right',
-        'bottom', and 'top'
+        'bottom', and 'top'. Chosen spines will be displayed, others are not
     
     position : float (default : 10)
         Determines position of spines in points, typically outward by x points. The
@@ -70,14 +75,14 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
             continue
         for loc, spine in ax.spines.iteritems():
             if loc in spines:
-                if type(position) is int:
+                if type(position) in [int, float]:
                     spine.set_position(('axes', position))
-                if type(position) is dict:
+                elif type(position) is dict:
                     spine.set_position(('axes', position[loc]))
-                # outward by 10 points
+                else:
+                    raise ValueError("position must be int, float or dict [ex: ]{'left': -0.05, 'bottom': -0.05}]")
             else:
                 spine.set_color('none')
-                # don't draw spine
         if axesoff is True:
             noaxes(ax)
 
@@ -85,14 +90,13 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
         if 'left' in spines and not axesoff:
             ax.yaxis.set_ticks_position('left')
         else:
-            # no yaxis ticks
-            ax.yaxis.set_ticks([])
+            ax.yaxis.set_ticks([]) # no yaxis ticks
 
         if 'bottom' in spines and not axesoff:
             ax.xaxis.set_ticks_position('bottom')
         else:
-            # no xaxis ticks
-            ax.xaxis.set_ticks([])
+            ax.xaxis.set_ticks([])  # no xaxis ticks
+
         if direction == 'inward':
             ax.tick_params(axis='y', direction='in')
             ax.tick_params(axis='x', direction='in')
@@ -100,48 +104,7 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
             ax.tick_params(axis='y', direction='out')
             ax.tick_params(axis='x', direction='out')
 
-def show_figure_grid(fig, figx=10., figy=10.):
-    """
-    Create a background grid with major and minor lines like graph paper
-    if using default figx and figy, the grid will be in units of the 
-    overall figure on a [0,1,0,1] grid
-    if figx and figy are in units of inches or cm, then the grid
-    will be on that scale.
-    
-    Parameters
-    ----------
-    
-    fig : Matplotlib figure handle (no default):
-        The figure to which the grid will be applied
-    
-    figx : float (default: 10)
-        # of major lines along the X dimension
-    
-    figy : float (default: 10)
-        # of major lines along the Y dimension
-    
-    """
-    backGrid = fig.add_axes([0,0,1,1], frameon=False)
-    backGrid.set_ylim(0., figy)
-    backGrid.set_xlim(0., figx)
-    backGrid.grid(True)
 
-    backGrid.set_yticks(np.arange(0., figy+0.01, 1.))
-    backGrid.set_yticks(np.arange(0., figy+0.01, 0.1), minor=True)
-    backGrid.set_xticks(np.arange(0., figx+0.01, 1.))
-    backGrid.set_xticks(np.arange(0., figx+0.01, 0.1), minor=True)
-#            backGrid.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-#            backGrid.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-    backGrid.grid(b=True, which='major', color='g', alpha=0.6, linewidth=1.0)
-    backGrid.grid(b=True, which='minor', color='g', alpha=0.7, linewidth=0.2)
-    return backGrid
-
-def hide_figure_grid(fig, grid):
-    grid.grid(False)
-
-def delete_figure_grid(fig, grid):
-    mpl.delete(grid)
-    
 def noaxes(axl, whichaxes = 'xy'):
     """ take away all the axis ticks and the lines
     
@@ -285,14 +248,6 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
                 color="k", verticalalignment=verticalalignment,weight=weight, horizontalalignment=horizontalalignment,
                 fontsize=fontsize, family='sans-serif', rotation=rotation
                 )
-        # ax.annotate
-        # at = TextArea(axlist[i], textprops=dict(color="k", verticalalignment='bottom',
-        #     weight=weight, horizontalalignment='right', fontsize=fontsize, family='sans-serif'))
-        # box = HPacker(children=[at], align="left", pad=0, sep=2)
-        # ab = AnchoredOffsetbox(loc=3, child=box, pad=0., frameon=False, bbox_to_anchor=(-0.08, 1.1),
-        #     bbox_transform=ax.transAxes, borderpad=0.)
-        # ax.add_artist(ab)
-        #text(-0.02, 1.05, axlist[i], verticalalignment='bottom', ha='right', fontproperties = font)
 
 
 def listAxes(axd):
@@ -501,7 +456,7 @@ def getLayoutDimensions(n, pref='height'):
                 inoptw += 1
             
     return(inopth, inoptw)
-    
+
 
 def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None, fontsize=11):
     """
@@ -552,6 +507,7 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None, 
                 horizontalalignment = 'center', verticalalignment = 'top',
                 fontsize = fontsize)
 
+
 def refline(axl, refline=None, limits=None, color='0.33', linestyle='--' ,linewidth=0.5):
     """
     draw a reference line at a particular level of the data on the y axis
@@ -571,6 +527,7 @@ def refline(axl, refline=None, limits=None, color='0.33', linestyle='--' ,linewi
         rl = ax.plot([xlims[0], xlims[1]], [refline, refline],
              color=color, linestyle=linestyle, linewidth=linewidth)
     return rl
+
 
 def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
     """
@@ -619,16 +576,239 @@ def violin_plot(ax, data, pos, bp=False, median = False):
         mpl.setp(bpf['whiskers'], color='black', linestyle='-')
 
 
+def show_figure_grid(fig, figx=10., figy=10.):
+    """
+    Create a background grid with major and minor lines like graph paper
+    if using default figx and figy, the grid will be in units of the 
+    overall figure on a [0,1,0,1] grid
+    if figx and figy are in units of inches or cm, then the grid
+    will be on that scale.
+    
+    Figure grid is useful when building figures and placing labels
+    at absolute locations on the figure.
+    
+    Parameters
+    ----------
+    
+    fig : Matplotlib figure handle (no default):
+        The figure to which the grid will be applied
+    
+    figx : float (default: 10.)
+        # of major lines along the X dimension
+    
+    figy : float (default: 10.)
+        # of major lines along the Y dimension
+    
+    """
+    backGrid = fig.add_axes([0,0,1,1], frameon=False)
+    backGrid.set_ylim(0., figy)
+    backGrid.set_xlim(0., figx)
+    backGrid.grid(True)
+
+    backGrid.set_yticks(np.arange(0., figy+0.01, 1.))
+    backGrid.set_yticks(np.arange(0., figy+0.01, 0.1), minor=True)
+    backGrid.set_xticks(np.arange(0., figx+0.01, 1.))
+    backGrid.set_xticks(np.arange(0., figx+0.01, 0.1), minor=True)
+#   backGrid.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+#   backGrid.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+    backGrid.grid(b=True, which='major', color='g', alpha=0.6, linewidth=0.8)
+    backGrid.grid(b=True, which='minor', color='g', alpha=0.4, linewidth=0.2)
+    return backGrid
+
+def hide_figure_grid(fig, grid):
+    grid.grid(False)
+
+def delete_figure_grid(fig, grid):
+    mpl.delete(grid)
+
+
+class Plotter():
+    """
+    The Plotter class provides a simple convenience for plotting data in 
+    an row x column array.
+    """
+    def __init__(self, rc, arrangement=None, title=None, label=False, roworder=True, refline=None,
+        figsize=(11, 8.5), fontsize=10, position=0):
+        """
+        Create an instance of the plotter. Generates a new matplotlib figure,
+        and sets up an array of subplots as defined, initializes the counters
+        
+        Parameters
+        ----------
+        rc : list 2x1 (no default)
+            rc is an array [row, col] telling us how many rows and columns to build.
+        
+        arrangement: Ordered Dict (default: None)
+            Arrangement allows the data to be plotted according to a logical arrangement
+            The dict keys are the names ("groups") for each column, and the elements are
+            string names for the entities in the groups
+        
+        title : string (default: None)
+            Provide a title for the entire plot
+        
+        label : Boolean (default: False)
+            If True, sets labels on panels
+        
+        roworder : Boolean (default: True)
+            Define whether labels run in row order first or column order first
+        
+        refline : float (default: None)
+            Define the position of a reference line to be used in all panels
+        
+        figsize : tuple (default : (11, 8.5))
+            Figure size in inches. Default is for a landscape figure
+        
+        fontsize : points (default : 10)
+            Defines the size of the font to use for 
+
+        position : position of spines (0 means close, 0.05 means break out)
+            x, y spines.. 
+        Returns
+        -------
+        Nothing
+        """
+        self.arrangement = arrangement
+        self.fontsize = fontsize
+        self.referenceLines = {}
+        self.figure_handle = mpl.figure() # create the figure
+        self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
+        gs = gridspec.GridSpec(rc[0], rc[1])  # define a grid
+        # assign to axarr
+        self.axarr = np.empty(shape=(rc[0], rc[1],), dtype=object)  # use a numpy object array, indexing features
+        ix = 0
+        for r in range(rc[0]):
+            for c in range(rc[1]):
+                self.axarr[r,c] = mpl.subplot(gs[ix])
+                ix += 1
+        
+        if title is not None:
+            self.figure_handle.canvas.set_window_title(title)
+            self.figure_handle.suptitle(title)
+        self.nrows = self.axarr.shape[0]
+        if len(self.axarr.shape) > 1:
+            self.ncolumns = self.axarr.shape[1]
+        else:
+            self.ncolumns = 1
+        self.row_counter = 0
+        self.column_counter = 0
+        for i in range(self.nrows):
+            for j in range(self.ncolumns):
+                self.axarr[i, j].spines['top'].set_visible(False)
+                self.axarr[i, j].get_xaxis().set_tick_params(direction='out', width=0.8, length=4.)
+                self.axarr[i, j].get_yaxis().set_tick_params(direction='out', width=0.8, length=4.)
+                self.axarr[i, j].tick_params(axis='both', which='major', labelsize=fontsize)
+                if i < self.nrows-1:
+                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
+                nice_plot(self.axarr[i, j], position=position)
+                if refline is not None:
+                    self.referenceLines[self.axarr[i,j]] = refline(self.axarr[i,j], refline=refline)
+
+        if label:
+            if type(position) is int:
+                p = [position, position]
+            elif type(position) is dict:
+                p = [position['bottom'], position['left']]
+            else:
+                p = [0., 0.]
+            self.axlist = []
+            if roworder == True:
+                for i in range(self.nrows):
+                    for j in range(self.ncolumns):
+                        self.axlist.append(self.axarr[i, j])
+            else:
+                for i in range(self.ncolumns):
+                    for j in range(self.nrows):
+                        self.axlist.append(self.axarr[j, i])
+                
+            if self.nrows*self.ncolumns > 26:  # handle large plot using "A1..."
+                ctxt = string.uppercase[0:self.ncolumns]  # columns are lettered
+                rtxt = [str(x+1) for x in range(self.nrows)] # rows are numbered, starting at 1
+                axl = []
+                for i in range(self.nrows):
+                    for j in range(self.ncolumns):
+                        axl.append(ctxt[j]+rtxt[i])
+                labelPanels(self.axlist, axlist=axl, xy=(-0.35+p[1], 0.75))
+            else:
+                labelPanels(self.axlist, xy=(-0.095+p[1], 0.95))
+    
+    def _next(self):
+        """
+        Private function
+        _next gets the axis pointer to the next row, column index that is available
+        Only sets internal variables
+        """
+        self.column_counter += 1
+        if self.column_counter > self.ncolumns:
+            self.row_counter += 1
+            if self.row_counter > self.nrows:
+                raise ValueError('Call to get next row exceeds the number of rows requested initially: %d' % self.nrows)
+            self.column_counter = 0
+    
+    def getaxis(self, group=None):
+        """
+        getaxis gets the current row, column counter, and calls _next to increment the counter
+        (so that the next getaxis returns the next available axis pointer)
+        
+        Parameters
+        ----------
+        group : string (default: None)
+            forces the current axis to be selected from text name of a "group"
+        
+        Returns
+        -------
+        the current axis or the axis associated with a group
+        """
+        
+        if group is None:
+            currentaxis = self.axarr[self.row_counter, self.column_counter]
+            self._next() # prepare for next call
+        else:
+            currentaxis = self.getRC(group)
+                
+        return currentaxis
+    
+    def getRC(self, group):
+        """
+        Get the axis associated with a group
+        
+        Parameters
+        ----------
+        group : string (default: None)
+            returns the matplotlib axis associated with a text name of a "group"
+        
+        Returns
+        -------
+        The matplotlib axis associated with the group name, or None if no group by
+        that name exists in the arrangement
+        """
+        
+        if self.arrangement is None:
+            raise ValueError('specifying a group requires an arrangment dictionary')
+        # look for the group label in the arrangement dicts
+        for c, colname in enumerate(self.arrangement.keys()):
+            if group in self.arrangement[colname]:
+                # print ('column name, column: ', colname, self.arrangement[colname])
+                # print ('group: ', group)
+                r = self.arrangement[colname].index(group)  # get the row position this way
+                return(self.axarr[r, c])
+        print('Group {:s} not in the arrangement'.format(group))
+        return None    
+
+
 if __name__ == '__main__':
     from collections import OrderedDict
+    P = Plotter((2,3), label=True)  # create a figure with plots
+    for a in P.axarr.flatten():
+        a.plot(np.random.random(10), np.random.random(10))
+    
     hfig, ax = mpl.subplots(2, 3)
     axd = OrderedDict()
     for i, a in enumerate(ax.flatten()):
         label = string.uppercase[i]
         axd[label] = a
-    for a in axd:
+    for a in axd.keys():
         axd[a].plot(np.random.random(10), np.random.random(10))
-    nice_plot([axd[a] for a in axd])
+    nice_plot([axd[a] for a in axd], position=-0.1)
     cleanAxes([axd['B'], axd['C']])
     calbar([axd['B'], axd['C']], calbar=[0.5, 0.5, 0.2, 0.2])
     labelPanels([axd[a] for a in axd], axd.keys())
