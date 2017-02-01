@@ -225,11 +225,11 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
         Nothing
 
     """
-    if type(axl) is dict:
+    if isinstance(axl, dict):
         axt = [axl[x] for x in axl]
         axlist = axl.keys()
         axl = axt
-    if type(axl) is not list:
+    if not isinstance(axl, list):
         axl = [axl]
     if axlist is None:
         axlist = string.uppercase[0:len(axl)]
@@ -243,6 +243,8 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     for i, ax in enumerate(axl):
         if ax is None:
             continue
+        if isinstance(ax, list):
+            ax = ax[0]
         ax.annotate(axlist[i], xy=xy, xycoords='axes fraction',
                 annotation_clip=False,
                 color="k", verticalalignment=verticalalignment,weight=weight, horizontalalignment=horizontalalignment,
@@ -627,7 +629,7 @@ class Plotter():
     The Plotter class provides a simple convenience for plotting data in 
     an row x column array.
     """
-    def __init__(self, rc, arrangement=None, title=None, label=False, roworder=True, refline=None,
+    def __init__(self, rc, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
         figsize=(11, 8.5), fontsize=10, position=0):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
@@ -637,6 +639,15 @@ class Plotter():
         ----------
         rc : list 2x1 (no default)
             rc is an array [row, col] telling us how many rows and columns to build.
+            default defines a rectangular array r x c of plots
+        
+        axmap : list of gridspec slices (default : None)
+            define slices for the axes of a gridspec, allowing for non-rectangular arrangements
+            The list is defined as:
+            [(r1t, r1b, c1l, c1r), slice(r2, c2)]
+            where r1t is the top for row 1 in the grid, r1b is the bottom, etc... 
+            When using this mode, the axarr returned is a 1-D list, as if r is all plots indexed,
+            and the number of columns is 1. The results match in order the list entered in axmap
         
         arrangement: Ordered Dict (default: None)
             Arrangement allows the data to be plotted according to a logical arrangement
@@ -670,16 +681,29 @@ class Plotter():
         self.arrangement = arrangement
         self.fontsize = fontsize
         self.referenceLines = {}
-        self.figure_handle = mpl.figure() # create the figure
+        self.figure_handle = mpl.figure(figsize=figsize) # create the figure
         self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
-        gs = gridspec.GridSpec(rc[0], rc[1])  # define a grid
-        # assign to axarr
-        self.axarr = np.empty(shape=(rc[0], rc[1],), dtype=object)  # use a numpy object array, indexing features
-        ix = 0
-        for r in range(rc[0]):
-            for c in range(rc[1]):
-                self.axarr[r,c] = mpl.subplot(gs[ix])
-                ix += 1
+        gs = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
+        if axmap is not None:
+            if isinstance(axmap, list):
+                self.axarr = np.empty(shape=(len(axmap), 1), dtype=object)
+                for k, g in enumerate(axmap):
+                    self.axarr[k,] = mpl.subplot(gs[g[0]:g[1], g[2]:g[3]])
+            elif isinstance(axmap, dict) or isinstance(axmap, OrderedDict): # keys are panel labels
+                self.axarr = np.empty(shape=(len(axmap.keys()), 1), dtype=object)
+                for k, pk in enumerate(axmap.keys()):
+                    g = axmap[pk]  # get the gridspec info
+                    self.axarr[k,] = mpl.subplot(gs[g[0]:g[1], g[2]:g[3]])
+            else:
+                raise TypeError('Plotter in PlotHelpers: axmap must be a list or dict')
+        else:
+            # assign to axarr
+            self.axarr = np.empty(shape=(rc[0], rc[1],), dtype=object)  # use a numpy object array, indexing features
+            ix = 0
+            for r in range(rc[0]):
+                for c in range(rc[1]):
+                    self.axarr[r,c] = mpl.subplot(gs[ix])
+                    ix += 1
         
         if title is not None:
             self.figure_handle.canvas.set_window_title(title)
@@ -710,6 +734,9 @@ class Plotter():
                 p = [position['bottom'], position['left']]
             else:
                 p = [0., 0.]
+            if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
+                labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[1], 0.95))
+                return
             self.axlist = []
             if roworder == True:
                 for i in range(self.nrows):
@@ -797,13 +824,19 @@ class Plotter():
 
 if __name__ == '__main__':
     from collections import OrderedDict
-    P = Plotter((2,3), label=True)  # create a figure with plots
-    for a in P.axarr.flatten():
-        a.plot(np.random.random(10), np.random.random(10))
+#    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
+    labels = ['A', 'D', 'G', 'B', 'C', 'E', 'F', 'H', 'I']
+    l = [(a, a+2, 0, 1) for a in range(0, 6, 2)]
+    r = [(a, a+1, 1, 2) for a in range(0, 6)]
+    axmap = OrderedDict(zip(labels, l+r))
+    P = Plotter((6,2), axmap=axmap, figsize=(10., 10.), label=True)
+#    P = Plotter((2,3), label=True)  # create a figure with plots
+    # for a in P.axarr.flatten():
+    #     a.plot(np.random.random(10), np.random.random(10))
     
-    hfig, ax = mpl.subplots(2, 3)
+#    hfig, ax = mpl.subplots(2, 3)
     axd = OrderedDict()
-    for i, a in enumerate(ax.flatten()):
+    for i, a in enumerate(P.axarr.flatten()):
         label = string.uppercase[i]
         axd[label] = a
     for a in axd.keys():
@@ -811,7 +844,7 @@ if __name__ == '__main__':
     nice_plot([axd[a] for a in axd], position=-0.1)
     cleanAxes([axd['B'], axd['C']])
     calbar([axd['B'], axd['C']], calbar=[0.5, 0.5, 0.2, 0.2])
-    labelPanels([axd[a] for a in axd], axd.keys())
+    #labelPanels([axd[a] for a in axd], axd.keys())
     #mpl.tight_layout(pad=2, w_pad=0.5, h_pad=2.0)
     mpl.show()
     
