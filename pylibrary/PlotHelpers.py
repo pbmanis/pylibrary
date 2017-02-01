@@ -704,6 +704,10 @@ class Plotter():
                 for c in range(rc[1]):
                     self.axarr[r,c] = mpl.subplot(gs[ix])
                     ix += 1
+        self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
+        for i, a in enumerate(P.axarr.flatten()):
+            label = string.uppercase[i]
+            self.axdict[label] = a
         
         if title is not None:
             self.figure_handle.canvas.set_window_title(title)
