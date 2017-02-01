@@ -23,6 +23,7 @@ Distributed under MIT/X11 license. See license.txt for more infofmation.
 import sys
 import os
 import string
+from collections import OrderedDict
 
 stdFont = 'Arial'
 import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
@@ -705,7 +706,7 @@ class Plotter():
                     self.axarr[r,c] = mpl.subplot(gs[ix])
                     ix += 1
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
-        for i, a in enumerate(P.axarr.flatten()):
+        for i, a in enumerate(self.axarr.flatten()):
             label = string.uppercase[i]
             self.axdict[label] = a
         
@@ -827,7 +828,6 @@ class Plotter():
 
 
 if __name__ == '__main__':
-    from collections import OrderedDict
 #    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
     labels = ['A', 'D', 'G', 'B', 'C', 'E', 'F', 'H', 'I']
     l = [(a, a+2, 0, 1) for a in range(0, 6, 2)]
