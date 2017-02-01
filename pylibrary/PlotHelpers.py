@@ -35,6 +35,10 @@ from scipy.stats import gaussian_kde
 import numpy as np
 import matplotlib.pyplot as mpl
 import matplotlib.gridspec as gridspec
+from matplotlib.patches import Circle
+from matplotlib.patches import Rectangle
+from matplotlib.patches import Ellipse
+from matplotlib.collections import PatchCollection
 
 seaborn.set_style('white')
 seaborn.set_style('ticks')
@@ -579,6 +583,218 @@ def violin_plot(ax, data, pos, bp=False, median = False):
         mpl.setp(bpf['whiskers'], color='black', linestyle='-')
 
 
+# # from somewhere on the web:
+
+class NiceScale:
+    def __init__(self, minv,maxv):
+        self.maxTicks = 6
+        self.tickSpacing = 0
+        self.lst = 10
+        self.niceMin = 0
+        self.niceMax = 0
+        self.minPoint = minv
+        self.maxPoint = maxv
+        self.calculate()
+
+    def calculate(self):
+        self.lst = self.niceNum(self.maxPoint - self.minPoint, False)
+        self.tickSpacing = self.niceNum(self.lst / (self.maxTicks - 1), True)
+        self.niceMin = np.floor(self.minPoint / self.tickSpacing) * self.tickSpacing
+        self.niceMax = np.ceil(self.maxPoint / self.tickSpacing) * self.tickSpacing
+
+    def niceNum(self, lst, rround):
+        self.lst = lst
+        exponent = 0 # exponent of range */
+        fraction = 0 # fractional part of range */
+        niceFraction = 0 # nice, rounded fraction */
+
+        exponent = np.floor(np.log10(self.lst));
+        fraction = self.lst / np.power(10, exponent);
+
+        if (self.lst):
+            if (fraction < 1.5):
+                niceFraction = 1
+            elif (fraction < 3):
+                niceFraction = 2
+            elif (fraction < 7):
+                niceFraction = 5;
+            else:
+                niceFraction = 10;
+        else :
+            if (fraction <= 1):
+                niceFraction = 1
+            elif (fraction <= 2):
+                niceFraction = 2
+            elif (fraction <= 5):
+                niceFraction = 5
+            else:
+                niceFraction = 10
+
+        return niceFraction * np.power(10, exponent)
+
+    def setMinMaxPoints(self, minPoint, maxPoint):
+          self.minPoint = minPoint
+          self.maxPoint = maxPoint
+          self.calculate()
+
+    def setMaxTicks(self, maxTicks):
+        self.maxTicks = maxTicks;
+        self.calculate()
+
+def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
+    """
+    Make a scatter of circles plot of x vs y, where x and y are sequence 
+    like objects of the same lengths. The size of circles are in data scale.
+
+    Parameters
+    ----------
+    x,y : scalar or array_like, shape (n, )
+        Input data
+    s : scalar or array_like, shape (n, ) 
+        Radius of circle in data scale (ie. in data unit)
+    c : color or sequence of color, optional, default : 'b'
+        `c` can be a single color format string, or a sequence of color
+        specifications of length `N`, or a sequence of `N` numbers to be
+        mapped to colors using the `cmap` and `norm` specified via kwargs.
+        Note that `c` should not be a single numeric RGB or
+        RGBA sequence because that is indistinguishable from an array of
+        values to be colormapped.  `c` can be a 2-D array in which the
+        rows are RGB or RGBA, however.
+    ax : Axes object, optional, default: None
+        Parent axes of the plot. It uses gca() if not specified.
+    vmin, vmax : scalar, optional, default: None
+        `vmin` and `vmax` are used in conjunction with `norm` to normalize
+        luminance data.  If either are `None`, the min and max of the
+        color array is used.  (Note if you pass a `norm` instance, your
+        settings for `vmin` and `vmax` will be ignored.)
+
+    Returns
+    -------
+    paths : `~matplotlib.collections.PathCollection`
+
+    Other parameters
+    ----------------
+    kwargs : `~matplotlib.collections.Collection` properties
+        eg. alpha, edgecolors, facecolors, linewidths, linestyles, norm, cmap
+
+    Examples
+    --------
+    a = np.arange(11)
+    circles(a, a, a*0.2, c=a, alpha=0.5, edgecolor='none')
+
+    License
+    --------
+    This code is under [The BSD 3-Clause License]
+    (http://opensource.org/licenses/BSD-3-Clause)
+    """
+
+    #import matplotlib.colors as colors
+
+    if ax is None:
+        ax = mpl.gca()    
+
+    if isinstance(c,basestring):
+        color = c     # ie. use colors.colorConverter.to_rgba_array(c)
+    else:
+        color = None  # use cmap, norm after collection is created
+    kwargs.update(color=color)
+
+    if np.isscalar(x):
+        patches = [Circle((x, y), s),]
+    elif np.isscalar(s):
+        patches = [Circle((x_,y_), s) for x_,y_ in zip(x,y)]
+    else:
+        patches = [Circle((x_,y_), s_) for x_,y_,s_ in zip(x,y,s)]
+    collection = PatchCollection(patches, **kwargs)
+
+    if color is None:
+        collection.set_array(np.asarray(c))
+        if vmin is not None or vmax is not None:
+            collection.set_clim(vmin, vmax)
+
+    ax.add_collection(collection)
+    ax.autoscale_view()
+    return collection
+
+
+def rectangles(x, y, sw, sh=None, c='b', ax=None, vmin=None, vmax=None, **kwargs):
+    """
+    Make a scatter of squares plot of x vs y, where x and y are sequence 
+    like objects of the same lengths. The size of sqares are in data scale.
+
+    Parameters
+    ----------
+    x,y : scalar or array_like, shape (n, )
+        Input data
+    s : scalar or array_like, shape (n, ) 
+        side of square in data scale (ie. in data unit)
+    c : color or sequence of color, optional, default : 'b'
+        `c` can be a single color format string, or a sequence of color
+        specifications of length `N`, or a sequence of `N` numbers to be
+        mapped to colors using the `cmap` and `norm` specified via kwargs.
+        Note that `c` should not be a single numeric RGB or
+        RGBA sequence because that is indistinguishable from an array of
+        values to be colormapped.  `c` can be a 2-D array in which the
+        rows are RGB or RGBA, however.
+    ax : Axes object, optional, default: None
+        Parent axes of the plot. It uses gca() if not specified.
+    vmin, vmax : scalar, optional, default: None
+        `vmin` and `vmax` are used in conjunction with `norm` to normalize
+        luminance data.  If either are `None`, the min and max of the
+        color array is used.  (Note if you pass a `norm` instance, your
+        settings for `vmin` and `vmax` will be ignored.)
+
+    Returns
+    -------
+    paths : `~matplotlib.collections.PathCollection`
+
+    Other parameters
+    ----------------
+    kwargs : `~matplotlib.collections.Collection` properties
+        eg. alpha, edgecolors, facecolors, linewidths, linestyles, norm, cmap
+
+    Examples
+    --------
+    a = np.arange(11)
+    squaress(a, a, a*0.2, c=a, alpha=0.5, edgecolor='none')
+
+    License
+    --------
+    This code is under [The BSD 3-Clause License]
+    (http://opensource.org/licenses/BSD-3-Clause)
+    """
+    #import matplotlib.colors as colors
+
+    if ax is None:
+        ax = mpl.gca()    
+
+    if isinstance(c,basestring):
+        color = c     # ie. use colors.colorConverter.to_rgba_array(c)
+    else:
+        color = None  # use cmap, norm after collection is created
+    kwargs.update(color=color)
+    if sh is None:
+        sh = sw
+    x = x - sw/2.  # offset as position specified is "lower left corner"
+    y = y - sh/2.
+    if np.isscalar(x):
+        patches = [Rectangle((x, y), sw, sh),]
+    elif np.isscalar(sw):
+        patches = [Rectangle((x_,y_), sw, sh) for x_,y_ in zip(x,y)]
+    else:
+        patches = [Rectangle((x_,y_), sw_, sh_) for x_,y_,sw_,sh_ in zip(x,y,sw,sh)]
+    collection = PatchCollection(patches, **kwargs)
+
+    if color is None:
+        collection.set_array(np.asarray(c))
+        if vmin is not None or vmax is not None:
+            collection.set_clim(vmin, vmax)
+
+    ax.add_collection(collection)
+    ax.autoscale_view()
+    return collection
+
+
 def show_figure_grid(fig, figx=10., figy=10.):
     """
     Create a background grid with major and minor lines like graph paper
@@ -685,6 +901,7 @@ class Plotter():
         self.figure_handle = mpl.figure(figsize=figsize) # create the figure
         self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
         gs = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
+        self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
         if axmap is not None:
             if isinstance(axmap, list):
                 self.axarr = np.empty(shape=(len(axmap), 1), dtype=object)
@@ -695,6 +912,7 @@ class Plotter():
                 for k, pk in enumerate(axmap.keys()):
                     g = axmap[pk]  # get the gridspec info
                     self.axarr[k,] = mpl.subplot(gs[g[0]:g[1], g[2]:g[3]])
+                    self.axdict[pk] = self.axarr[k,][0]
             else:
                 raise TypeError('Plotter in PlotHelpers: axmap must be a list or dict')
         else:
@@ -705,10 +923,10 @@ class Plotter():
                 for c in range(rc[1]):
                     self.axarr[r,c] = mpl.subplot(gs[ix])
                     ix += 1
-        self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
-        for i, a in enumerate(self.axarr.flatten()):
-            label = string.uppercase[i]
-            self.axdict[label] = a
+        if len(self.axdict) == 0:
+            for i, a in enumerate(self.axarr.flatten()):
+                label = string.uppercase[i]
+                self.axdict[label] = a
         
         if title is not None:
             self.figure_handle.canvas.set_window_title(title)
