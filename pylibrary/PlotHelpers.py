@@ -1037,8 +1037,8 @@ class Plotter():
         # look for the group label in the arrangement dicts
         for c, colname in enumerate(self.arrangement.keys()):
             if group in self.arrangement[colname]:
-                # print ('column name, column: ', colname, self.arrangement[colname])
-                # print ('group: ', group)
+                print ('column name, column: ', colname, self.arrangement[colname])
+                print ('group: ', group)
                 r = self.arrangement[colname].index(group)  # get the row position this way
                 return(self.axarr[r, c])
         print('Group {:s} not in the arrangement'.format(group))
