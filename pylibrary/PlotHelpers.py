@@ -227,7 +227,7 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     
     Returns
     -------
-        Nothing
+        list of the annotations
 
     """
     if isinstance(axl, dict):
@@ -245,16 +245,19 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     font.set_weight=weight
     font.set_size=fontsize
     font.set_style('normal')
+    labels = []
     for i, ax in enumerate(axl):
         if ax is None:
             continue
         if isinstance(ax, list):
             ax = ax[0]
-        ax.annotate(axlist[i], xy=xy, xycoords='axes fraction',
+        ann = ax.annotate(axlist[i], xy=xy, xycoords='axes fraction',
                 annotation_clip=False,
                 color="k", verticalalignment=verticalalignment,weight=weight, horizontalalignment=horizontalalignment,
                 fontsize=fontsize, family='sans-serif', rotation=rotation
                 )
+        labels.append(ann)
+    return(ann)
 
 
 def listAxes(axd):
@@ -847,7 +850,7 @@ class Plotter():
     an row x column array.
     """
     def __init__(self, rc, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
-        figsize=(11, 8.5), fontsize=10, position=0):
+        figsize=(11, 8.5), fontsize=10, position=0, labeloffset=[0., 0.]):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
         and sets up an array of subplots as defined, initializes the counters
@@ -900,6 +903,7 @@ class Plotter():
         self.referenceLines = {}
         self.figure_handle = mpl.figure(figsize=figsize) # create the figure
         self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
+        self.axlabels = []
         gs = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
         if axmap is not None:
@@ -951,14 +955,16 @@ class Plotter():
                     self.referenceLines[self.axarr[i,j]] = refline(self.axarr[i,j], refline=refline)
 
         if label:
-            if type(position) is int:
-                p = [position, position]
-            elif type(position) is dict:
-                p = [position['bottom'], position['left']]
+            if type(labeloffset) is int:
+                p = [labeloffset, labeloffset]
+            elif type(labeloffset) is dict:
+                p = [position['left'], position['bottom']]
+            elif type(labeloffset) in [list, tuple]:
+                p = labeloffset
             else:
                 p = [0., 0.]
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
-                labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[1], 0.95))
+                self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]))
                 return
             self.axlist = []
             if roworder == True:
@@ -977,9 +983,9 @@ class Plotter():
                 for i in range(self.nrows):
                     for j in range(self.ncolumns):
                         axl.append(ctxt[j]+rtxt[i])
-                labelPanels(self.axlist, axlist=axl, xy=(-0.35+p[1], 0.75))
+                self.axlabels = labelPanels(self.axlist, axlist=axl, xy=(-0.35+p[0], 0.75))
             else:
-                labelPanels(self.axlist, xy=(-0.095+p[1], 0.95))
+                self.axlabels = labelPanels(self.axlist, xy=(-0.095+p[0], 0.95+p[1]))
     
     def _next(self):
         """
