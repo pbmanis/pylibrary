@@ -944,8 +944,8 @@ class Plotter():
                 self.axarr[i, j].get_xaxis().set_tick_params(direction='out', width=0.8, length=4.)
                 self.axarr[i, j].get_yaxis().set_tick_params(direction='out', width=0.8, length=4.)
                 self.axarr[i, j].tick_params(axis='both', which='major', labelsize=fontsize)
-                if i < self.nrows-1:
-                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
+#                if i < self.nrows-1:
+#                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
                 nice_plot(self.axarr[i, j], position=position)
                 if refline is not None:
                     self.referenceLines[self.axarr[i,j]] = refline(self.axarr[i,j], refline=refline)
@@ -1042,7 +1042,41 @@ class Plotter():
                 r = self.arrangement[colname].index(group)  # get the row position this way
                 return(self.axarr[r, c])
         print('Group {:s} not in the arrangement'.format(group))
-        return None    
+        return None
+        
+        sizer = {'A': [0.08, 0.22, 0.50, 0.4], 'B1': [0.40, 0.25, 0.60, 0.3], 'B2': [0.40, 0.25, 0.5, 0.1],
+                'C1': [0.72, 0.25, 0.60, 0.3], 'C2': [0.72, 0.25, 0.5, 0.1],
+                'D': [0.08, 0.25, 0.1, 0.3], 'E': [0.40, 0.25, 0.1, 0.3], 'F': [0.72, 0.25, 0.1, 0.3],
+        }
+    
+    def resize(self, sizer):
+        """
+        Resize the graphs in the array.
+        
+        Parameters
+        ----------
+        sizer : dict (no default)
+            A dictionary with keys corresponding to the plot labels. 
+            The values for each key are a list (or tuple) of [left, width, bottom, height]
+            for each panel in units of the graph [0, 1, 0, 1]. 
+        
+        sizer = {'A': [0.08, 0.22, 0.50, 0.4], 'B1': [0.40, 0.25, 0.60, 0.3], 'B2': [0.40, 0.25, 0.5, 0.1],
+                'C1': [0.72, 0.25, 0.60, 0.3], 'C2': [0.72, 0.25, 0.5, 0.1],
+                'D': [0.08, 0.25, 0.1, 0.3], 'E': [0.40, 0.25, 0.1, 0.3], 'F': [0.72, 0.25, 0.1, 0.3],
+        
+        Returns
+        -------
+        Nothing
+        """
+        
+        for s in sizer.keys():
+            ax = self.axdict[s]
+            bbox = ax.get_position()
+            bbox.x0 = sizer[s][0]
+            bbox.x1 = sizer[s][1]+ sizer[s][0]
+            bbox.y0 = sizer[s][2]
+            bbox.y1 = sizer[s][3] + sizer[s][2]  # offsets are in figure fractions
+            ax.set_position(bbox)
 
 
 if __name__ == '__main__':
