@@ -849,25 +849,57 @@ class Plotter():
     The Plotter class provides a simple convenience for plotting data in 
     an row x column array.
     """
-    def __init__(self, rc, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
+    def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
         figsize=(11, 8.5), fontsize=10, position=0, labeloffset=[0., 0.]):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
         and sets up an array of subplots as defined, initializes the counters
         
+        Examples
+        --------
+        Ex. 1: 
+        One way to generate plots on a standard grid, uses gridspec to specify an axis map:
+            labels = ['A', 'B1', 'B2', 'C1', 'C2', 'D', 'E', 'F']
+            gr = [(0, 4, 0, 1), (0, 3, 1, 2), (3, 4, 1, 2), (0, 3, 2, 3), (3, 4, 2, 3), (5, 8, 0, 1), (5, 8, 1, 2), (5, 8, 2, 3)]
+            axmap = OrderedDict(zip(labels, gr))
+            P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
+            PH.show_figure_grid(P.figure_handle)
+        
+        Ex. 2:
+        Place plots on defined locations on the page - no messing with gridspec or subplots. 
+            For this version, we just generate N subplots with labels (used to tag each plot)
+            The "sizer" array then maps the tags to specific panel locations
+            # define positions for each panel in Figure coordinages (0, 1, 0, 1)
+            # you don't have to use an ordered dict for this, I just prefer it when debugging
+            sizer = OrderedDict([('A', [0.08, 0.22, 0.55, 0.4]), ('B1', [0.40, 0.25, 0.65, 0.3]), ('B2', [0.40, 0.25, 0.5, 0.1]),
+                    ('C1', [0.72, 0.25, 0.65, 0.3]), ('C2', [0.72, 0.25, 0.5, 0.1]),
+                    ('D', [0.08, 0.25, 0.1, 0.3]), ('E', [0.40, 0.25, 0.1, 0.3]), ('F', [0.72, 0.25, 0.1, 0.3]),
+            ])  # dict elements are [left, width, bottom, height] for the axes in the plot.
+            gr = [(a, a+1, 0, 1) for a in range(0, 8)]   # just generate subplots - shape does not matter
+            axmap = OrderedDict(zip(sizer.keys(), gr))
+            P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
+            PH.show_figure_grid(P.figure_handle)
+            P.resize(sizer)  # perform positioning magic
+            P.axdict['B1'] access the plot associated with panel B1
+
         Parameters
         ----------
-        rc : list 2x1 (no default)
-            rc is an array [row, col] telling us how many rows and columns to build.
-            default defines a rectangular array r x c of plots
+        rcshape : a list or tuple: 2x1 (no default)
+                    rcshape is an array [row, col] telling us how many rows and columns to build.
+                    default defines a rectangular array r x c of plots
+                  a dict : 
+                  None: expect axmap to provide the input... 
         
-        axmap : list of gridspec slices (default : None)
+        axmap : 
+            list of gridspec slices (default : None)
             define slices for the axes of a gridspec, allowing for non-rectangular arrangements
             The list is defined as:
             [(r1t, r1b, c1l, c1r), slice(r2, c2)]
             where r1t is the top for row 1 in the grid, r1b is the bottom, etc... 
             When using this mode, the axarr returned is a 1-D list, as if r is all plots indexed,
             and the number of columns is 1. The results match in order the list entered in axmap
+        
+
         
         arrangement: Ordered Dict (default: None)
             Arrangement allows the data to be plotted according to a logical arrangement
@@ -904,22 +936,25 @@ class Plotter():
         self.figure_handle = mpl.figure(figsize=figsize) # create the figure
         self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
         self.axlabels = []
-        gs = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
-        if axmap is not None:
-            if isinstance(axmap, list):
-                self.axarr = np.empty(shape=(len(axmap), 1), dtype=object)
-                for k, g in enumerate(axmap):
-                    self.axarr[k,] = mpl.subplot(gs[g[0]:g[1], g[2]:g[3]])
-            elif isinstance(axmap, dict) or isinstance(axmap, OrderedDict): # keys are panel labels
-                self.axarr = np.empty(shape=(len(axmap.keys()), 1), dtype=object)
-                for k, pk in enumerate(axmap.keys()):
-                    g = axmap[pk]  # get the gridspec info
-                    self.axarr[k,] = mpl.subplot(gs[g[0]:g[1], g[2]:g[3]])
-                    self.axdict[pk] = self.axarr[k,][0]
+        gridbuilt = False
+        # compute label offsets
+        p = [0., 0.]
+        if label:
+            if type(labeloffset) is int:
+                p = [labeloffset, labeloffset]
+            elif type(labeloffset) is dict:
+                p = [position['left'], position['bottom']]
+            elif type(labeloffset) in [list, tuple]:
+                p = labeloffset
             else:
-                raise TypeError('Plotter in PlotHelpers: axmap must be a list or dict')
-        else:
+                p = [0., 0.]
+        
+        # build axes arrays
+        # 1. nxm grid
+        if isinstance(rcshape, list) or isinstance(rcshape, tuple):
+            rc = rcshape
+            gs = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
             # assign to axarr
             self.axarr = np.empty(shape=(rc[0], rc[1],), dtype=object)  # use a numpy object array, indexing features
             ix = 0
@@ -927,6 +962,43 @@ class Plotter():
                 for c in range(rc[1]):
                     self.axarr[r,c] = mpl.subplot(gs[ix])
                     ix += 1
+            gridbuilt = True
+        # 2. specified values - starts with Nx1 subplots, then reorganizes according to shape boxes
+        elif isinstance(rcshape, dict):  # true for OrderedDict also
+            nplots = len(rcshape.keys())
+            gs = gridspec.GridSpec(nplots, 1)
+            rc = (nplots, 1)
+            self.axarr = np.empty(shape=(rc[0], rc[1],), dtype=object)  # use a numpy object array, indexing features
+            ix = 0
+            for r in range(rc[0]):
+                for c in range(rc[1]):
+                    self.axarr[r,c] = mpl.subplot(gs[ix])
+                    ix += 1
+            gridbuilt = True
+            for k, pk in enumerate(rcshape.keys()):
+                self.axdict[pk] = self.axarr[k,0]
+            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+p[0], 0.95+p[1]))
+            self.resize(rcshape)
+        else:
+            raise ValueError('Input rcshape must be list/tuple or dict')
+            
+        # create sublots
+        if axmap is not None:
+            if isinstance(axmap, list) and not gridbuilt:
+                self.axarr = np.empty(shape=(len(axmap), 1), dtype=object)
+                for k, g in enumerate(axmap):
+                    self.axarr[k,] = mpl.subplot(gs[g[0]:g[1], g[2]:g[3]])
+            elif isinstance(axmap, dict) or isinstance(axmap, OrderedDict): # keys are panel labels
+                if not gridbuilt:
+                    self.axarr = np.empty(shape=(len(axmap.keys()), 1), dtype=object)
+                for k, pk in enumerate(axmap.keys()):
+                    g = axmap[pk]  # get the gridspec info
+                    if not gridbuilt:
+                        self.axarr[k,] = mpl.subplot(gs[g[0]:g[1], g[2]:g[3]])
+                    self.axdict[pk] = self.axarr[k,][0]
+            else:
+                raise TypeError('Plotter in PlotHelpers: axmap must be a list or dict')
+ 
         if len(self.axdict) == 0:
             for i, a in enumerate(self.axarr.flatten()):
                 label = string.uppercase[i]
@@ -955,14 +1027,6 @@ class Plotter():
                     self.referenceLines[self.axarr[i,j]] = refline(self.axarr[i,j], refline=refline)
 
         if label:
-            if type(labeloffset) is int:
-                p = [labeloffset, labeloffset]
-            elif type(labeloffset) is dict:
-                p = [position['left'], position['bottom']]
-            elif type(labeloffset) in [list, tuple]:
-                p = labeloffset
-            else:
-                p = [0., 0.]
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
                 self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]))
                 return
