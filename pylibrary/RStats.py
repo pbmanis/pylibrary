@@ -364,7 +364,7 @@ def ranksums(data, dataLabel=None, paired=False, decimals=4):
 
     cmdx = '%s=c(%s)' % (labels[0], ', '.join(str(x) for x in data[labels[0]]))
     cmdy = '%s=c(%s)' % (labels[1], ', '.join(str(y) for y in data[labels[1]]))
-    importr('coin')
+#    importr('coin')
     #importr('wilcox.test')
     robjects.r(cmdx)
     robjects.r(cmdy)
