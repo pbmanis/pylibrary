@@ -18,6 +18,7 @@ Created by Paul Manis on 2014-06-26.
 Copyright 2010-2014  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
+from __future__ import print_function
 import scipy.stats as Stats
 import numpy as np
 
@@ -31,12 +32,35 @@ try:
     R_imported = True
     robjects.r.options("digite = 7")
 #   RKMD = importr('kruskalmc')
-    print 'R imported OK'
+    print( 'R imported OK')
 except:
     raise Exception ('Rstats.py: R import Failed! Are R and RPy2 installed?')
     R_imported = False
     exit()
 
+def pformat(p):
+    """
+    Take a value for p and format it differently depending on the value itself
+    p = 1.0: '1.0'
+    p = [0.1 -1.0]: '0.nn'
+    p = [0.01 - 0.1]: '0.0nnn'
+    p = [0.001 - 0.01]: '0.00nnn'
+    p = [0.0001 - 0.001]: '0.00nnn'
+    p < 1e-3: 'n.nnE-m'
+    Parameters
+    ----------
+    p : the p value
+    
+    """
+    fbrks = [1.0, 0.1, 0.01, 0.001, 0.0001]
+    prec = [2, 3, 4, 5, 6]
+    for i, f in enumerate(fbrks[:-1]):
+        if fbrks[i] >= p and p > fbrks[i+1]:
+            return('{:.{prec}f}'.format(p, prec=prec[i]))
+    return('{:.2e}'.format(p))
+    
+    
+    
 
 def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
     """
@@ -66,7 +90,7 @@ def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
     labels = dataDict.keys()
     NGroups = len(labels)
     if NGroups <= 2:
-        print "Need at least 3 groups to run One Way Anova"
+        print( "Need at least 3 groups to run One Way Anova")
         return
     data = [[]]*NGroups
     dn = [[]]*NGroups
@@ -74,16 +98,16 @@ def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
     for i, d in enumerate(labels):
         data[i] = dataDict[d]
 
-    print 'OneWayAnova for %s' % (dataLabel)
+    print( 'OneWayAnova for %s' % (dataLabel))
     for i in range(NGroups):
         dn[i]=dataDict[labels[i]]
     dataargs = ', '.join([('dn[{:d}]'.format(d)) for d in range(NGroups)])
     (F, p) = eval('Stats.f_oneway(%s)' % dataargs)
-    print '\nOne-way Anova (Scipy.stats), %d Groups for check: F=%f, p = %8.4f'% (NGroups, F, p)
+    print ('\nOne-way Anova (Scipy.stats), %d Groups for check: F=%f, p = %8.4f'% (NGroups, F, p))
     if R_imported is False:
         'R not found, skipping'
         return
-    print '\nR yields: ' 
+    print( '\nR yields: ' )
     for i in range(NGroups):
         gn[i] = FloatVector(dn[i])
         robjects.globalenv['g%d'%(i+1)] = gn[i]
@@ -110,23 +134,23 @@ def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
             else:
                 print ('Data Set <{:s}> passed normality (Shapiro-Wilk p = {:.2f}, w = {:.3f})'.format(labels[i], p, w))
         aov = robjects.r("aov(Yd ~ Equation, data=vData)")
-        print aov
+        print( aov)
         robjects.globalenv["aov"] = aov
         sum = robjects.r("summary(aov)")
-        print sum
+        print (sum)
        # drop = robjects.r('drop1(aov, ~., test="F")')
         #print drop
         #x=RStats.anova(aov)
         #print x
-        print 'Post Hoc (Tukey HSD): '
+        print( 'Post Hoc (Tukey HSD): ')
         y=robjects.r("TukeyHSD(aov)")
-        print y
+        print (y)
     if mode == 'nonparametric':
         kw = robjects.r("kruskal.test(Yd ~ Equation, data=vData)")
-        print kw
+        print( kw)
         loc = robjects.r('Equation=factor(rep(c(%s), times=c(%s)))' % (clargs, clenargs))
         kwmc = robjects.r('pairwise.wilcox.test(Yd, Equation, p.adj="bonferroni")')
-        print "PostTest: pairwise wilcox\n", kwmc
+        print ("PostTest: pairwise wilcox\n", kwmc)
 
 
 def permTS(dataDict=None, dataLabel='data', mode='exact.ce'):
@@ -230,7 +254,7 @@ def permutation(data, dataLabel=None, nperm=10000, decimals=4):
         diffs[i] = np.mean(br) - np.mean(ar)
     pvalue = np.sum(np.abs(diffs) >= np.abs(diffobs)) / float(nperm)
     if dataLabel is not None:
-        print '\n%s:  Permutation Test (Nperm = %d)' % (dataLabel, nperm)
+        print ('\n%s:  Permutation Test (Nperm = %d)' % (dataLabel, nperm))
         # if p1 < 0.05 and p2 < 0.05:
         #     print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
         # else:
@@ -250,7 +274,7 @@ def permutation(data, dataLabel=None, nperm=10000, decimals=4):
     return(pvalue, nperm)
 
 
-def ttest(data, dataLabel=None, paired=False, decimals=4):
+def ttest(data, dataLabel=None, paired=False, decimals=4, textline=False, units=None):
     """
     Perform a t-test using Scipy.stats
     
@@ -286,33 +310,38 @@ def ttest(data, dataLabel=None, paired=False, decimals=4):
             '\nUse KW (anova) for more than 2 groups')
             
     k = data.keys()
-    g1 = data[k[0]]
-    g2 = data[k[1]]
-    n1 = len(g1)
-    n2 = len(g2)
+    g={}
+    n={}
+    gmean={}
+    gstd={}
+    
+    g[1] = data[k[0]]
+    g[2] = data[k[1]]
+    n[1] = len(g[1])
+    n[2] = len(g[2])
     # (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
     # (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
     # Tb, pb = Stats.bartlett(g1, g2)  # do bartletss for equal variance
     equalVar = False
     
     if paired:
-        print (len(g1), len(g2))
-        (t, p) = Stats.ttest_rel(g1, g2)
+        print (len(g[1]), len(g[2]))
+        (t, p) = Stats.ttest_rel(g[1], g[2])
     else:
-        (t, p) = Stats.ttest_ind(g1, g2, equal_var=equalVar)
-    g1mean = np.mean(g1)
-    g1std = np.std(g1)
-    g2mean = np.mean(g2)
-    g2std = np.std(g2)
+        (t, p) = Stats.ttest_ind(g[1], g[2], equal_var=equalVar)
+    gmean[1] = np.mean(g[1])
+    gstd[1] = np.std(g[1])
+    gmean[2] = np.mean(g[2])
+    gstd[2] = np.std(g[2])
     #       df = (tstd[k]**2/tN[k] + dstd[k]**2/dN[k])**2 / (( (tstd[k]**2 /
     # tN[k])**2 / (tN[k] - 1) ) + ( (dstd[k]**2 / dN[k])**2 / (tN[k] - 1) ) )
-    df = (g1std**2/n1 + g2std**2/n2)**2 / (((g1std**2 / n1)**2 / (n1 - 1) + ((g2std**2 / n2)**2 / (n1 - 1))))
+    df = (gstd[1]**2/n[1] + gstd[2]**2/n[2])**2 / (((gstd[1]**2 / n[1])**2 / (n[1] - 1) + ((gstd[2]**2 / n[2])**2 / (n[1] - 1))))
     if dataLabel is not None:
         testtype = 'Independent'
         if paired:
             testtype = 'Paired'
         n = max([len(l) for l in k])
-        print '\n%s\n  %s T-test, Welch correction' % (dataLabel, testtype)
+        print ('\n%s\n  %s T-test, Welch correction' % (dataLabel, testtype))
         # if p1 < 0.05 and p2 < 0.05:
         #     print(u'  Both data sets appear normally distributed: Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
         # else:
@@ -322,9 +351,22 @@ def ttest(data, dataLabel=None, paired=False, decimals=4):
         #     print(u'  Variances are equivalent (Bartletts test, p = {:.3f})'.format(pb))
         # else:
         #     print(u'  Variances are unequal (Bartletts test, p = {:.3f}); not assuming equal variances'.format(pb))
-        print(u'  {:s}={:8.{pc}f} (SD {:.{pc}f}, N = {:d})'.format(k[0].rjust(n), g1mean, g1std, len(g1), pc=decimals))
-        print(u'  {:s}={:8.{pc}f} (SD {:.{pc}f}, N = {:d})'.format(k[1].rjust(n), g2mean, g2std, len(g2), pc=decimals))
+        print(u'  {:s}={:8.{pc}f} (SD {:.{pc}f}, N = {:d})'.format(k[0].rjust(n), gmean[1], gstd[1], len(g[1]), pc=decimals))
+        print(u'  {:s}={:8.{pc}f} (SD {:.{pc}f}, N = {:d})'.format(k[1].rjust(n), gmean[2], gstd[2], len(g[2]), pc=decimals))
         print(u'  t({:6.2f})={:8.4f}  p={:8.6f}\n'.format(df, float(t), float(p)))
+        # generate one line of text suitable for pasting into a paper
+        if textline:
+            if units is not None:
+                units = ' ' + units
+            else:
+                units = ''
+            fmtstring = u'{:s}: {:.{pc}f} (SD {:.{pc}f}, N={:d}){:s}; '
+            print(u'(')
+            for s in range(1, 3):
+                print(fmtstring.format(
+                k[s-1].rjust(n), gmean[s], gstd[s], len(g[s]), units, pc=decimals), end='')
+            print(u't{:.2f}={:.3f}, p={:s})\n'.format(df, float(t), pformat(p)))
+            
     return(df, float(t), float(p))
 
 
@@ -390,7 +432,7 @@ def ranksums(data, dataLabel=None, paired=False, decimals=4):
     (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
     if dataLabel is not None:
         n = max([len(l) for l in k])
-        print '\n%s test, data set = %s' % (testtype, dataLabel)
+        print( '\n%s test, data set = %s' % (testtype, dataLabel))
         if p1 < 0.05 and p2 < 0.05:
             print(u'  Both data sets appear normally distributed: \n    Shapiro-Wilk Group 1 p = {:6.3f}, Group2 p = {:6.3f}'.format(p1, p2))
         else:
@@ -415,7 +457,7 @@ def summarizeData(data, dataLabel=None, decimals=4):
     Provide descriptive median and interquartile range for non-normal (or small) data sets
     """
     if dataLabel is not None:
-        print '%s: Data Set Summary (median, IQR)' % dataLabel
+        print ('%s: Data Set Summary (median, IQR)' % dataLabel)
     n = max([len(l) for l in data.keys()])
     for i, k in enumerate(data.keys()):
         g1 = data[k]
@@ -442,9 +484,9 @@ def testANOVA():
     data={'Control': [54, 23, 45, 54, 45, 47], 'Treated': [87, 98, 64, 77, 89], 
     'TreatedAntagonist': [45, 39, 51, 49, 50, 55]}
     OneWayAnova(dataDict=data, dataLabel='3Groups', mode='parametric')
-    print '-'*80
-    print 'Compare to Prism output: '
-    print """
+    print ('-'*80)
+    print ('Compare to Prism output: ')
+    print( """
     "Table Analyzed"	"One-way ANOVA data"				
 					
     "ANOVA summary"					
@@ -473,10 +515,10 @@ def testANOVA():
 					
     "Data summary"					
     "  Number of treatments (columns)"	3				
-    "  Number of values (total)"	17				"""
-    print '-'*80
-    print 'Multiple comparisions from Prism:'
-    print """
+    "  Number of values (total)"	17				""")
+    print ('-'*80)
+    print ('Multiple comparisions from Prism:')
+    print ("""
     "Number of families"	1							
     "Number of comparisons per family"	3							
     Alpha	0.05							
@@ -494,7 +536,7 @@ def testANOVA():
     "  Control vs. Treated+Antagonist"	44.67	48.17	-3.500	5.928	6	6	0.8349	14
     "  Treated vs. Treated+Antagonist"	83.00	48.17	34.83	6.218	5	6	7.923	14
 
-    """
+    """)
 
 
 def test2Samp():
@@ -525,8 +567,8 @@ def test2Samp():
     datadict = {'x': datax, 'y': datay}
     ranksums(datadict, dataLabel='Test Rank Sums (scipy)')
     ranksums(datadict, dataLabel='Test Rank Sums, Paired (scipy)', paired=True)
-    ttest(datadict, dataLabel='Standard t-test (scipy)')
-    ttest(datadict, dataLabel='Standard t-test (scipy), paired')
+    ttest(datadict, dataLabel='Standard t-test (scipy)', textline=True, decimals=3, units='mV')
+    ttest(datadict, dataLabel='Standard t-test (scipy), paired', paired=True, textline=True, decimals=3)
     (p, n) = permTS(datadict, dataLabel='R permTS')
     permutation(datadict, dataLabel='Test simple permute')
 
@@ -535,6 +577,9 @@ if __name__ == '__main__':
     """
     If called from commmand line, runs tests on routines
     """
-    testANOVA()
+    # for p in [0.25, 0.038, 0.0048, 0.00001, 1e-18]:
+    #     print(pformat(p))
+    
+#    testANOVA()
     test2Samp()
     
