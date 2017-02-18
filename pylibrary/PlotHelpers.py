@@ -977,6 +977,7 @@ class Plotter():
             gridbuilt = True
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k,0]
+            p = labeloffset
             self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+p[0], 0.95+p[1]))
             self.resize(rcshape)
         else:

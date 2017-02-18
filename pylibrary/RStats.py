@@ -567,7 +567,7 @@ def test2Samp():
     datadict = {'x': datax, 'y': datay}
     ranksums(datadict, dataLabel='Test Rank Sums (scipy)')
     ranksums(datadict, dataLabel='Test Rank Sums, Paired (scipy)', paired=True)
-    ttest(datadict, dataLabel='Standard t-test (scipy)', textline=True, decimals=3, units='mV')
+    ttest(datadict, dataLabel='Standard t-test (scipy)', textline=True, decimals=0, units='mV')
     ttest(datadict, dataLabel='Standard t-test (scipy), paired', paired=True, textline=True, decimals=3)
     (p, n) = permTS(datadict, dataLabel='R permTS')
     permutation(datadict, dataLabel='Test simple permute')
