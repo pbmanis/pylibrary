@@ -361,10 +361,10 @@ def ttest(data, dataLabel=None, paired=False, decimals=4, textline=False, units=
             else:
                 units = ''
             fmtstring = u'{:s}: {:.{pc}f} (SD {:.{pc}f}, N={:d}){:s}; '
-            print(u'(')
+            print(u'(', end='')
             for s in range(1, 3):
                 print(fmtstring.format(
-                k[s-1].rjust(n), gmean[s], gstd[s], len(g[s]), units, pc=decimals), end='')
+                k[s-1], gmean[s], gstd[s], len(g[s]), units, pc=decimals), end='')
             print(u't{:.2f}={:.3f}, p={:s})\n'.format(df, float(t), pformat(p)))
             
     return(df, float(t), float(p))

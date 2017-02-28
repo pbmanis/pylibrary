@@ -257,7 +257,7 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
                 fontsize=fontsize, family='sans-serif', rotation=rotation
                 )
         labels.append(ann)
-    return(ann)
+    return(labels)
 
 
 def listAxes(axd):
@@ -518,7 +518,7 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None, 
                 fontsize = fontsize)
 
 
-def refline(axl, refline=None, limits=None, color='0.33', linestyle='--' ,linewidth=0.5):
+def refline(axl, refline=None, limits=None, color='0.33', linestyle='--' ,linewidth=0.5, dashes=None):
     """
     draw a reference line at a particular level of the data on the y axis
     returns the line object.
@@ -534,8 +534,10 @@ def refline(axl, refline=None, limits=None, color='0.33', linestyle='--' ,linewi
             xlims = ax.get_xlim()
         else:
             xlims = limits
-        rl = ax.plot([xlims[0], xlims[1]], [refline, refline],
+        rl, = ax.plot([xlims[0], xlims[1]], [refline, refline],
              color=color, linestyle=linestyle, linewidth=linewidth)
+        if dashes is not None:
+            rl.set_dashes(dashes)
     return rl
 
 
@@ -922,7 +924,7 @@ class Plotter():
             Figure size in inches. Default is for a landscape figure
         
         fontsize : points (default : 10)
-            Defines the size of the font to use for 
+            Defines the size of the font to use for panel labels
 
         position : position of spines (0 means close, 0.05 means break out)
             x, y spines.. 
@@ -978,7 +980,7 @@ class Plotter():
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k,0]
             p = labeloffset
-            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+p[0], 0.95+p[1]))
+            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize)
             self.resize(rcshape)
         else:
             raise ValueError('Input rcshape must be list/tuple or dict')
@@ -1029,7 +1031,7 @@ class Plotter():
 
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
-                self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]))
+                self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize)
                 return
             self.axlist = []
             if roworder == True:
