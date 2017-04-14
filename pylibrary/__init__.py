@@ -21,9 +21,9 @@ if listimports:
 import Params
 if listimports:
     print 'imported Params'
-import RStats
-if listimports:
-    print 'imported RStats'
+# import RStats
+# if listimports:
+#     print 'imported RStats'
 import pyqtgraphPlotHelpers
 if listimports:
     print 'imported pyqtgraphPlotHelpers'

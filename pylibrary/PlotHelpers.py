@@ -80,6 +80,7 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
             continue
         for loc, spine in ax.spines.iteritems():
             if loc in spines:
+                spine.set_color('k')
                 if type(position) in [int, float]:
                     spine.set_position(('axes', position))
                 elif type(position) is dict:
@@ -94,11 +95,13 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
         # turn off ticks where there is no spine, if there are axes
         if 'left' in spines and not axesoff:
             ax.yaxis.set_ticks_position('left')
+            ax.yaxis.set_tick_params(color='k')
         else:
             ax.yaxis.set_ticks([]) # no yaxis ticks
 
         if 'bottom' in spines and not axesoff:
             ax.xaxis.set_ticks_position('bottom')
+            ax.xaxis.set_tick_params(color='k')
         else:
             ax.xaxis.set_ticks([])  # no xaxis ticks
 
