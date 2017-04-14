@@ -241,8 +241,9 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
         axl = [axl]
     if axlist is None:
         axlist = string.uppercase[0:len(axl)]
-        # assume we wish to go in sequence
-        assert len(axlist) == len(axl)
+    # assume we wish to go in sequence
+    if len(axlist) != len(axl):
+        raise ValueError ('axlist and axl must have same length: got %d and %d for axlist:' % (len(axlist), len(axl)), axlist)
     font = FontProperties()
     font.set_family('sans-serif')
     font.set_weight=weight
@@ -521,15 +522,15 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None, 
                 fontsize = fontsize)
 
 
-def refline(axl, refline=None, limits=None, color='0.33', linestyle='--' ,linewidth=0.5, dashes=None):
+def referenceline(axl, reference=None, limits=None, color='0.33', linestyle='--' ,linewidth=0.5, dashes=None):
     """
     draw a reference line at a particular level of the data on the y axis
     returns the line object.
     """
     if type(axl) is not list:
         axl = [axl]
-    if refline is None:
-        refline = 0.
+    if reference is None:
+        refeference = 0.
     for ax in axl:
         if ax is None:
             continue
@@ -537,7 +538,7 @@ def refline(axl, refline=None, limits=None, color='0.33', linestyle='--' ,linewi
             xlims = ax.get_xlim()
         else:
             xlims = limits
-        rl, = ax.plot([xlims[0], xlims[1]], [refline, refline],
+        rl, = ax.plot([xlims[0], xlims[1]], [reference, reference],
              color=color, linestyle=linestyle, linewidth=linewidth)
         if dashes is not None:
             rl.set_dashes(dashes)
@@ -982,8 +983,8 @@ class Plotter():
             gridbuilt = True
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k,0]
-            p = labeloffset
-            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize)
+            plo = labeloffset
+            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+plo[0], 0.95+plo[1]), fontsize=fontsize)
             self.resize(rcshape)
         else:
             raise ValueError('Input rcshape must be list/tuple or dict')
@@ -1030,7 +1031,7 @@ class Plotter():
 #                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
                 nice_plot(self.axarr[i, j], position=position)
                 if refline is not None:
-                    self.referenceLines[self.axarr[i,j]] = refline(self.axarr[i,j], refline=refline)
+                    self.referenceLines[self.axarr[i,j]] = referenceline(self.axarr[i,j], reference=refline)
 
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
@@ -1064,11 +1065,11 @@ class Plotter():
         Only sets internal variables
         """
         self.column_counter += 1
-        if self.column_counter > self.ncolumns:
+        if self.column_counter >= self.ncolumns:
             self.row_counter += 1
-            if self.row_counter > self.nrows:
-                raise ValueError('Call to get next row exceeds the number of rows requested initially: %d' % self.nrows)
             self.column_counter = 0
+            if self.row_counter >= self.nrows:
+                raise ValueError('Call to get next row exceeds the number of rows requested initially: %d' % self.nrows)
     
     def getaxis(self, group=None):
         """
@@ -1136,23 +1137,30 @@ class Plotter():
             The values for each key are a list (or tuple) of [left, width, bottom, height]
             for each panel in units of the graph [0, 1, 0, 1]. 
         
-        sizer = {'A': [0.08, 0.22, 0.50, 0.4], 'B1': [0.40, 0.25, 0.60, 0.3], 'B2': [0.40, 0.25, 0.5, 0.1],
-                'C1': [0.72, 0.25, 0.60, 0.3], 'C2': [0.72, 0.25, 0.5, 0.1],
-                'D': [0.08, 0.25, 0.1, 0.3], 'E': [0.40, 0.25, 0.1, 0.3], 'F': [0.72, 0.25, 0.1, 0.3],
-        
+        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y)}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
+                 'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y)},
+                'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
+                'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 
+                'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
+                }
         Returns
         -------
         Nothing
         """
         
-        for s in sizer.keys():
+        for i, s in enumerate(sizer.keys()):
             ax = self.axdict[s]
             bbox = ax.get_position()
-            bbox.x0 = sizer[s][0]
-            bbox.x1 = sizer[s][1]+ sizer[s][0]
-            bbox.y0 = sizer[s][2]
-            bbox.y1 = sizer[s][3] + sizer[s][2]  # offsets are in figure fractions
+            bbox.x0 = sizer[s]['pos'][0]
+            bbox.x1 = sizer[s]['pos'][1]+ sizer[s]['pos'][0]
+            bbox.y0 = sizer[s]['pos'][2]
+            bbox.y1 = sizer[s]['pos'][3] + sizer[s]['pos'][2]  # offsets are in figure fractions
             ax.set_position(bbox)
+            if 'labelpos' in sizer[s].keys() and len(sizer[s]['labelpos']) == 2:
+                x, y = sizer[s]['labelpos']
+                self.axlabels[i].set_x(x)
+                self.axlabels[i].set_y(y)
+                
 
 
 if __name__ == '__main__':
