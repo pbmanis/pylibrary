@@ -39,7 +39,18 @@ from matplotlib.patches import Circle
 from matplotlib.patches import Rectangle
 from matplotlib.patches import Ellipse
 from matplotlib.collections import PatchCollection
-
+import matplotlib
+rcParams = matplotlib.rcParams
+rcParams['svg.fonttype'] = 'none' # No text as paths. Assume font installed.
+rcParams['pdf.fonttype'] = 42
+rcParams['ps.fonttype'] = 42
+#rcParams['font.serif'] = ['Times New Roman']
+from matplotlib import rc
+rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
+#rcParams['font.sans-serif'] = ['Arial']
+#rcParams['font.family'] = 'sans-serif'
+rc('text', usetex=True)
+rcParams['text.latex.unicode'] = True
 seaborn.set_style('white')
 seaborn.set_style('ticks')
 
@@ -472,7 +483,7 @@ def getLayoutDimensions(n, pref='height'):
     return(inopth, inoptw)
 
 
-def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None, fontsize=11):
+def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsize=11, weight='normal', font='Arial'):
     """
         draw a calibration bar and label it. The calibration bar is defined as:
         [x0, y0, xlen, ylen]
@@ -484,42 +495,49 @@ def calbar(axl, calbar = None, axesoff = True, orient = 'left', unitNames=None, 
             continue
         if axesoff is True:
             noaxes(ax)
-        Vfmt = '%.0f'
+        Hfmt = r'{:.0f}'
         if calbar[2] < 1.0:
-            Vfmt = '%.1f'
-        Hfmt = '%.0f'
+            Hfmt = r'{:.1f}'
+        Vfmt = r' {:.0f}'
         if calbar[3] < 1.0:
-            Hfmt = '%.1f'
+            Vfmt = r' {:.1f}'
         if unitNames is not None:
-            Vfmt = Vfmt + ' ' + unitNames['x']
-            Hfmt = Hfmt + ' ' + unitNames['y']
+            Vfmt = Vfmt + r' ' + r'{:s}'.format(unitNames['y'])
+            Hfmt = Hfmt + r' ' + r'{:s}'.format(unitNames['x'])
+        # print(Vfmt, unitNames['y'])
+        # print(Vfmt.format(calbar[3]))
+        font = FontProperties()
+        font.set_family('sans-serif')
+        font.set_weight=weight
+        font.set_size=fontsize
+        font.set_style('normal')
         if calbar is not None:
             if orient == 'left':  # vertical part is on the left
                 ax.plot([calbar[0], calbar[0], calbar[0]+calbar[2]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
                     color = 'k', linestyle = '-', linewidth = 1.5)
-                ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3], Hfmt % calbar[3], 
+                ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3], Vfmt.format(calbar[3]), 
                     horizontalalignment = 'left', verticalalignment = 'center',
-                    fontsize = fontsize)
+                    fontsize = fontsize, weight=weight, family='sans-serif',)
             elif orient == 'right':  # vertical part goes on the right
                 ax.plot([calbar[0] + calbar[2], calbar[0]+calbar[2], calbar[0]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
                     color = 'k', linestyle = '-', linewidth = 1.5)
-                ax.text(calbar[0]+calbar[2]-0.05*calbar[2], calbar[1]+0.5*calbar[3], Hfmt % calbar[3], 
+                ax.text(calbar[0]+calbar[2]-0.05*calbar[2], calbar[1]+0.5*calbar[3], Vfmt.format(calbar[3]), 
                     horizontalalignment = 'right', verticalalignment = 'center',
-                    fontsize = fontsize)
+                    fontsize = fontsize, weight=weight, family='sans-serif',)
             else:
                 print "PlotHelpers.py: I did not understand orientation: %s" % (orient)
                 print "plotting as if set to left... "
                 ax.plot([calbar[0], calbar[0], calbar[0]+calbar[2]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
                     color = 'k', linestyle = '-', linewidth = 1.5)
-                ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3], Hfmt % calbar[3], 
+                ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3],Vfmt.format(calbar[3]), 
                     horizontalalignment = 'left', verticalalignment = 'center',
-                    fontsize = fontsize)
-            ax.text(calbar[0]+calbar[2]*0.5, calbar[1]-0.1*calbar[3], Vfmt % calbar[2], 
+                    fontsize = fontsize, weight=weight, family='sans-serif',)
+            ax.text(calbar[0]+calbar[2]*0.5, calbar[1]-0.1*calbar[3], Hfmt.format(calbar[2]), 
                 horizontalalignment = 'center', verticalalignment = 'top',
-                fontsize = fontsize)
+                fontsize = fontsize, weight=weight, family='sans-serif',)
 
 
 def referenceline(axl, reference=None, limits=None, color='0.33', linestyle='--' ,linewidth=0.5, dashes=None):
@@ -1137,8 +1155,8 @@ class Plotter():
             The values for each key are a list (or tuple) of [left, width, bottom, height]
             for each panel in units of the graph [0, 1, 0, 1]. 
         
-        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y)}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
-                 'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y)},
+        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
+                 'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
                 'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
                 'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 
                 'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
@@ -1160,6 +1178,8 @@ class Plotter():
                 x, y = sizer[s]['labelpos']
                 self.axlabels[i].set_x(x)
                 self.axlabels[i].set_y(y)
+            if 'noaxes' in sizer[s] and sizer[s]['noaxes'] == True:
+                noaxes(ax)
                 
 
 
