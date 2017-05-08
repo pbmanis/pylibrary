@@ -262,8 +262,8 @@ def permutation(data, dataLabel=None, nperm=10000, decimals=4):
         # print (u'    (Permutation test does not depend on distribution)')
 
         n = max([len(l) for l in k])
-        print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f}, {:d} (mean, SD, N)'.format(k[0].rjust(n), np.mean(g1), np.std(g1), len(g1), pc=decimals))
-        print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f}, {:d} (mean, SD, N)'.format(k[1].rjust(n), np.mean(g2), np.std(g2), len(g2), pc=decimals))
+        print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f}, {:d} (mean, SD, N)'.format(k[0].rjust(n), np.mean(g1), np.std(g1, ddof=1), len(g1), pc=decimals))
+        print(u'  {:s}={:8.{pc}f} \u00B1{:.{pc}f}, {:d} (mean, SD, N)'.format(k[1].rjust(n), np.mean(g2), np.std(g2, ddof=1), len(g2), pc=decimals))
         summarizeData(data, decimals=decimals)
         # iqr1 = np.subtract(*np.percentile(g1, [75, 25]))
         # iqr2 = np.subtract(*np.percentile(g2, [75, 25]))
@@ -330,9 +330,9 @@ def ttest(data, dataLabel=None, paired=False, decimals=4, textline=False, units=
     else:
         (t, p) = Stats.ttest_ind(g[1], g[2], equal_var=equalVar)
     gmean[1] = np.mean(g[1])
-    gstd[1] = np.std(g[1])
+    gstd[1] = np.std(g[1], ddof=1)
     gmean[2] = np.mean(g[2])
-    gstd[2] = np.std(g[2])
+    gstd[2] = np.std(g[2], ddof=1)
     #       df = (tstd[k]**2/tN[k] + dstd[k]**2/dN[k])**2 / (( (tstd[k]**2 /
     # tN[k])**2 / (tN[k] - 1) ) + ( (dstd[k]**2 / dN[k])**2 / (tN[k] - 1) ) )
     df = (gstd[1]**2/n[1] + gstd[2]**2/n[2])**2 / (((gstd[1]**2 / n[1])**2 / (n[1] - 1) + ((gstd[2]**2 / n[2])**2 / (n[1] - 1))))
@@ -425,9 +425,9 @@ def ranksums(data, dataLabel=None, paired=False, decimals=4):
 #        print 'R: Wilcox (unpaired) p: ', u[u.names.index('p.value')][0]
         
     g1mean = np.mean(g1)
-    g1std = np.std(g1)
+    g1std = np.std(g1, ddof=1)
     g2mean = np.mean(g2)
-    g2std = np.std(g2)
+    g2std = np.std(g2, ddof=1)
     (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
     (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
     if dataLabel is not None:
