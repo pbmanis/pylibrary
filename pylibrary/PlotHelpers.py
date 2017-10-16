@@ -874,7 +874,7 @@ class Plotter():
     an row x column array.
     """
     def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
-        figsize=(11, 8.5), fontsize=10, position=0, labeloffset=[0., 0.]):
+        figsize=(11, 8.5), fontsize=10, position=0, labeloffset=[0., 0.], labelsize=12):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
         and sets up an array of subplots as defined, initializes the counters
@@ -961,6 +961,8 @@ class Plotter():
         self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
         self.axlabels = []
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
+        if isinstance(fontsize, int):
+            fontsize = {'tick': fontsize, 'label': fontsize, 'panel': fontsize}
         gridbuilt = False
         # compute label offsets
         p = [0., 0.]
@@ -1002,7 +1004,7 @@ class Plotter():
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k,0]
             plo = labeloffset
-            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+plo[0], 0.95+plo[1]), fontsize=fontsize)
+            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+plo[0], 0.95+plo[1]), fontsize=fontsize['panel'])
             self.resize(rcshape)
         else:
             raise ValueError('Input rcshape must be list/tuple or dict')
@@ -1044,7 +1046,7 @@ class Plotter():
                 self.axarr[i, j].spines['top'].set_visible(False)
                 self.axarr[i, j].get_xaxis().set_tick_params(direction='out', width=0.8, length=4.)
                 self.axarr[i, j].get_yaxis().set_tick_params(direction='out', width=0.8, length=4.)
-                self.axarr[i, j].tick_params(axis='both', which='major', labelsize=fontsize)
+                self.axarr[i, j].tick_params(axis='both', which='major', labelsize=fontsize['tick'])
 #                if i < self.nrows-1:
 #                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
                 nice_plot(self.axarr[i, j], position=position)
@@ -1053,7 +1055,7 @@ class Plotter():
 
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
-                self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize)
+                self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize['panel'])
                 return
             self.axlist = []
             if roworder == True:
