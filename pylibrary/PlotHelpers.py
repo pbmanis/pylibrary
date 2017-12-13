@@ -84,14 +84,17 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
     -------
         Nothing.
     """
+    #print 'NICEPLOT'
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
         if ax is None:
             continue
+        #print 'ax: ', ax
         for loc, spine in ax.spines.iteritems():
             if loc in spines:
                 spine.set_color('k')
+                #print 'spine color : k'
                 if type(position) in [int, float]:
                     spine.set_position(('axes', position))
                 elif type(position) is dict:
@@ -100,6 +103,7 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
                     raise ValueError("position must be int, float or dict [ex: ]{'left': -0.05, 'bottom': -0.05}]")
             else:
                 spine.set_color('none')
+                #print 'spine color : none'
         if axesoff is True:
             noaxes(ax)
 
@@ -1134,16 +1138,16 @@ class Plotter():
         # look for the group label in the arrangement dicts
         for c, colname in enumerate(self.arrangement.keys()):
             if group in self.arrangement[colname]:
-                print ('column name, column: ', colname, self.arrangement[colname])
-                print ('group: ', group)
+                # print ('column name, column: ', colname, self.arrangement[colname])
+                # print ('group: ', group)
                 r = self.arrangement[colname].index(group)  # get the row position this way
                 return(self.axarr[r, c])
         print('Group {:s} not in the arrangement'.format(group))
         return None
         
-        sizer = {'A': [0.08, 0.22, 0.50, 0.4], 'B1': [0.40, 0.25, 0.60, 0.3], 'B2': [0.40, 0.25, 0.5, 0.1],
-                'C1': [0.72, 0.25, 0.60, 0.3], 'C2': [0.72, 0.25, 0.5, 0.1],
-                'D': [0.08, 0.25, 0.1, 0.3], 'E': [0.40, 0.25, 0.1, 0.3], 'F': [0.72, 0.25, 0.1, 0.3],
+        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4]}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3]}, 'B2': {'pos': [0.40, 0.25, 0.5, 0.1]},
+                'C1': {'pos': [0.72, 0.25, 0.60, 0.3]}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1]},
+                'D': {'pos': [0.08, 0.25, 0.1, 0.3]}, 'E': {'pos': [0.40, 0.25, 0.1, 0.3]}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3]},
         }
     
     def resize(self, sizer):
