@@ -30,6 +30,7 @@ import seaborn  # a bit dangerous because it changes defaults, but it has wider 
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.font_manager import FontProperties
 from mpl_toolkits.axes_grid.anchored_artists import AnchoredText
+#from mpl_toolkits.axes_grid1.anchored_artists import AnchoredText
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, DrawingArea, HPacker
 from scipy.stats import gaussian_kde
 import numpy as np
