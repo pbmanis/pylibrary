@@ -8,18 +8,15 @@ Copyright 2014  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
-import sys
-import os
-import unittest
-
 
 class Params(object):
     """
     utility class to create parameter lists...
     create like: p = Params(abc=2.0, defg = 3.0, lunch='sandwich')
     reference like p.abc, p.defg, etc.
-    Supports getting the keys, finding whether a key exists, returning the strucure as a simple dictionary,
-    and printing (show) the parameter structure.
+    Supports getting the keys, finding whether a key exists, returning
+    the strucure as a simple dictionary, and printing (show) the
+    parameter structure.
     """
     def __init__(self, **kwds):
         self.__dict__.update(kwds)
@@ -28,45 +25,56 @@ class Params(object):
         """
         Get the keys in the current dictionary
         """
-        return(self.__dict__.keys())
+        return self.__dict__.keys()
 
     def haskey(self, key):
         """
         Find out if the param list has a specific key in it
         """
-        if key in self.__dict__.keys():
-            return True
-        else:
-            return False
+        return key in self.__dict__.keys()
 
     def todict(self):
         """
         convert param list to standard dictionary
         Useful when writing the data
         """
-        r = {}
+        res = {}
         for dictelement in self.__dict__:
             if isinstance(self.__dict__[dictelement], Params):
                 #print 'nested: ', dictelement
-                r[dictelement] = self.__dict__[dictelement].todict()
+                res[dictelement] = self.__dict__[dictelement].todict()
             else:
-                r[dictelement] = self.__dict__[dictelement]
-        return r
+                res[dictelement] = self.__dict__[dictelement]
+        return res
 
-    def show(self, printFlag = True):
+    def show(self):
         """
         print the parameter block created in Parameter Init
         """
         print "--------    Parameter Block    ----------"
         for key in self.__dict__.keys():
-            print "%15s = " % (key), eval('self.%s' % key)
+            print "%15s = " % (key), self.__dict__[key] # eval('self.%s' % key)
         print "-------- ---------------------- ----------"
 
 
-class ParamTests(unittest.TestCase):
-	def setUp(self):
-		pass
+class ParamTests(object):
+    """
+    Perform some tests (not implemented)
+    Also illustrates how to use this module
+    """
+    def __init__(self):
+        self.testpar = Params(number=1, string='string', dict={'x': 0, 'y': 1})
+        """
+        Run a simple test to verify this works
+        """
+
+        print self.testpar.getkeys()
+        print self.testpar.haskey('number')
+        print self.testpar.haskey('notinkeys')
+        print self.testpar.todict()
+        self.testpar.show()
 
 
 if __name__ == '__main__':
-	unittest.main()
+    ParamTests()
+
