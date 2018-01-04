@@ -30,6 +30,7 @@ import seaborn  # a bit dangerous because it changes defaults, but it has wider 
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.font_manager import FontProperties
 from mpl_toolkits.axes_grid.anchored_artists import AnchoredText
+#from mpl_toolkits.axes_grid1.anchored_artists import AnchoredText
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, DrawingArea, HPacker
 from scipy.stats import gaussian_kde
 import numpy as np
@@ -84,14 +85,17 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
     -------
         Nothing.
     """
+    #print 'NICEPLOT'
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
         if ax is None:
             continue
+        #print 'ax: ', ax
         for loc, spine in ax.spines.iteritems():
             if loc in spines:
                 spine.set_color('k')
+                #print 'spine color : k'
                 if type(position) in [int, float]:
                     spine.set_position(('axes', position))
                 elif type(position) is dict:
@@ -100,6 +104,7 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
                     raise ValueError("position must be int, float or dict [ex: ]{'left': -0.05, 'bottom': -0.05}]")
             else:
                 spine.set_color('none')
+                #print 'spine color : none'
         if axesoff is True:
             noaxes(ax)
 
@@ -874,7 +879,7 @@ class Plotter():
     an row x column array.
     """
     def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
-        figsize=(11, 8.5), fontsize=10, position=0, labeloffset=[0., 0.]):
+        figsize=(11, 8.5), fontsize=10, position=0, labeloffset=[0., 0.], labelsize=12):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
         and sets up an array of subplots as defined, initializes the counters
@@ -961,6 +966,8 @@ class Plotter():
         self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
         self.axlabels = []
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
+        if isinstance(fontsize, int):
+            fontsize = {'tick': fontsize, 'label': fontsize, 'panel': fontsize}
         gridbuilt = False
         # compute label offsets
         p = [0., 0.]
@@ -1002,7 +1009,7 @@ class Plotter():
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k,0]
             plo = labeloffset
-            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+plo[0], 0.95+plo[1]), fontsize=fontsize)
+            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+plo[0], 0.95+plo[1]), fontsize=fontsize['panel'])
             self.resize(rcshape)
         else:
             raise ValueError('Input rcshape must be list/tuple or dict')
@@ -1044,7 +1051,7 @@ class Plotter():
                 self.axarr[i, j].spines['top'].set_visible(False)
                 self.axarr[i, j].get_xaxis().set_tick_params(direction='out', width=0.8, length=4.)
                 self.axarr[i, j].get_yaxis().set_tick_params(direction='out', width=0.8, length=4.)
-                self.axarr[i, j].tick_params(axis='both', which='major', labelsize=fontsize)
+                self.axarr[i, j].tick_params(axis='both', which='major', labelsize=fontsize['tick'])
 #                if i < self.nrows-1:
 #                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
                 nice_plot(self.axarr[i, j], position=position)
@@ -1053,7 +1060,7 @@ class Plotter():
 
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
-                self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize)
+                self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize['panel'])
                 return
             self.axlist = []
             if roworder == True:
@@ -1132,16 +1139,16 @@ class Plotter():
         # look for the group label in the arrangement dicts
         for c, colname in enumerate(self.arrangement.keys()):
             if group in self.arrangement[colname]:
-                print ('column name, column: ', colname, self.arrangement[colname])
-                print ('group: ', group)
+                # print ('column name, column: ', colname, self.arrangement[colname])
+                # print ('group: ', group)
                 r = self.arrangement[colname].index(group)  # get the row position this way
                 return(self.axarr[r, c])
         print('Group {:s} not in the arrangement'.format(group))
         return None
         
-        sizer = {'A': [0.08, 0.22, 0.50, 0.4], 'B1': [0.40, 0.25, 0.60, 0.3], 'B2': [0.40, 0.25, 0.5, 0.1],
-                'C1': [0.72, 0.25, 0.60, 0.3], 'C2': [0.72, 0.25, 0.5, 0.1],
-                'D': [0.08, 0.25, 0.1, 0.3], 'E': [0.40, 0.25, 0.1, 0.3], 'F': [0.72, 0.25, 0.1, 0.3],
+        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4]}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3]}, 'B2': {'pos': [0.40, 0.25, 0.5, 0.1]},
+                'C1': {'pos': [0.72, 0.25, 0.60, 0.3]}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1]},
+                'D': {'pos': [0.08, 0.25, 0.1, 0.3]}, 'E': {'pos': [0.40, 0.25, 0.1, 0.3]}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3]},
         }
     
     def resize(self, sizer):

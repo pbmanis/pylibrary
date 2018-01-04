@@ -4,6 +4,11 @@
 RStats.py
 Wrappers for using R, scipy and a custom permutation routine for data anlsysis
 
+If you use the standard anaconda install for r, you will only get some packages.
+To get permTS, do: conda install -c r r-perm
+
+then importr('perm'), access with perm.permTS()
+
 Currently implements 1-way ANOVA for 3, 4, and 5 groups with all-way posttests
 t-tests (paired, unpaired, equal and unequal variance)
     Runs 
@@ -12,6 +17,7 @@ permutation
 
 To use:
 import pylibrary.RStats as RStats
+
 
 Created by Paul Manis on 2014-06-26.
 
@@ -24,19 +30,24 @@ import numpy as np
 
 
 # connect to R via RPy2
-try:
-    from rpy2.robjects import FloatVector
-    import rpy2.robjects as robjects
-    from rpy2.robjects.packages import importr
-    RStats = importr('stats')
-    R_imported = True
-    robjects.r.options("digite = 7")
+#try:
+from rpy2.robjects import FloatVector
+import rpy2.robjects as robjects
+from rpy2.robjects.packages import importr
+from rpy2.robjects import numpy2ri
+
+numpy2ri.activate()
+RStats = importr('stats')
+perm = importr('perm')
+
+R_imported = True
+#robjects.r.options(digits = 7)
 #   RKMD = importr('kruskalmc')
-    print( 'R imported OK')
-except:
-    raise Exception ('Rstats.py: R import Failed! Are R and RPy2 installed?')
-    R_imported = False
-    exit()
+print( 'R imported OK')
+#except:
+#    raise Exception ('Rstats.py: R import Failed! Are R and RPy2 installed?')
+#    R_imported = False
+#    exit()
 
 def pformat(p):
     """
@@ -59,7 +70,50 @@ def pformat(p):
             return('{:.{prec}f}'.format(p, prec=prec[i]))
     return('{:.2e}'.format(p))
     
+def KS(dataDict=None, dataLabel='data', mode='two.sided'):
+    """
+    KS performs a two-sample Kolmogorov-Smirnov test using the R package
     
+    Params
+    ------
+    dataDict: Dictionary
+        Data format {'group1': [dataset], 'group2': [dataset]}.
+    dataLabel: string
+        title to use for print out of data
+
+    Returns
+    -------
+    (p, n) : tuple
+        p value for test (against null hypothesis), and n, number of mc replications or 0 for other tests
+    """
+    
+    # test calling values
+    modes = ['two.sided', 'less', 'greater']
+    if mode not in modes:
+        raise ValueError('Rstats.KS: mode must be in: ', modes)
+    if dataDict is None or not isinstance(dataDict, dict) or len(dataDict.keys()) != 2:
+        raise ValueError('RStats.KS: dataDict must be a dictionary with exactly 2 keys')
+
+    labels = dataDict.keys()
+    NGroups = len(labels)
+    cmdx = 'X=c(%s)' % ', '.join(str(x) for x in dataDict[labels[0]])
+    cmdy = 'Y=c(%s)' % ', '.join(str(y) for y in dataDict[labels[1]])
+# package "perm" not available on mac os x, use coin instead
+#    importr('perm')
+    robjects.r(cmdx)
+    robjects.r(cmdy)
+    
+#    (pvalue, nmc) = permutation(dataDict, dataDict.keys())
+    
+    u = robjects.r("ks.test(X, Y, alternative='%s')" % mode)
+
+    pvalue = float(u[1][0])
+    statvalue = float(u[0][0]) # get diff estimate
+    if dataLabel is not None:
+        print ('\nKolmogorov-Smirnov test. Dataset = %s' % (dataLabel))
+        print(u'  Test statistic: {:8.4f}'.format(statvalue))
+        print(u'  p={:8.6f}, [mode={:s}]'.format(float(pvalue),  mode))
+    return (pvalue)
     
 
 def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
@@ -178,33 +232,27 @@ def permTS(dataDict=None, dataLabel='data', mode='exact.ce'):
     if mode not in ['exact.ce', 'exact.mc']:
         raise ValueError('RStats.permTS: Mode must be either "exact.ce" or "exact.mc"; got %s' % mode)
     if dataDict is None or not isinstance(dataDict, dict) or len(dataDict.keys()) != 2:
-        raise ValueError('RStats.OneWayAnova: dataDict must be a dictionary with exactly 2 keys')
-
+        raise ValueError('RStats.permTX: dataDict must be a dictionary with exactly 2 keys')
+    k = dataDict.keys()
+    labels = dataDict.keys()
+    g1 = dataDict[k[0]]
+    g2 = dataDict[k[1]]
     labels = dataDict.keys()
     NGroups = len(labels)
-    cmdx = 'X=c(%s)' % ', '.join(str(x) for x in dataDict[labels[0]])
-    cmdy = 'Y=c(%s)' % ', '.join(str(y) for y in dataDict[labels[1]])
-# package "perm" not available on mac os x, use coin instead
-#    importr('perm')
-    robjects.r(cmdx)
-    robjects.r(cmdy)
-    
-    (pvalue, nmc) = permutation(dataDict, dataDict.keys())
-    
-#    u = robjects.r("permTS(X, Y, method='%s')" % mode)
 
-    # pvalue = float(u[3][0])
-    # if mode == 'exact.mc':
-    #     nmc = int(u[10][0])
-    # else:
-    #     nmc = 0
-    # estdiffu = u[1] # get diff estimate
-    # d = u[1].items()  # stored as a generator (interesting...)
-    #estdiff = d.next()  # gets the tuple with what was measured, and the value
-    # if dataLabel is not None:
-    #     print '\nPermutation Test (R permTS). Dataset = %s' % (dataLabel)
-    #     print(u'  Test statistic: ({:s}): {:8.4f}'.format(estdiff[0], estdiff[1]))
-    #     print(u'  p={:8.6f}, Nperm={:8d} [mode={:s}]'.format(float(pvalue), int(nmc), mode))
+    u = perm.permTS(FloatVector(g1), FloatVector(g2), alternative='two.sided', method=mode)
+    pvalue = float(u[3][0])
+    if mode == 'exact.mc':
+        nmc = int(u[10][0])
+    else:
+        nmc = 0
+    estdiffu = u[1] # get diff estimate
+    d = u[1].items()  # stored as a generator (interesting...)
+    estdiff = d.next()  # gets the tuple with what was measured, and the value
+    if dataLabel is not None:
+        print ('\nPermutation Test (R permTS). Dataset = %s' % (dataLabel))
+        print(u'  Test statistic: ({:s}): {:8.4f}'.format(estdiff[0], estdiff[1]))
+        print(u'  p={:8.6f}, Nperm={:8d} [mode={:s}]'.format(float(pvalue), int(nmc), mode))
     return (pvalue, nmc)  # return the p value for this test, and the number of mc replicatess
 
 
@@ -404,32 +452,23 @@ def ranksums(data, dataLabel=None, paired=False, decimals=4):
     n1 = len(g1)
     n2 = len(g2)
 
-    cmdx = '%s=c(%s)' % (labels[0], ', '.join(str(x) for x in data[labels[0]]))
-    cmdy = '%s=c(%s)' % (labels[1], ', '.join(str(y) for y in data[labels[1]]))
-#    importr('coin')
-    #importr('wilcox.test')
-    robjects.r(cmdx)
-    robjects.r(cmdy)
-
     if paired:
         (z, p) = Stats.wilcoxon(g1, g2)
-        res = robjects.r("wilcox.test(%s, %s, pair=T)" % (labels[0], labels[1]))
-#        print 'R: Wilcox (paired) p: ', u[u.names.index('p.value')][0]
+        res = RStats.wilcox_test(g1, g2, pair=True)
         testtype = "Wilcoxon signed-rank"
         pairedtype = "Paired"
     else:
         (z, p) = Stats.ranksums(g1, g2)
         testtype = "Rank-sums test"
-        res = robjects.r("wilcox.test(%s, %s, pair=F)" % (labels[0], labels[1]))
+        res = RStats.wilcox_test(g1, g2, pair=False)
         pairedtype = "Independent"
-#        print 'R: Wilcox (unpaired) p: ', u[u.names.index('p.value')][0]
         
     g1mean = np.mean(g1)
     g1std = np.std(g1, ddof=1)
     g2mean = np.mean(g2)
     g2std = np.std(g2, ddof=1)
-    (w1, p1) = Stats.shapiro(g1, a=None, reta=False)
-    (w2, p2) = Stats.shapiro(g2, a=None, reta=False)
+    (w1, p1) = Stats.shapiro(g1) #, a=None, reta=False)
+    (w2, p2) = Stats.shapiro(g2) #, a=None, reta=False)
     if dataLabel is not None:
         n = max([len(l) for l in k])
         print( '\n%s test, data set = %s' % (testtype, dataLabel))
@@ -571,6 +610,7 @@ def test2Samp():
     ttest(datadict, dataLabel='Standard t-test (scipy), paired', paired=True, textline=True, decimals=3)
     (p, n) = permTS(datadict, dataLabel='R permTS')
     permutation(datadict, dataLabel='Test simple permute')
+    KS(datadict, dataLabel='Test with KS')
 
 
 if __name__ == '__main__':
