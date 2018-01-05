@@ -258,8 +258,8 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     if axlist is None:
         axlist = string.uppercase[0:len(axl)]
     # assume we wish to go in sequence
-    if len(axlist) != len(axl):
-        raise ValueError ('axlist and axl must have same length: got %d and %d for axlist:' % (len(axlist), len(axl)), axlist)
+    if len(axlist) > len(axl):
+        raise ValueError ('axl must have more entries than axlist: got axl=%d and axlist=%d for axlist:' % (len(axl), len(axlist)), axlist)
     font = FontProperties()
     font.set_family('sans-serif')
     font.set_weight=weight
@@ -267,6 +267,8 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     font.set_style('normal')
     labels = []
     for i, ax in enumerate(axl):
+        if i >= len(axlist):
+            continue
         if ax is None:
             continue
         if isinstance(ax, list):
@@ -1023,11 +1025,12 @@ class Plotter():
             elif isinstance(axmap, dict) or isinstance(axmap, OrderedDict): # keys are panel labels
                 if not gridbuilt:
                     self.axarr = np.empty(shape=(len(axmap.keys()), 1), dtype=object)
+                na = np.prod(self.axarr.shape)  # number of axes
                 for k, pk in enumerate(axmap.keys()):
                     g = axmap[pk]  # get the gridspec info
                     if not gridbuilt:
                         self.axarr[k,] = mpl.subplot(gs[g[0]:g[1], g[2]:g[3]])
-                    self.axdict[pk] = self.axarr[k,][0]
+                    self.axdict[pk] = self.axarr.ravel()[k]
             else:
                 raise TypeError('Plotter in PlotHelpers: axmap must be a list or dict')
  
@@ -1060,7 +1063,7 @@ class Plotter():
 
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
-                self.axlabels = labelPanels(self.axarr.tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize['panel'])
+                self.axlabels = labelPanels(self.axarr.ravel().tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize['panel'])
                 return
             self.axlist = []
             if roworder == True:
@@ -1192,11 +1195,11 @@ class Plotter():
 
 if __name__ == '__main__':
 #    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
-    labels = ['A', 'D', 'G', 'B', 'C', 'E', 'F', 'H', 'I']
+    labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     l = [(a, a+2, 0, 1) for a in range(0, 6, 2)]
     r = [(a, a+1, 1, 2) for a in range(0, 6)]
     axmap = OrderedDict(zip(labels, l+r))
-    P = Plotter((6,2), axmap=axmap, figsize=(10., 10.), label=True)
+    P = Plotter((6,2), axmap=axmap, figsize=(6., 6.), label=True)
 #    P = Plotter((2,3), label=True)  # create a figure with plots
     # for a in P.axarr.flatten():
     #     a.plot(np.random.random(10), np.random.random(10))

@@ -1,37 +1,35 @@
 import math
 import numpy as np
-# import matplotlib
-# import matplotlib.pyplot as plt
-# import matplotlib.ticker as tckr
-# import matplotlib.transforms as mtransforms
-# import matplotlib.mlab as mlab
 
-# An alpha version of the Talbot, Lin, Hanrahan tick mark generator for matplotlib.
-# Described in "An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"
-# by Justin Talbot, Sharon Lin, and Pat Hanrahan, InfoVis 2010.
+"""
+An alpha version of the Talbot, Lin, Hanrahan tick mark generator for matplotlib.
+Described in "An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"
+by Justin Talbot, Sharon Lin, and Pat Hanrahan, InfoVis 2010.
 
-# Implementation by Justin Talbot
-# This implementation is in the public domain.
-# Report bugs to jtalbot@stanford.edu
+Implementation by Justin Talbot
+This implementation is in the public domain.
+Report bugs to jtalbot@stanford.edu
 
-# A shortcoming:
-#	The weights used in the paper were designed for static plots where the extent of
-#	the tick marks unioned with the extent of the data defines the extent of the plot.
-#	In a plot where the extent of the plot is defined by the user (e.g. an interactive
-#	plot supporting panning and zooming), the weights don't work as well. In particular,
-#	you would want to retune them assuming that the tick labels must be inside
-#	the provided view range. You probably want higher weighting on simplicity and lower
-#	on coverage and possibly density. But I haven't experimented in any detail with this.
-#
-#	If you do intend on using this for static plots in matplotlib, you should set
-#	only_inside to False in the call to Extended.extended. And then you should
-#	manually set your view extent to include the min and max ticks if they are outside
-#	the data range. This should produce the same results as the paper. 
+A shortcoming:
+    The weights used in the paper were designed for static plots where the extent of
+    the tick marks unioned with the extent of the data defines the extent of the plot.
+    In a plot where the extent of the plot is defined by the user (e.g. an interactive
+    plot supporting panning and zooming), the weights don't work as well. In particular,
+    you would want to retune them assuming that the tick labels must be inside
+    the provided view range. You probably want higher weighting on simplicity and lower
+    on coverage and possibly density. But I haven't experimented in any detail with this.
 
-#class Extended(tckr.Locator):
+    If you do intend on using this for static plots in matplotlib, you should set
+    only_inside to False in the call to Extended.extended. And then you should
+    manually set your view extent to include the min and max ticks if they are outside
+    the data range. This should produce the same results as the paper.
+"""
+
 class Extended():
 	# density is labels per inch
-    def __init__(self, density = 1, steps = None, figure = None, range=(0,1), axis = 'x'):
+    def __init__(
+            self, density = 1, steps = None, figure = None, 
+            range=(0,1), axis = 'x'):
         """
         Keyword args:
         """
@@ -58,7 +56,6 @@ class Extended():
         else:
             return 1
 
-        
     def density(self, k, m, dmin, dmax, lmin, lmax):
         r = (k-1.0) / (lmax-lmin)
         rt = (m-1.0) / (max(lmax, dmax) - min(lmin, dmin))
@@ -69,7 +66,6 @@ class Extended():
             return 2 - (k-1.0)/(m-1.0)
         else:
             return 1
-
 
     def simplicity(self, q, Q, j, lmin, lmax, lstep):
         eps = 1e-10
@@ -84,13 +80,11 @@ class Extended():
         v = 1
         return (n-i)/(n-1.0) + v - j
 
-
     def legibility(self, lmin, lmax, lstep):
         return 1
 
     def legibility_max(self, lmin, lmax, lstep):
         return 1
-
 
     def extended (self, dmin, dmax, m, Q=[1,5,2,2.5,4,3], only_inside=False, w=[0.25,0.2,0.5,0.05]):
         n = len(Q)

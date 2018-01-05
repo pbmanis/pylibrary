@@ -1,9 +1,9 @@
 from setuptools import setup
 
 setup(name='pylibrary',
-      version='0.16',
-      description='Paul Manis,  Python Utility Library',
-      url='',
+      version='0.18',
+      description='Paul Manis, Python Utility Library',
+      url='https://',
       author='Paul B. Manis, Ph.D.',
       author_email='pmanis@med.unc.edu',
       license='MIT',
