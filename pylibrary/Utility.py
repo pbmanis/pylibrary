@@ -604,7 +604,7 @@ def RichardsonSilberberg(data, tau, time = None):
     else:
         return rn
 
-def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpolate=False, debug=False):
+def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', refract=0.7, interpolate=False, debug=False):
     """ findspikes identifies the times of action potential in the trace v, with the
     times in t. An action potential is simply timed at the first point that exceeds
     the threshold... or is the peak. 
@@ -615,16 +615,8 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
     if True, the returned time is interpolated, based on a spline fit
     if False, the returned time is just taken as the data time. 
     """
-#    if debug:
-    # this does not work with pyside...
-    #     import matplotlib
-    #     matplotlib.use('Qt4Agg')
-    #     import pylab
-    #     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-    #     from matplotlib.figure import Figure
-        
-        # MP.rcParams['interactive'] = False
-        
+    if mode not in ['schmitt', 'threshold']:
+        raise ValueError('pylibrary.utility.findspikes: mode must be one of "schmitt", "peak" : got %s', mode)
     if t1 is not None and t0 is not None:
         xt = ma.masked_outside(x, t0, t1)
         v = ma.array(v, mask = ma.getmask(xt))
@@ -633,12 +625,8 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
     else:
         xt = np.array(x)
         v = np.array(v)
-    # if debug:
-    #     f = figure(1)
-    #     plot(xt, v, 'k-')
-    #     show()
     dv = np.diff(v)/dt # compute slope
-    st=np.array([])
+    st = np.array([])
     spv = np.where(v > thresh)[0].tolist() # find points above threshold
     sps = np.where(dv > 0.0)[0].tolist() # find points where slope is positive
     sp = list(set(spv) & set(sps)) # intersection defines putative spike start times
@@ -646,7 +634,8 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
     sp = tuple(sp) # convert to tuple
     if sp is ():
         return(st) # nothing detected
-    if mode is 'schmitt': # normal operating mode is fixed voltage threshold
+        
+    if mode in  ['schmitt', 'Schmitt']: # normal operating mode is fixed voltage threshold
         for k in sp:
             x = xt[k-1:k+1]
             y = v[k-1:k+1]
@@ -655,9 +644,10 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
                 b = y[0]-(x[0]*m)
                 st  = np.append(st, x[1]+(thresh-b)/m)
             else:
-                st = np.append(st, x[1])
+                if len(x) > 1:
+                    st = np.append(st, x[1])
                 
-    elif mode is 'peak':
+    elif mode == 'peak':
         pkwidth = 1.0 # in same units as dt  - usually msec
         kpkw = int(pkwidth/dt)
         z = (np.array(np.where(np.diff(spv) > 1)[0])+1).tolist()
@@ -665,18 +655,13 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
         for k in z:
             zk = spv[k]
             spk = np.argmax(v[zk:zk+kpkw])+zk # find the peak position
-#            print spk
-#            print len(v)
             x = xt[spk-1:spk+2]
             y = v[spk-1:spk+2]
-#            print 'lenny: ', len(y)
             if interpolate:
                 try:
                     # mimic Igor FindPeak routine with B = 1
                     m1 = (y[1]-y[0])/dt # local slope to left of peak
                     b1 = y[0]-(x[0]*m1)
-#                    print x
-#                    print y
                     m2 = (y[2]-y[1])/dt # local slope to right of peak
                     b2 = y[1]-(x[1]*m2)
                     mprime = (m2-m1)/dt # find where slope goes to 0 by getting the line
@@ -686,22 +671,26 @@ def findspikes(x, v, thresh, t0=None, t1= None, dt=1.0, mode='schmitt', interpol
                     continue
             else:
                 st = np.append(st, x[1]) # always save the first one
-#        print "xt spike: %8.3f  vs ST way: %8.3f   diff: %8.4f" %  (xt[spk], xt[sp[0]], xt[sp[0]]-xt[spk]) 
 
-    # print 'sp: ', sp
-    # print 'spike list shape: ', st.shape
-    # print 'st: ', st
-    # diffsp = np.diff(st) # look for the jumps
-    # print diffsp
-    # isd = np.where(diffsp > 0.7) # look for non-sequential points in the array
-    # stret = np.array(st[isd])
-    # stret = np.append(st, st[0])
-    # stret = np.sort(stret)
-    # for i in isd:
-    # if xt[sp[i+1]] > st[i]+dt: # minimum interval in time
-    # stret = np.append(stret, xt[sp[i+1]]) # build times from difference array
-#    stret = np.sort(stret)
+    # clean spike times
+    st = clean_spiketimes(st, mindT=refract)
     return(st)
+
+def clean_spiketimes(spikeTimes, mindT=0.7):
+    """
+    Clean up spike time array, removing all less than mindT
+    spikeTimes is a 1-D list or array
+    mindT is difference in time, same units as spikeTimes
+    If 1 or 0 spikes in array, just return the array
+    """
+    if len(spikeTimes) > 1:
+        dst = np.diff(spikeTimes)
+        st = np.array(spikeTimes[0])  # get first spike
+        sok = np.where(dst > mindT)
+        st = np.append(st, [spikeTimes[s+1] for s in sok])
+        # print st
+        spikeTimes = st
+    return spikeTimes
 
 # getSpikes returns a dictionary with keys that are record numbers, each with values
 # that are the array of spike timesin the spike window.

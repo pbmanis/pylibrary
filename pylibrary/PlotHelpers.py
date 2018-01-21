@@ -29,8 +29,6 @@ stdFont = 'Arial'
 import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.font_manager import FontProperties
-from mpl_toolkits.axes_grid.anchored_artists import AnchoredText
-#from mpl_toolkits.axes_grid1.anchored_artists import AnchoredText
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, DrawingArea, HPacker
 from scipy.stats import gaussian_kde
 import numpy as np
@@ -55,6 +53,16 @@ rcParams['text.latex.unicode'] = True
 seaborn.set_style('white')
 seaborn.set_style('ticks')
 
+def _ax_tolist(ax):
+    if isinstance(ax, list):
+        return(ax)
+    elif isinstance(ax, dict):
+        axlist = axl.keys()
+        return([ax for ax in axl[axlist]])
+    else:
+        return([ax])
+    
+    
 def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', axesoff=False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot.
         Also allow quickaccess to things we like to do for publication plots, including:
@@ -181,8 +189,9 @@ def setY(ax1, ax2):
     if type(ax1) is list:
         print 'PlotHelpers: cannot use list as source to set Y axis'
         return
-    if type(ax2) is not list:
-        ax2 = [ax2]
+    ax2 = _ax_tolist(ax2)
+    # if type(ax2) is not list:
+    #     ax2 = [ax2]
     refy = ax1.get_ylim()
     for ax in ax2:
         ax.set_ylim(refy)
@@ -210,8 +219,9 @@ def setX(ax1, ax2):
     if type(ax1) is list:
         print 'PlotHelpers: cannot use list as source to set Y axis'
         return
-    if type(ax2) is not list:
-        ax2 = [ax2]
+    ax2 = _ax_tolist(ax2)
+    # if type(ax2) is not list:
+    #     ax2 = [ax2]
     refx = ax1.get_xlim()
     for ax in ax2:
         ax.set_xlim(refx)
@@ -250,11 +260,14 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
 
     """
     if isinstance(axl, dict):
-        axt = [axl[x] for x in axl]
         axlist = axl.keys()
-        axl = axt
-    if not isinstance(axl, list):
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if isinstance(axl, dict):
+    #     axt = [axl[x] for x in axl]
+    #     axlist = axl.keys()
+    #     axl = axt
+    # if not isinstance(axl, list):
+    #     axl = [axl]
     if axlist is None:
         axlist = string.uppercase[0:len(axl)]
     # assume we wish to go in sequence
@@ -297,16 +310,16 @@ def listAxes(axd):
 
 
 def cleanAxes(axl):
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
     for ax in axl:
         if ax is None:
             continue
         for loc, spine in ax.spines.iteritems():
             if loc in ['left', 'bottom']:
-                pass
+                spine.set_visible(True)
             elif loc in ['right', 'top']:
-                spine.set_color('none')
+                spine.set_visible(False) 
+                # spine.set_color('none')
                 # do not draw the spine
             else:
                 raise ValueError('Unknown spine location: %s' % loc)
@@ -318,10 +331,11 @@ def cleanAxes(axl):
 
 
 def setTicks(axl, axis='x', ticks=np.arange(0, 1.1, 1.0)):
-    if type(axl) is dict:
-        axl = [axl[x] for x in axl.keys()]
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if type(axl) is dict:
+    #     axl = [axl[x] for x in axl.keys()]
+    # if type(axl) is not list:
+    #     axl = [axl]
     for ax in axl:
         if ax is None:
             continue
@@ -337,8 +351,9 @@ def formatTicks(axl, axis='xy', fmt='%d', font='Arial'):
     To do just one axis, set axis = 'x' or 'y'
     Control the format with the formatting string
     """
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if type(axl) is not list:
+    #     axl = [axl]
     majorFormatter = FormatStrFormatter(fmt)
     for ax in axl:
         if ax is None:
@@ -350,8 +365,9 @@ def formatTicks(axl, axis='xy', fmt='%d', font='Arial'):
 
 
 def autoFormatTicks(axl, axis='xy', font='Arial'):
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if type(axl) is not list:
+    #     axl = [axl]
     for ax in axl:
         if ax is None:
             continue
@@ -364,7 +380,8 @@ def autoFormatTicks(axl, axis='xy', font='Arial'):
             setFormatter(ax, y0, y1, axis = 'y')
 
 
-def setFormatter(ax, x0, x1, axis='x'):
+def setFormatter(axl, x0, x1, axis='x'):
+    axl = _ax_tolist(axl)
     datarange = np.abs(x0-x1)
     mdata = np.ceil(np.log10(datarange))
     if mdata > 0 and mdata <= 4:
@@ -377,15 +394,17 @@ def setFormatter(ax, x0, x1, axis='x'):
         majorFormatatter = FormatStrFormatter('%6.3f')
     else:
         majorFormatter = FormatStrFormatter('%e')
-    if axis == 'x':
-        ax.xaxis.set_major_formatter(majorFormatter)
-    else:
-        ax.yaxis.set_major_formatter(majorFormatter)
+    for ax in axl:
+        if axis == 'x':
+            ax.xaxis.set_major_formatter(majorFormatter)
+        elif axis == 'y':
+            ax.yaxis.set_major_formatter(majorFormatter)
 
 
 def update_font(axl, size=9, font=stdFont):
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if type(axl) is not list:
+    #     axl = [axl]
     fontProperties = {'family':'sans-serif', #'sans-serif': font,
             'weight' : 'normal', 'size' : size}
     for ax in axl:
@@ -412,9 +431,10 @@ def lockPlot(axl, lims, ticks=None):
         This routine forces the plot of invisible data to force the axes to take certain
         limits and to force the tick marks to appear. 
         call with the axis and lims (limits) = [x0, x1, y0, y1]
-    """ 
-    if type(axl) is not list:
-        axl = [axl]
+    """
+    axl = _ax_tolist(axl)
+    # if type(axl) is not list:
+    #     axl = [axl]
     plist = []
     for ax in axl:
         if ax is None:
@@ -427,8 +447,9 @@ def lockPlot(axl, lims, ticks=None):
 
 
 def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', distance=5, smart=True):
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if type(axl) is not list:
+    #     axl = [axl]
     for ax in axl:
         if ax is None:
             continue
@@ -495,8 +516,9 @@ def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsi
         draw a calibration bar and label it. The calibration bar is defined as:
         [x0, y0, xlen, ylen]
     """
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if type(axl) is not list:
+    #     axl = [axl]
     for ax in axl:
         if ax is None:
             continue
@@ -552,8 +574,9 @@ def referenceline(axl, reference=None, limits=None, color='0.33', linestyle='--'
     draw a reference line at a particular level of the data on the y axis
     returns the line object.
     """
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if type(axl) is not list:
+    #     axl = [axl]
     if reference is None:
         refeference = 0.
     for ax in axl:
@@ -575,8 +598,9 @@ def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
     Make plot(s) with crossed axes at the data points set by xyzero, and optionally
     set axes limits
     """
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
+    # if type(axl) is not list:
+    #     axl = [axl]
     for ax in axl:
         if ax is None:
             continue

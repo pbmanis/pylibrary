@@ -2,10 +2,14 @@
 
 
 # Use Semantic Versioning, http://semver.org/
-version_info = (0, 1, 6, '')
+version_info = (0, 1, 8, '')
 __version__ = '%d.%d.%d%s' % version_info
 
+import acq4read
 listimports = False
+import acq4read
+if listimports:
+    print 'imported acq4read'
 import bootstrap
 if listimports:
     print 'imported bootstrap'

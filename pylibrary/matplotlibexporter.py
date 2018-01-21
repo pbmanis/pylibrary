@@ -11,7 +11,14 @@ Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
 import re
-from PyQt4 import QtGui, QtCore
+try:
+    from PyQt4 import QtGui, QtCore
+except:
+    try:
+        from PyQt5 import QtGui, QtCore
+    except:
+        raise ImportError()
+
 import pyqtgraph as pg
 import numpy as np
 
@@ -21,7 +28,6 @@ try:
     import matplotlib.pyplot as pylab
     import matplotlib.gridspec as gridspec
     import matplotlib.gridspec as GS
-    from mpl_toolkits.axes_grid.anchored_artists import AnchoredText
     from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, DrawingArea, HPacker
 
     HAVE_MPL = True
@@ -40,7 +46,7 @@ if HAVE_MPL:
     pylab.rcParams['figure.facecolor'] = 'white'
     # next setting allows pdf font to be readable in Adobe Illustrator
     pylab.rcParams['pdf.fonttype'] = 42
-    pylab.rcParams['text.dvipnghack'] = True
+    #pylab.rcParams['text.dvipnghack'] = True
     # to here (matplotlib stuff - touchy!)
 
 stdFont = 'Arial'
