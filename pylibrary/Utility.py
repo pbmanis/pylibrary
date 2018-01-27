@@ -541,7 +541,7 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
             if t >= predelay:
                 template[i] = (1.-np.exp(-(t-predelay)/rise))**2.0*np.exp(-(t-predelay)/decay)
         if lpfilter > 0:
-            template = SignalFilter_LPFButter(template, lpfilter, 1./samplerate, NPole = 8)
+            template = SignalFilter_LPFButter(template, lpfilter, 1./samplerate, NPole=8)
     #
     # case 2 % dual exponential function with power (standard)
     #     predelay = 0.25;
@@ -593,7 +593,7 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpf
     # plot(0:samplerate:(N-1)*samplerate', template);
     return template
 
-def RichardsonSilberberg(data, tau, time = None):
+def RichardsonSilberberg(data, tau, time=None):
     D = data.view(np.ndarray)
     rn = tau*np.diff(D) + D[:-2,:]
     rn = spSignal.savgol_filter(rn, 11, 4) # , deriv=0, delta=1.0, axis=-1, mode='interp', cval=0.0)[source]
@@ -615,8 +615,8 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', refract=0
     if True, the returned time is interpolated, based on a spline fit
     if False, the returned time is just taken as the data time. 
     """
-    if mode not in ['schmitt', 'threshold']:
-        raise ValueError('pylibrary.utility.findspikes: mode must be one of "schmitt", "peak" : got %s', mode)
+    if mode not in ['schmitt', 'threshold', 'peak']:
+        raise ValueError('pylibrary.utility.findspikes: mode must be one of "schmitt", "peak" : got %s' % mode)
     if t1 is not None and t0 is not None:
         xt = ma.masked_outside(x, t0, t1)
         v = ma.array(v, mask = ma.getmask(xt))
@@ -635,7 +635,7 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', refract=0
     if sp is ():
         return(st) # nothing detected
         
-    if mode in  ['schmitt', 'Schmitt']: # normal operating mode is fixed voltage threshold
+    if mode in  ['schmitt', 'Schmitt', 'threshold']: # normal operating mode is fixed voltage threshold
         for k in sp:
             x = xt[k-1:k+1]
             y = v[k-1:k+1]
@@ -697,7 +697,7 @@ def clean_spiketimes(spikeTimes, mindT=0.7):
 # data is studied from the "axis", and only ONE block should be in the selection.
 # thresh sets the spike threshold.
 
-def getSpikes(x, y, axis, tpts, tdel=0, thresh=0, selection = None, refractory=1.0, mode='schmitt', interpolate = False):
+def getSpikes(x, y, axis, tpts, tdel=0, thresh=0, selection=None, refractory=1.0, mode='schmitt', interpolate=False):
     if selection is None: # really means whatever is displayed/selected
         selected = np.arange(0, np.shape(y)[0]).astype(int).tolist()
     else:
@@ -713,7 +713,7 @@ def getSpikes(x, y, axis, tpts, tdel=0, thresh=0, selection = None, refractory=1
 # return a measurement made on a block of traces
 # within the window t0-t1, on the data "axis", and according to the selected mode
 
-def measureTrace(x, y, t0 = 0, t1 = 10, thisaxis = 0, mode='mean', selection = None, threshold = 0):
+def measureTrace(x, y, t0=0, t1=10, thisaxis=0, mode='mean', selection=None, threshold=0):
     result = np.array([])
     if selection is None: # whooops
         return
@@ -740,22 +740,23 @@ def measureTrace(x, y, t0 = 0, t1 = 10, thisaxis = 0, mode='mean', selection = N
             result = np.append(result, m1)
     return(result)
 
-def measureTrace2(x, y, t0 = 0, t1 = 10, thisaxis = 0, mode='mean', threshold = 0):
+def measureTrace2(x, y, t0=0, t1=10, thisaxis=0, mode='mean', threshold=0, slopewin=1.0):
     """
     Simplified version that just expects a 2-d array for y, nothing fancy
     """
-    result = np.array([])
-    d = y.T # get data for this block
-    for j in range(0, np.shape(d)[0]):
+    r1 = []
+    r2 = []
+    for j in range(0, np.shape(y)[0]):
         if isinstance(threshold, int):
             thr = threshold
         else:
             thr = threshold[j]
-        (m1, m2) = measure(mode, x, d[j][:], t0, t1, thresh= thr)
-        result = np.append(result, m1)
-    return(result)
+        (m1, m2) = measure(mode, x, y[j], t0, t1, thresh=thr, slopewin=slopewin)
+        r1.append(m1)
+        r2.append(m2)
+    return(r1, r2)
     
-def measure(mode, x, y, x0, x1, thresh = 0):
+def measure(mode, x, y, x0, x1, thresh=0, slopewin=1.0):
     """ return the a measure of y in the window x0 to x1
     """
     xm = ma.masked_outside(x, x0, x1)# .compressed()
@@ -824,16 +825,16 @@ def measure(mode, x, y, x0, x1, thresh = 0):
         r1 = ma.count(ym)
         r2 = 0
     if mode == 'maxslope':
-        return(0,0)
-        slope = np.array([])
+        slope = []
         win = ma.flatnotmasked_contiguous(ym)
-        st = int(len(win)/20) # look over small ranges
-        for k in win: # move through the slope measurementwindow
+        dt = x[1]-x[0]
+        st = int(slopewin/dt) # use slopewin duration window for fit.
+        print ('st: ', st)
+        for k, w in enumerate(win): # move through the slope measurementwindow
             tb = range(k-st, k+st) # get tb array
-            newa = np.array(self.dat[i][j, thisaxis, tb])
             ppars = np.polyfit(x[tb], ym[tb], 1) # do a linear fit - smooths the slope measures
-            slope = np.append(slope, ppars[0]) # keep track of max slope
-        r1 = np.amax(slope)
+            slope.append(ppars[0]) # keep track of max slope
+        r1 = np.max(slope)
         r2 = np.argmax(slope)
     return(r1, r2)
 
