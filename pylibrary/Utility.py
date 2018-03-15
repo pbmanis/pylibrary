@@ -86,7 +86,8 @@ def pSpectrum(data=None, samplefreq=44100):
     padw =  np.append(data, np.zeros(npad))
     npts = len(padw)
     sigfft = spFFT.fft(padw)
-    nUniquePts = np.ceil((npts+1)/2.0)
+    nUniquePts = int(np.ceil((npts+1)/2.0))
+#    print nUniquePts
     sigfft = sigfft[0:nUniquePts]
     spectrum = abs(sigfft)
     spectrum = spectrum / float(npts) # scale by the number of points so that
