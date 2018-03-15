@@ -20,8 +20,13 @@ import pylibrary.RStats as RStats
 Requires
 Created by Paul Manis on 2014-06-26.
 
-Copyright 2010-2014  Paul Manis
+Copyright 2010-2014  Paul Manis 
 Distributed under MIT/X11 license. See license.txt for more infofmation.
+
+3-2018: Some changes made for Python portability: use list(dict.keys()) to get the keys as a list;
+otherwise they are a "dict_keys" objects
+Also, the ".next(iter)" iteratior was changed to __next__ in py3, but "next(iter)" works in boht.
+
 """
 from __future__ import print_function
 import scipy.stats as Stats
@@ -37,7 +42,7 @@ from rpy2.robjects import numpy2ri
 
 numpy2ri.activate()
 RStats = importr('stats')
-perm = importr('perm')
+perm = importr("perm", "/Library/Frameworks/R.framework/Versions/3.4/Resources/library")  # may need to point to lib on system...
 
 R_imported = True
 #robjects.r.options(digits = 7)
@@ -97,7 +102,7 @@ def KS(dataDict=None, dataLabel='data', mode='two.sided'):
         raise ValueError('RSTATS.KS: dataDict must be a dictionary with '
             + 'exactly 2 keys')
 
-    labels = dataDict.keys()
+    labels = list(dataDict.keys())
 #    NGroups = len(labels)
     cmdx = 'X=c(%s)' % ', '.join(str(x) for x in dataDict[labels[0]])
     cmdy = 'Y=c(%s)' % ', '.join(str(y) for y in dataDict[labels[1]])
@@ -119,7 +124,7 @@ def KS(dataDict=None, dataLabel='data', mode='two.sided'):
     return pvalue
 
 
-def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
+def OneWayAnova(dataStruct=None, dataLabel='data', mode='parametric'):
     """
     Perform a one way ANOVA with N groups
 
@@ -142,25 +147,29 @@ def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
     if mode not in ['parametric', 'nonparametric']:
         raise ValueError('RSTATS.OneWayAnova: Mode must be either parametric'+
                          ' or nonparametric; got %s' % mode)
-    if dataDict is None or not (isinstance(dataDict, dict) or
-             len(dataDict.keys()) < 2):
-        raise ValueError('RSTATS.OneWayAnova: dataDict must be a dictionary'
+    if dataStruct is None or not (isinstance(dataStruct, dict) or
+             len(dataStruct.keys()) < 2):
+        raise ValueError('RSTATS.OneWayAnova: dataStruct must be a dictionary'
             + ' with at least 2 keys')
 
-    labels = dataDict.keys()
-    NGroups = len(labels)
+
+    NGroups = len(dataStruct.keys())
     if NGroups <= 2:
         print("Need at least 3 groups to run One Way Anova")
         return
     data = [[]]*NGroups
     dn = [[]]*NGroups
     gn = [[]]*NGroups
-    for i, d in enumerate(labels):
-        data[i] = dataDict[d]
+    for i, d in enumerate(dataStruct.keys()):
+        data[i] = dataStruct[d]
 
     print('OneWayAnova for %s ' % (dataLabel))
-    for i in range(NGroups):
-        dn[i] = dataDict[labels[i]]
+    print('datadict: ', len(dataStruct.keys()))
+    labels = []
+    print (labels)
+    for i, d in enumerate(dataStruct.keys()): # range(NGroups):
+        dn[i] = dataStruct[d] # dataStruct[dataStruct.keys()[i]]
+        labels.append(d)
     dataargs = ', '.join([('dn[{:d}]'.format(d)) for d in range(NGroups)])
     (F, p) = eval('Stats.f_oneway(%s)' % dataargs)
     print('\nOne-way Anova (Scipy.stats), {0:d}'
@@ -169,11 +178,11 @@ def OneWayAnova(dataDict=None, dataLabel='data', mode='parametric'):
         'R not found, skipping'
         return
     print('\nR yields: ')
-    for i in range(NGroups):
+    for i, d in enumerate(dataStruct.keys()): # range(NGroups):
         gn[i] = FloatVector(dn[i])
         robjects.globalenv['g%d'%(i+1)] = gn[i]
         robjects.globalenv['d%d'%(i+1)] = dn[i]
-        robjects.globalenv['l%d'%(i+1)] = labels[i]
+        robjects.globalenv['l%d'%(i+1)] = d  # labels[i]
     cargs = ', '.join([('g{:d}'.format(d+1)) for d in range(NGroups)])
     clenargs = ', '.join([('length(g{:d})'.format(d+1)) for d in range(NGroups)])
     clargs = ', '.join([('l{:d}'.format(d+1)) for d in range(NGroups)])
@@ -251,7 +260,7 @@ def permTS(dataDict=None, dataLabel='data', mode='exact.ce'):
             or len(dataDict.keys()) != 2):
         raise ValueError('RSTATS.permTX: dataDict must be'
                         + ' a dictionary with exactly 2 keys')
-    k = dataDict.keys()
+    k = list(dataDict.keys())
     g1 = dataDict[k[0]]
     g2 = dataDict[k[1]]
 
@@ -263,8 +272,8 @@ def permTS(dataDict=None, dataLabel='data', mode='exact.ce'):
         nmc = int(u[10][0])
     else:
         nmc = 0
-    d = u[1].items()  # stored as a generator (interesting...)
-    estdiff = d.next()  # gets the tuple with what was measured, and the value
+    d = u[1].items()  # stored as a generator (interesting...)  # using next for py2/3
+    estdiff = next(d)  #.next()  # gets the tuple with what was measured, and the value  
     if dataLabel is not None:
         print('\nPermutation Test (R permTS). Dataset = %s' % (dataLabel))
         print(u'  Test statistic: ({:s}): {:8.4f}'.
@@ -301,7 +310,7 @@ def permutation(data, dataLabel=None, nperm=10000, decimals=4):
                 + ' a dictionary with at exactly 2 keys'
                 + '\nUse KW (anova) for more than 2 groups')
 
-    k = data.keys()
+    k = list(data.keys())
 
     g1 = data[k[0]]
     g2 = data[k[1]]
@@ -387,7 +396,7 @@ def ttest(
                 + ' with at exactly 2 keys'
                 + '\nUse KW (anova) for more than 2 groups')
 
-    k = data.keys()
+    k = list(data.keys())
     g = {}
     n = {}
     gmean = {}
@@ -486,7 +495,7 @@ def ranksums(data, dataLabel=None, paired=False, decimals=4):
             + ' at exactly 2 keys' +
             '\nUse KW (anova) for more than 2 groups')
 
-    k = data.keys()
+    k = list(data.keys())
 #    labels = data.keys()
     g1 = data[k[0]]
     g2 = data[k[1]]
@@ -574,9 +583,10 @@ def testANOVA():
     Nothing
     """
 
-    data={'Control': [54, 23, 45, 54, 45, 47], 'Treated': [87, 98, 64, 77, 89],
+    data = {'Control': [54, 23, 45, 54, 45, 47], 'Treated': [87, 98, 64, 77, 89],
     'TreatedAntagonist': [45, 39, 51, 49, 50, 55]}
-    OneWayAnova(dataDict=data, dataLabel='3 Groups', mode='parametric')
+    print(type(data))
+    OneWayAnova(dataStruct=data, dataLabel='3 Groups', mode='parametric')
     print ('-'*80)
     print ('Compare to Prism output: ')
     print( """
