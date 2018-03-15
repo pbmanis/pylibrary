@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
 
-# Use Semantic Versioning, http://semver.org/
-version_info = (0, 1, 8, '')
-__version__ = '%d.%d.%d%s' % version_info
-
 import acq4read
 listimports = False
 import acq4read
@@ -52,6 +48,8 @@ if listimports:
 import matplotlibexporter
 if listimports:
     print 'import matplotlibexporter'
+import digital_filters
+
 # try:
 #     import RStats
 #     if listimports:
