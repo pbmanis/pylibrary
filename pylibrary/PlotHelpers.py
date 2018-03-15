@@ -926,10 +926,13 @@ class Plotter():
             The "sizer" array then maps the tags to specific panel locations
             # define positions for each panel in Figure coordinages (0, 1, 0, 1)
             # you don't have to use an ordered dict for this, I just prefer it when debugging
-            sizer = OrderedDict([('A', [0.08, 0.22, 0.55, 0.4]), ('B1', [0.40, 0.25, 0.65, 0.3]), ('B2', [0.40, 0.25, 0.5, 0.1]),
-                    ('C1', [0.72, 0.25, 0.65, 0.3]), ('C2', [0.72, 0.25, 0.5, 0.1]),
-                    ('D', [0.08, 0.25, 0.1, 0.3]), ('E', [0.40, 0.25, 0.1, 0.3]), ('F', [0.72, 0.25, 0.1, 0.3]),
-            ])  # dict elements are [left, width, bottom, height] for the axes in the plot.
+            sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
+                     'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
+                    'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
+                    'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 
+                    'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
+                    }
+            # dict pos elements are [left, width, bottom, height] for the axes in the plot.
             gr = [(a, a+1, 0, 1) for a in range(0, 8)]   # just generate subplots - shape does not matter
             axmap = OrderedDict(zip(sizer.keys(), gr))
             P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
