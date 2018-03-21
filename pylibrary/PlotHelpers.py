@@ -902,7 +902,43 @@ def hide_figure_grid(fig, grid):
 def delete_figure_grid(fig, grid):
     mpl.delete(grid)
 
-
+def regular_grid(rows, cols, figsize=(8., 10), showgrid=False):
+    """
+    make a regular layout grid for plotters
+    """
+    lmar = 0.07
+    rmar = 0.05
+    hs = 0.08
+    tmar = 0.03
+    bmar = 0.1
+    vs = 0.04
+    
+    xw = ((1.0-lmar-rmar)-(cols-1.0)*hs)/cols
+    xl = [lmar + (xw+hs)*i for i in range(0, cols)]
+    yh = ((1.0-tmar-bmar)-(rows-1.0)*vs)/rows
+    yb = [1.0-tmar - (yh*(i+1))-vs*i for i in range(0, rows)]
+    plabels = list(string.ascii_uppercase)
+    # auto generate sizer dict based on this
+    i = 0
+    sizer = OrderedDict()
+    for r in range(rows):
+        for c in range(cols):
+            pos = [xl[c], xw, yb[r], yh]
+            sizer[plabels[i]] = {'pos': pos, 'labelpos': (-0.12, 0.95), 'noaxes': False}
+            i = i + 1
+    gr = [(a, a+1, 0, 1) for a in range(0, rows*cols)]   # just generate subplots - shape does not matter
+    axmap = OrderedDict(zip(sizer.keys(), gr))
+    P = Plotter((rows, cols), axmap=axmap, label=True, figsize=(figsize))
+    if showgrid:
+        show_figure_grid(P.figure_handle)
+    P.resize(sizer)  # perform positioning magic
+    return P
+    
+def test_sizergrid():
+    P = regular_grid(8, 3)
+    mpl.show()
+    
+    
 class Plotter():
     """
     The Plotter class provides a simple convenience for plotting data in 
@@ -1226,6 +1262,8 @@ class Plotter():
 
 if __name__ == '__main__':
 #    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
+    test_sizergrid()
+    exit(1)
     labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     l = [(a, a+2, 0, 1) for a in range(0, 6, 2)]
     r = [(a, a+1, 1, 2) for a in range(0, 6)]
