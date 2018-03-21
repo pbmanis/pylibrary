@@ -4,6 +4,7 @@ _pycache__/
 *.py[cod]
 *$py.class
 pylibrary/*.pyc
+.pyc
 
 # pycharm
 .idea

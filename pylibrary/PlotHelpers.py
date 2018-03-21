@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+from six import iteritems
 # encoding: utf-8
 """
 PlotHelpers.py
@@ -100,7 +102,7 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
         if ax is None:
             continue
         #print 'ax: ', ax
-        for loc, spine in ax.spines.iteritems():
+        for loc, spine in iteritems(ax.spines): # .iteritems():
             if loc in spines:
                 spine.set_color('k')
                 #print 'spine color : k'
@@ -187,7 +189,7 @@ def setY(ax1, ax2):
     
     """
     if type(ax1) is list:
-        print 'PlotHelpers: cannot use list as source to set Y axis'
+        print ('PlotHelpers: cannot use list as source to set Y axis')
         return
     ax2 = _ax_tolist(ax2)
     # if type(ax2) is not list:
@@ -217,7 +219,7 @@ def setX(ax1, ax2):
     
     """
     if type(ax1) is list:
-        print 'PlotHelpers: cannot use list as source to set Y axis'
+        print ('PlotHelpers: cannot use list as source to set Y axis')
         return
     ax2 = _ax_tolist(ax2)
     # if type(ax2) is not list:
@@ -260,7 +262,7 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
 
     """
     if isinstance(axl, dict):
-        axlist = axl.keys()
+        axlist = list(axl.keys())
     axl = _ax_tolist(axl)
     # if isinstance(axl, dict):
     #     axt = [axl[x] for x in axl]
@@ -270,6 +272,8 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     #     axl = [axl]
     if axlist is None:
         axlist = string.uppercase[0:len(axl)]
+    else:
+        axlist = list(axlist)
     # assume we wish to go in sequence
     if len(axlist) > len(axl):
         raise ValueError ('axl must have more entries than axlist: got axl=%d and axlist=%d for axlist:' % (len(axl), len(axlist)), axlist)
@@ -303,7 +307,7 @@ def listAxes(axd):
         if type(axd) is list:
             return axd
         else:
-            print 'listAxes expects dictionary or list; type not known (fix the code)'
+            print ('listAxes expects dictionary or list; type not known (fix the code)')
             raise
     axl = [axd[x] for x in axd]
     return axl
@@ -314,7 +318,7 @@ def cleanAxes(axl):
     for ax in axl:
         if ax is None:
             continue
-        for loc, spine in ax.spines.iteritems():
+        for loc, spine in iteritems(ax.spines): # .iteritems():
             if loc in ['left', 'bottom']:
                 spine.set_visible(True)
             elif loc in ['right', 'top']:
@@ -465,7 +469,7 @@ def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', dista
         else:
             # no xaxis ticks
             ax.xaxis.set_ticks([])
-        for loc, spine in ax.spines.iteritems():
+        for loc, spine in ax.spines: #.iteritems():
             if loc in spines:
                 spine.set_position((direction,distance)) # outward by 10 points
                 if smart is True:
@@ -556,8 +560,8 @@ def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsi
                     horizontalalignment = 'right', verticalalignment = 'center',
                     fontsize = fontsize, weight=weight, family='sans-serif',)
             else:
-                print "PlotHelpers.py: I did not understand orientation: %s" % (orient)
-                print "plotting as if set to left... "
+                print ("PlotHelpers.py: I did not understand orientation: %s" % (orient))
+                print ("plotting as if set to left... ")
                 ax.plot([calbar[0], calbar[0], calbar[0]+calbar[2]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
                     color = 'k', linestyle = '-', linewidth = 1.5)

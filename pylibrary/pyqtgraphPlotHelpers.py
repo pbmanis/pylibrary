@@ -273,34 +273,6 @@ def lockPlot(axl, lims, ticks=None):
         y.setRange(lims[2], lims[3])
 
 
-def adjust_spines(axl, spines = ('left', 'bottom'), direction = 'outward', distance=5, smart=True):
-    pass
-    # if type(axl) is not list:
-    #     axl = [axl]
-    # for ax in axl:
-    #     # turn off ticks where there is no spine
-    #     if 'left' in spines:
-    #         ax.yaxis.set_ticks_position('left')
-    #     else:
-    #         # no yaxis ticks
-    #         ax.yaxis.set_ticks([])
-    #
-    #     if 'bottom' in spines:
-    #         ax.xaxis.set_ticks_position('bottom')
-    #     else:
-    #         # no xaxis ticks
-    #         ax.xaxis.set_ticks([])
-    #     for loc, spine in ax.spines.iteritems():
-    #         if loc in spines:
-    #             spine.set_position((direction,distance)) # outward by 10 points
-    #             if smart is True:
-    #                 spine.set_smart_bounds(True)
-    #             else:
-    #                 spine.set_smart_bounds(False)
-    #         else:
-    #             spine.set_color('none') # don't draw spine
-    #     return
-    #
 def calbar(plotlist, calbar=None, axesoff=True, orient='left', unitNames=None):
     """ draw a calibration bar and label it up. The calibration bar is defined as:
         [x0, y0, xlen, ylen]
