@@ -902,7 +902,7 @@ def hide_figure_grid(fig, grid):
 def delete_figure_grid(fig, grid):
     mpl.delete(grid)
 
-def regular_grid(rows, cols, figsize=(8., 10), showgrid=False):
+def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False):
     """
     make a regular layout grid for plotters
     """
@@ -921,11 +921,18 @@ def regular_grid(rows, cols, figsize=(8., 10), showgrid=False):
     # auto generate sizer dict based on this
     i = 0
     sizer = OrderedDict()
-    for r in range(rows):
+    if order == 'columns':
+        for r in range(rows):
+            for c in range(cols):
+                pos = [xl[c], xw, yb[r], yh]
+                sizer[plabels[i]] = {'pos': pos, 'labelpos': (-0.12, 0.95), 'noaxes': False}
+                i = i + 1
+    else:
         for c in range(cols):
-            pos = [xl[c], xw, yb[r], yh]
-            sizer[plabels[i]] = {'pos': pos, 'labelpos': (-0.12, 0.95), 'noaxes': False}
-            i = i + 1
+            for r in range(rows):
+                pos = [xl[c], xw, yb[r], yh]
+                sizer[plabels[i]] = {'pos': pos, 'labelpos': (-0.12, 0.95), 'noaxes': False}
+                i = i + 1
     gr = [(a, a+1, 0, 1) for a in range(0, rows*cols)]   # just generate subplots - shape does not matter
     axmap = OrderedDict(zip(sizer.keys(), gr))
     P = Plotter((rows, cols), axmap=axmap, label=True, figsize=(figsize))
