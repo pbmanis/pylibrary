@@ -4,6 +4,8 @@ _pycache__/
 *$py.class
 pylibrary/*.py[cod]
 pylibrary/*.orig
+pylibrary/doc/build
+pylibrary/docs/build
 
 # pycharm
 .idea
