@@ -1084,7 +1084,7 @@ def recparse(cmdstr):
     seed=0
 
     n2 = n2 + 0.01*skip
-    print 'mode: ', mode
+    #print 'mode: ', mode
     if mode == 0 or mode == '': # linear spacing; skip is size of step
         recs=np.arange(n1,n2,skip)
     elif mode == 'l': # log spacing; skip is length of result
