@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 Utils.py - general utility routines
 - power spectrum
@@ -74,7 +75,7 @@ def pSpectrum(data=None, samplefreq=44100):
     npts = len(data)
 # we should window the data here
     if npts == 0:
-        print "? no data in pSpectrum"
+        print( "? no data in pSpectrum")
         return
 # pad to the nearest higher power of 2
     (a,b) = np.frexp(npts)
@@ -82,7 +83,7 @@ def pSpectrum(data=None, samplefreq=44100):
         b = b = 1
     npad = 2**b -npts
     if debugFlag:
-        print "npts: %d   npad: %d   npad+npts: %d" % (npts, npad, npad+npts)
+        print("npts: %d   npad: %d   npad+npts: %d" % (npts, npad, npad+npts))
     padw =  np.append(data, np.zeros(npad))
     npts = len(padw)
     sigfft = spFFT.fft(padw)
@@ -198,7 +199,7 @@ def savitzky_golay(data, kernel = 11, order = 4):
     try:
             kernel = abs(int(kernel))
             order = abs(int(order))
-    except ValueError, msg:
+    except:
         raise ValueError("kernel and order have to be of type int (floats will be converted).")
     if kernel % 2 != 1 or kernel < 1:
         raise TypeError("kernel size must be a positive odd number, was: %d" % kernel)
@@ -252,7 +253,7 @@ def SignalFilter(signal, LPF, HPF, samplefreq):
         filtered version of the input signal
     """
     if debugFlag:
-        print "sfreq: %f LPF: %f HPF: %f" % (samplefreq, LPF, HPF)
+        print("sfreq: %f LPF: %f HPF: %f" % (samplefreq, LPF, HPF))
     flpf = float(LPF)
     fhpf = float(HPF)
     sf = float(samplefreq)
@@ -260,8 +261,8 @@ def SignalFilter(signal, LPF, HPF, samplefreq):
     wp = [fhpf/sf2, flpf/sf2]
     ws = [0.5*fhpf/sf2, 2*flpf/sf2]
     if debugFlag:
-        print "signalfilter: samplef: %f  wp: %f, %f  ws: %f, %f lpf: %f  hpf: %f" % (
-           sf, wp[0], wp[1], ws[0], ws[1], flpf, fhpf)
+        print( "signalfilter: samplef: %f  wp: %f, %f  ws: %f, %f lpf: %f  hpf: %f" % (
+           sf, wp[0], wp[1], ws[0], ws[1], flpf, fhpf))
     filter_b,filter_a=spSignal.iirdesign(wp, ws,
             gpass=1.0,
             gstop=60.0,
@@ -271,7 +272,7 @@ def SignalFilter(signal, LPF, HPF, samplefreq):
     w=spSignal.lfilter(filter_b, filter_a, signal) # filter the incoming signal
     signal = signal + msig
     if debugFlag:
-        print "sig: %f-%f w: %f-%f" % (np.amin(signal), np.amax(signal), np.amin(w), np.amax(w))
+        print( "sig: %f-%f w: %f-%f" % (np.amin(signal), np.amax(signal), np.amin(w), np.amax(w)))
     return(w)
 
 def SignalFilter_LPFButter(signal, LPF, samplefreq, NPole=8):
@@ -336,7 +337,7 @@ def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole=8, reduce=False):
     """
 
     if debugFlag:
-        print "sfreq: %f LPF: %f HPF: %f" % (samplefreq, LPF)
+        print( "sfreq: %f LPF: %f HPF: %f" % (samplefreq, LPF))
     flpf = float(LPF)
     sf = float(samplefreq)
     wn = [flpf/(sf/2.0)]
@@ -345,8 +346,8 @@ def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole=8, reduce=False):
         if LPF <= samplefreq/2.0:
             reduction = int(samplefreq/LPF)
     if debugFlag is True:
-        print "signalfilter: samplef: %f  wn: %f,  lpf: %f, NPoles: %d " % (
-           sf, wn, flpf, NPole)
+        print( "signalfilter: samplef: %f  wn: %f,  lpf: %f, NPoles: %d " % (
+           sf, wn, flpf, NPole))
     filter_b,filter_a=spSignal.bessel(
             NPole,
             wn,
@@ -385,7 +386,7 @@ def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole=8, reduce=False):
                 w[i,j,:] = w1
         return(w)
     if signal.ndim > 3:
-        print "Error: signal dimesions of > 3 are not supported (no filtering applied)"
+        print("Error: signal dimesions of > 3 are not supported (no filtering applied)")
         return signal
 
 # do an eval on a long line (longer than 512 characters)
@@ -830,7 +831,7 @@ def measure(mode, x, y, x0, x1, thresh=0, slopewin=1.0):
         win = ma.flatnotmasked_contiguous(ym)
         dt = x[1]-x[0]
         st = int(slopewin/dt) # use slopewin duration window for fit.
-        print ('st: ', st)
+        print('st: ', st)
         for k, w in enumerate(win): # move through the slope measurementwindow
             tb = range(k-st, k+st) # get tb array
             ppars = np.polyfit(x[tb], ym[tb], 1) # do a linear fit - smooths the slope measures
@@ -841,7 +842,7 @@ def measure(mode, x, y, x0, x1, thresh=0, slopewin=1.0):
 
 def mask(x, xm, x0, x1):
     if np.ndim(xm) != 1:
-        print "utility.mask(): array to used to derive mask must be 1D"
+        print("utility.mask(): array to used to derive mask must be 1D")
         return(np.array([]))
     xmask = ma.masked_outside(xm, x0, x1)
     tmask =ma.getmask(xmask)
@@ -853,13 +854,13 @@ def mask(x, xm, x0, x1):
             xnew= ma.array(x[i,:], mask=tmask)
             xcmp = ma.compressed(xnew)
             if i == 0:
-                print ma.shape(xcmp)[0]
-                print np.shape(x)[0]
+                print(ma.shape(xcmp)[0])
+                print(np.shape(x)[0])
                 xout = np.zeros((np.shape(x)[0], ma.shape(xcmp)[0]))
             xout[i,:] = xcmp
         return(xout)
     else:
-        print "Utility.Mask: dimensions of input arrays are not acceptable"
+        print("Utility.Mask: dimensions of input arrays are not acceptable")
         return(np.array([]))
 
 def clipdata(y, xm, x0, x1, minFlag = False):
@@ -977,20 +978,23 @@ def ffind(path, shellglobs=None, namefs=None, relative=True):
         raise ScriptError("cannot access path: '%s'" % path)
 
     fileList = [] # result list
-    try:
-        for dir, subdirs, files in os.walk(path):
-            if shellglobs:
-                matched = []
-                for pattern in shellglobs:
-                    filterf = lambda s: fnmatch.fnmatchcase(s, pattern)
-                    matched.extend(filter(filterf, files))
-                fileList.extend(['%s%s%s' % (dir, os.sep, f) for f in matched])
-            else:
-                fileList.extend(['%s%s%s' % (dir, os.sep, f) for f in files])
-        if not relative: fileList = map(os.path.abspath, fileList)
-        if namefs:
-            for ff in namefs: fileList = filter(ff, fileList)
-    except Exception, e: raise ScriptError(str(e))
+
+    for dir, subdirs, files in os.walk(path):
+        if shellglobs:
+            matched = []
+            for pattern in shellglobs:
+                filterf = lambda s: fnmatch.fnmatchcase(s, pattern)
+                matched.extend(filter(filterf, files))
+            fileList.extend(['%s%s%s' % (dir, os.sep, f) for f in matched])
+        else:
+            fileList.extend(['%s%s%s' % (dir, os.sep, f) for f in files])
+    if not relative:
+        fileList = map(os.path.abspath, fileList)
+    if namefs:
+        for ff in namefs:
+            fileList = filter(ff, fileList)
+    # except Exception, e:
+    #     raise ScriptError(str(e))
     return(fileList)
 
 
