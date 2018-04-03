@@ -61,11 +61,13 @@ def _ax_tolist(ax):
     elif isinstance(ax, dict):
         axlist = axl.keys()
         return([ax for ax in axl[axlist]])
+    elif isinstance(ax, np.ndarray):
+        ax = ax.tolist()
     else:
         return([ax])
     
     
-def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', axesoff=False):
+def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', axesoff=False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot.
         Also allow quickaccess to things we like to do for publication plots, including:
            using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
@@ -95,13 +97,11 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
     -------
         Nothing.
     """
-    #print 'NICEPLOT'
     if type(axl) is not list:
         axl = [axl]
     for ax in axl:
         if ax is None:
             continue
-        #print 'ax: ', ax
         for loc, spine in iteritems(ax.spines): # .iteritems():
             if loc in spines:
                 spine.set_color('k')
@@ -114,7 +114,6 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
                     raise ValueError("position must be int, float or dict [ex: ]{'left': -0.05, 'bottom': -0.05}]")
             else:
                 spine.set_color('none')
-                #print 'spine color : none'
         if axesoff is True:
             noaxes(ax)
 
@@ -124,7 +123,6 @@ def nice_plot(axl, spines=['left', 'bottom'], position=10, direction='inward', a
             ax.yaxis.set_tick_params(color='k')
         else:
             ax.yaxis.set_ticks([]) # no yaxis ticks
-
         if 'bottom' in spines and not axesoff:
             ax.xaxis.set_ticks_position('bottom')
             ax.xaxis.set_tick_params(color='k')
@@ -1269,8 +1267,8 @@ class Plotter():
 
 if __name__ == '__main__':
 #    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
-    test_sizergrid()
-    exit(1)
+#    test_sizergrid()
+#    exit(1)
     labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     l = [(a, a+2, 0, 1) for a in range(0, 6, 2)]
     r = [(a, a+1, 1, 2) for a in range(0, 6)]
@@ -1279,7 +1277,9 @@ if __name__ == '__main__':
 #    P = Plotter((2,3), label=True)  # create a figure with plots
     # for a in P.axarr.flatten():
     #     a.plot(np.random.random(10), np.random.random(10))
-    
+    nice_plot(P.axdict['A'])
+    mpl.show()
+    exit(1)
 #    hfig, ax = mpl.subplots(2, 3)
     axd = OrderedDict()
     for i, a in enumerate(P.axarr.flatten()):
