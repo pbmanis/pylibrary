@@ -60,11 +60,12 @@ def _ax_tolist(ax):
         return(ax)
     elif isinstance(ax, dict):
         axlist = axl.keys()
-        return([ax for ax in axl[axlist]])
+        ax = [ax for ax in axl[axlist]]
     elif isinstance(ax, np.ndarray):
         ax = ax.tolist()
     else:
         return([ax])
+    return(ax)
     
     
 def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', axesoff=False):
@@ -296,6 +297,8 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
         labels.append(ann)
     return(labels)
 
+def list_axes(axd): # convienence
+    listAxes(axd)
 
 def listAxes(axd):
     """
@@ -310,6 +313,9 @@ def listAxes(axd):
     axl = [axd[x] for x in axd]
     return axl
 
+
+def clean_axes(axl):  # because I always forget which way I coded it
+    cleanAxes(axl)
 
 def cleanAxes(axl):
     axl = _ax_tolist(axl)
