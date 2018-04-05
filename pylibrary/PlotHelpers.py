@@ -98,12 +98,12 @@ def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', a
     -------
         Nothing.
     """
-    if type(axl) is not list:
-        axl = [axl]
+    axl = _ax_tolist(axl)
     for ax in axl:
         if ax is None:
             continue
         for loc, spine in iteritems(ax.spines): # .iteritems():
+            #print(loc, spines)
             if loc in spines:
                 spine.set_color('k')
                 #print 'spine color : k'
@@ -906,16 +906,43 @@ def hide_figure_grid(fig, grid):
 def delete_figure_grid(fig, grid):
     mpl.delete(grid)
 
-def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False):
+def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
+                verticalspacing=0.08, horizontalspacing=0.08,
+                margins={'leftmargin': 0.07, 'rightmargin': 0.05, 'topmargin': 0.03, 'bottommargin': 0.1},
+                labelposition=(-0.12, 0.95)):
     """
     make a regular layout grid for plotters
+                
+    Parameters
+    ----------
+    
+    rows : int (no default):
+        number of rows in figure
+    cols : int (nodefault)
+        number of columns in figure
+    order : str (default: 'columns')
+        lettering order 'rows' | 'columns'
+    figsize : tuple floats (default: (8., 10.))
+        figure size (width, height) in inches
+    showgrid : bool (default: False)
+        If true, plots a pale green grid on the page to help with alignment
+    verticalspacing : float (default: 0.08)
+        fractional width of spacing between columns
+    horizontalspacing : float (default: 0.08)
+        fractional height spacing between rows
+    margins : dict (default: 'leftmargin': 0.07, 'rightmargin': 0.05, 'topmargin': 0.03, 'bottommargin': 0.1})
+        fraxtional spacing around borders of graphs relative to edge of "paper"
+    labelposition : tuple of floats (default: (-0.12, 0.95))
+        panel label offset from axes. Axes are from 0 to 1, so default places label to left
+        and just below the top of the left axis.
     """
-    lmar = 0.07
-    rmar = 0.05
-    hs = 0.08
-    tmar = 0.03
-    bmar = 0.1
-    vs = 0.04
+                
+    lmar = margins['leftmargin']
+    rmar = margins['rightmargin']
+    hs = horizontalspacing
+    tmar = margins['topmargin']
+    bmar = margins['bottommargin']
+    vs = verticalspacing
     
     xw = ((1.0-lmar-rmar)-(cols-1.0)*hs)/cols
     xl = [lmar + (xw+hs)*i for i in range(0, cols)]
@@ -929,7 +956,7 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False):
         for r in range(rows):
             for c in range(cols):
                 pos = [xl[c], xw, yb[r], yh]
-                sizer[plabels[i]] = {'pos': pos, 'labelpos': (-0.12, 0.95), 'noaxes': False}
+                sizer[plabels[i]] = {'pos': pos, 'labelpos': labelposition, 'noaxes': False}
                 i = i + 1
     else:
         for c in range(cols):
