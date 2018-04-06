@@ -155,8 +155,8 @@ def noaxes(axl, whichaxes = 'xy'):
     -------
         Nothing
     """
-    if type(axl) is not list:
-        axl = [axl]
+    
+    axl = _ax_tolist(axl)
     for ax in axl:
         if ax is None:
             continue
@@ -436,9 +436,17 @@ def update_font(axl, size=9, font=stdFont):
 
 def lockPlot(axl, lims, ticks=None):
     """ 
-        This routine forces the plot of invisible data to force the axes to take certain
-        limits and to force the tick marks to appear. 
-        call with the axis and lims (limits) = [x0, x1, y0, y1]
+    This routine forces the plot of invisible data to force the axes to take certain
+    limits and to force the tick marks to appear. 
+    
+    Parameters
+    ----------
+    axl : axis or list of axes (no default)
+        a Matplotlib axis instance, or a list fo axes
+    lims : list : no default
+        List of 4 values for axis limits: [x0, x1, y0, y1]
+    ticks: bool (default None)
+        Not implemented
     """
     axl = _ax_tolist(axl)
     # if type(axl) is not list:
@@ -454,7 +462,21 @@ def lockPlot(axl, lims, ticks=None):
     return(plist)  # just in case you want to modify these plots later.
 
 
-def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', distance=5, smart=True):
+def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', distance=5):
+    """
+    Change spine size, location and direction
+    Parameters
+    ----------
+    axl : axis or list of axes (no default)
+        a Matplotlib axis instance, or a list fo axes    
+    spines : list (default ['left', 'bottom])
+        List of which spines to adjust
+    direction: str (default: 'outward')
+        Direction spines should point
+    distance : float (default: 5)
+        Length of spines
+    
+    """
     axl = _ax_tolist(axl)
     # if type(axl) is not list:
     #     axl = [axl]
