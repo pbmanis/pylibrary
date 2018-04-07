@@ -12,7 +12,7 @@ from PyQt5.QtGui import QIcon
  
 class FileSelector(QWidget):
  
-    def __init__(self, title='', dialogtype='dir', extensions=None):
+    def __init__(self, title='', dialogtype='dir', extensions=None, startingdir='.'):
         """
         File Selector
         
@@ -24,6 +24,8 @@ class FileSelector(QWidget):
             Type of dialog: [file, files, save, dir]
         extensions : str (default: None)
             FIle extension string for the selector (not fully implemented yet)
+        startingdir : str (default '.')
+            Path to directory to start in
         
         Usage:
         FS = FileSelector(title, dialogtype)
@@ -40,7 +42,7 @@ class FileSelector(QWidget):
         self.width = 400
         self.height = 300
         self.fileName = None
-
+        self.startingdir = startingdir
         self.dialogs = {'file': self.openFileNameDialog,
                    'files': self.openFileNamesDialog,
                    'save': self.saveFileDialog,
@@ -60,45 +62,41 @@ class FileSelector(QWidget):
     def openFileNameDialog(self):    
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self, self.title, "",
+        fileName, _ = QFileDialog.getOpenFileName(self, self.title, self.startingdir,
                 "All Files (*);;Python Files (*.py)", options=options)
-        if fileName == '':
-            fileName = None
-        self.fileName = fileName
-
+        self.savefilename(fileName)
 
     def openDirNameDialog(self):    
         options = QFileDialog.Options()
-       # options |= QFileDialog.DontUseNativeDialog
+        options |= QFileDialog.DontUseNativeDialog
         options |= QFileDialog.DirectoryOnly
+        #options |= QFileDialog.ShowDirsOnly
         fileName = QFileDialog.getExistingDirectory(self, self.title,
-                "", options=options)
-        if fileName == '':
-            fileName = None
-        self.fileName = fileName
+                self.startingdir, options=options)
+        self.savefilename(fileName)
  
     def openFileNamesDialog(self):    
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         files, _ = QFileDialog.getOpenFileNames(self, self.title, 
-                "","All Files (*);;Python Files (*.py)", options=options)
-        if len(files) == 0:
-            self.fileName = None
-        else:
-            self.fileName = files
+                self.startingdir,"All Files (*);;Python Files (*.py)", options=options)
+        self.savefilename(files)
  
     def saveFileDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self, self.title,"",
+        fileName, _ = QFileDialog.getSaveFileName(self, self.title, self.startingdir,
             "All Files (*);;Text Files (*.txt)", options=options)
-        if fileName == '':
+        self.savefilename(fileName)
+
+    def savefilename(self, fileName):
+        if fileName == '' or len(fileName) == 0:
             fileName = None
         self.fileName = fileName
-
- 
+               
+        
 if __name__ == '__main__':
-    ex = FileSelector(dialogtype='files')
+    ex = FileSelector(dialogtype='dir')
     print('exfile: ', ex.fileName)
 
     
