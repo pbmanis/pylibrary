@@ -7,9 +7,13 @@ Provides Qt5 based, system independent file selection
 """
 
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
-from PyQt5.QtGui import QIcon
- 
+try:
+    from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
+    from PyQt5.QtGui import QIcon
+except:
+    from PyQt4.QtGui import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
+    from PyQt4.QtGui import QIcon
+    
 class FileSelector(QWidget):
  
     def __init__(self, title='', dialogtype='dir', extensions=None, startingdir='.'):
@@ -34,7 +38,7 @@ class FileSelector(QWidget):
         FS.fileName will be None if the dialog is cancelled
         """
         
-        app = QApplication(sys.argv)
+        self.app = QApplication(sys.argv)
         super(FileSelector, self).__init__()
         self.title = title
         self.left = 110
@@ -56,8 +60,9 @@ class FileSelector(QWidget):
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        a = self.dialogs[self.dialogtype]()
-        self.show()
+        self.active_dialog = self.dialogs[self.dialogtype]()
+        # print( self.active_dialog)
+        # self.show()
  
     def openFileNameDialog(self):    
         options = QFileDialog.Options()

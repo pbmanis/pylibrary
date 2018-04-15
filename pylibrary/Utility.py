@@ -606,7 +606,8 @@ def RichardsonSilberberg(data, tau, time=None):
     else:
         return rn
 
-def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', refract=0.7, interpolate=False, debug=False):
+def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', 
+    refract=0.7, interpolate=False, peakwidth=1.0, debug=False, verify=False):
     """ findspikes identifies the times of action potential in the trace v, with the
     times in t. An action potential is simply timed at the first point that exceeds
     the threshold... or is the peak. 
@@ -617,6 +618,7 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', refract=0
     if True, the returned time is interpolated, based on a spline fit
     if False, the returned time is just taken as the data time. 
     """
+
     if mode not in ['schmitt', 'threshold', 'peak']:
         raise ValueError('pylibrary.utility.findspikes: mode must be one of "schmitt", "peak" : got %s' % mode)
     if t1 is not None and t0 is not None:
@@ -627,16 +629,18 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', refract=0
     else:
         xt = np.array(x)
         v = np.array(v)
+
     dv = np.diff(v)/dt # compute slope
     st = np.array([])
     spv = np.where(v > thresh)[0].tolist() # find points above threshold
-    sps = np.where(dv > 0.0)[0].tolist() # find points where slope is positive
+    sps = (np.where(dv > 0.0)[0]+1).tolist() # find points where slope is positive
     sp = list(set(spv) & set(sps)) # intersection defines putative spike start times
     sp.sort() # make sure all detected events are in order (sets is unordered)
+    spl = sp
     sp = tuple(sp) # convert to tuple
     if sp is ():
         return(st) # nothing detected
-        
+
     if mode in  ['schmitt', 'Schmitt', 'threshold']: # normal operating mode is fixed voltage threshold
         for k in sp:
             x = xt[k-1:k+1]
@@ -650,8 +654,7 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', refract=0
                     st = np.append(st, x[1])
                 
     elif mode == 'peak':
-        pkwidth = 1.0 # in same units as dt  - usually msec
-        kpkw = int(pkwidth/dt)
+        kpkw = int(peakwidth/dt)
         z = (np.array(np.where(np.diff(spv) > 1)[0])+1).tolist()
         z.insert(0, 0) # first element in spv is needed to get starting AP
         for k in z:
@@ -676,6 +679,17 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt', refract=0
 
     # clean spike times
     st = clean_spiketimes(st, mindT=refract)
+    if verify:
+        import matplotlib.pyplot as mpl
+        print('nspikes detected: ', len(st))
+        mpl.figure()
+        mpl.plot(xt, v, 'k-', linewidth=0.5)
+        mpl.plot(st, thresh*np.ones_like(st), 'ro')
+        mpl.plot(xt[spv], v[spv], 'r-')
+        mpl.plot(xt[sps], v[sps], 'm-', linewidth=1)
+        mpl.show()
+   # exit(1)
+
     return(st)
 
 def clean_spiketimes(spikeTimes, mindT=0.7):

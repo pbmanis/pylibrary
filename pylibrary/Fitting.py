@@ -32,9 +32,6 @@ except Exception:
 import numpy.random
 #from numba import autojit
 
-usingMPlot = False
-# if usingMPlot:
-# import MPlot # we include plotting as part of the fitting
 pyqt = False
 
 
