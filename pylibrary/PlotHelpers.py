@@ -291,7 +291,7 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
             ax = ax[0]
         ann = ax.annotate(axlist[i], xy=xy, xycoords='axes fraction',
                 annotation_clip=False,
-                color="k", verticalalignment=verticalalignment,weight=weight, horizontalalignment=horizontalalignment,
+                color="k", verticalalignment=verticalalignment, weight=weight, horizontalalignment=horizontalalignment,
                 fontsize=fontsize, family='sans-serif', rotation=rotation
                 )
         labels.append(ann)
@@ -931,7 +931,7 @@ def delete_figure_grid(fig, grid):
 def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
                 verticalspacing=0.08, horizontalspacing=0.08,
                 margins={'leftmargin': 0.07, 'rightmargin': 0.05, 'topmargin': 0.03, 'bottommargin': 0.1},
-                labelposition=(-0.12, 0.95)):
+                labelposition=(-0.12, 0.95), **kwds):
     """
     make a regular layout grid for plotters
                 
@@ -971,6 +971,8 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
     yh = ((1.0-tmar-bmar)-(rows-1.0)*vs)/rows
     yb = [1.0-tmar - (yh*(i+1))-vs*i for i in range(0, rows)]
     plabels = list(string.ascii_uppercase)
+    a2 = ['%c%c' % (plabels[i],b) for i in range(len(plabels)) for b in plabels]
+    plabels.extend(a2)
     # auto generate sizer dict based on this
     i = 0
     sizer = OrderedDict()
@@ -988,7 +990,7 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
                 i = i + 1
     gr = [(a, a+1, 0, 1) for a in range(0, rows*cols)]   # just generate subplots - shape does not matter
     axmap = OrderedDict(zip(sizer.keys(), gr))
-    P = Plotter((rows, cols), axmap=axmap, label=True, figsize=(figsize))
+    P = Plotter((rows, cols), axmap=axmap, label=True, figsize=(figsize), **kwds)
     if showgrid:
         show_figure_grid(P.figure_handle)
     P.resize(sizer)  # perform positioning magic
@@ -1005,7 +1007,7 @@ class Plotter():
     an row x column array.
     """
     def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
-        figsize=(11, 8.5), fontsize=10, position=0, labeloffset=[0., 0.], labelsize=12):
+        figsize=(11, 8.5), fontsize=10, fontweight='normal', position=0, labeloffset=[0., 0.], labelsize=12):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
         and sets up an array of subplots as defined, initializes the counters
@@ -1079,8 +1081,10 @@ class Plotter():
         figsize : tuple (default : (11, 8.5))
             Figure size in inches. Default is for a landscape figure
         
-        fontsize : points (default : 10)
+        fontsize : points (default : 10) OR dict {'tick', 'label', 'panel'}
             Defines the size of the font to use for panel labels
+        fontwieght : weights (str) dict {'tick', 'label', 'panel'}
+            Defines the weight of the font to use for labels: 'normal', 'bold', etc.
 
         position : position of spines (0 means close, 0.05 means break out)
             x, y spines.. 
@@ -1089,14 +1093,24 @@ class Plotter():
         Nothing
         """
         self.arrangement = arrangement
-        self.fontsize = fontsize
         self.referenceLines = {}
         self.figure_handle = mpl.figure(figsize=figsize) # create the figure
         self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
         self.axlabels = []
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
         if isinstance(fontsize, int):
-            fontsize = {'tick': fontsize, 'label': fontsize, 'panel': fontsize}
+            self.fontsize = {'tick': fontsize, 'label': fontsize, 'panel': fontsize}
+        elif isinstance(fontsize, dict):
+            self.fontsize = fontsize
+        else:
+            raise ValueError('Plotter: Font size must be int or dict')
+        if isinstance(fontweight, str):
+            self.fontweight= {'tick': fontweight, 'label': fontweight, 'panel': fontweight}
+        elif isinstance(fontweight, dict):
+            self.fontweight = fontweight
+        else:
+            raise ValueError('Plotter: Font size must be int or dict')
+        # otherwise we assume it is a dict and the sizes are set in the dict.
         gridbuilt = False
         # compute label offsets
         p = [0., 0.]
@@ -1138,7 +1152,9 @@ class Plotter():
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k,0]
             plo = labeloffset
-            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), xy=(-0.095+plo[0], 0.95+plo[1]), fontsize=fontsize['panel'])
+            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), 
+                xy=(-0.095+plo[0], 0.95+plo[1]), 
+                fontsize=self.fontsize['panel'], weight='Bold')
             self.resize(rcshape)
         else:
             raise ValueError('Input rcshape must be list/tuple or dict')
@@ -1181,7 +1197,7 @@ class Plotter():
                 self.axarr[i, j].spines['top'].set_visible(False)
                 self.axarr[i, j].get_xaxis().set_tick_params(direction='out', width=0.8, length=4.)
                 self.axarr[i, j].get_yaxis().set_tick_params(direction='out', width=0.8, length=4.)
-                self.axarr[i, j].tick_params(axis='both', which='major', labelsize=fontsize['tick'])
+                self.axarr[i, j].tick_params(axis='both', which='major', labelsize=self.fontsize['tick'])
 #                if i < self.nrows-1:
 #                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
                 nice_plot(self.axarr[i, j], position=position)
@@ -1190,7 +1206,9 @@ class Plotter():
 
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
-                self.axlabels = labelPanels(self.axarr.ravel().tolist(), axlist=axmap.keys(), xy=(-0.095+p[0], 0.95+p[1]), fontsize=fontsize['panel'])
+                self.axlabels = labelPanels(self.axarr.ravel().tolist(), axlist=axmap.keys(),
+                        xy=(-0.095+p[0], 0.95+p[1]),
+                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
                 return
             self.axlist = []
             if roworder == True:
@@ -1209,9 +1227,13 @@ class Plotter():
                 for i in range(self.nrows):
                     for j in range(self.ncolumns):
                         axl.append(ctxt[j]+rtxt[i])
-                self.axlabels = labelPanels(self.axlist, axlist=axl, xy=(-0.35+p[0], 0.75))
+                self.axlabels = labelPanels(self.axlist, axlist=axl, xy=(-0.35+p[0], 0.75),
+                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
+
             else:
-                self.axlabels = labelPanels(self.axlist, xy=(-0.095+p[0], 0.95+p[1]))
+                self.axlabels = labelPanels(self.axlist, xy=(-0.095+p[0], 0.95+p[1]),
+                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
+
     
     def _next(self):
         """
