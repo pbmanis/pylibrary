@@ -31,6 +31,7 @@ except Exception:
 
 import numpy.random
 #from numba import autojit
+usingMPlot=False
 
 pyqt = False
 
