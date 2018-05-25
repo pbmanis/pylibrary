@@ -2,9 +2,8 @@
 # encoding: utf-8
 """
 Params.py
-
-Created by Paul Manis on 2014-01-31.
-Copyright 2014  Paul Manis
+A clsss to create parameter structures
+First version: Paul Manis on 2014-01-31.
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
