@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-
+__author__ = "Paul B. Manis"
+__version__ = "0.17"
 
 # import acq4read
 # import bootstrap
