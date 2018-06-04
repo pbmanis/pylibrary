@@ -54,6 +54,8 @@ rc('text', usetex=True)
 rcParams['text.latex.unicode'] = True
 seaborn.set_style('white')
 seaborn.set_style('ticks')
+import talbotetalTicks as ticks # logical tick formatting... 
+
 
 def _ax_tolist(ax):
     if isinstance(ax, list):
@@ -227,6 +229,134 @@ def setX(ax1, ax2):
     for ax in ax2:
         ax.set_xlim(refx)
 
+def tickStrings(values, scale=1, spacing=None, tickPlacesAdd=1, floatAdd=None):
+    """Return the strings that should be placed next to ticks. This method is called 
+    when redrawing the axis and is a good method to override in subclasses.
+    
+    Parameters
+    ----------
+    values : array or list
+         An array or list of tick values
+    scale : float, optional
+        a scaling factor (see below), defaults to 1
+    spacing : float, optional
+        spaceing between ticks (this is required since, in some instances, there may be only 
+    one tick and thus no other way to determine the tick spacing). Defaults to None
+    tickPlacesToAdd : int, optional
+        the number of decimal places to add to the ticks, default is 1
+    
+    Returns
+    -------
+    list : a list containing the tick strings
+    
+    The scale argument is used when the axis label is displaying units which may have an SI scaling prefix.
+    When determining the text to display, use value*scale to correctly account for this prefix.
+    For example, if the axis label's units are set to 'V', then a tick value of 0.001 might
+    be accompanied by a scale value of 1000. This indicates that the label is displaying 'mV', and 
+    thus the tick should display 0.001 * 1000 = 1.
+    Copied rom pyqtgraph; we needed it here.
+    """
+#    print ('tickplacesadd: ', tickPlacesAdd)
+
+    if spacing is None:
+        spacing = np.mean(np.diff(values))
+    places = tickPlacesAdd # int(np.max((0, np.ceil(-np.log10(spacing*scale)))) + tickPlacesAdd)
+    if tickPlacesAdd == 0 and floatAdd in [0, None]:
+        places = 0
+
+#    print('places, floatAdd, spacing: ', places, floatAdd, spacing)
+    strings = []
+    
+    #ifor v in values:
+    
+        
+    for v in values:
+        vs = v * scale
+        if np.fabs(vs) < 1e-3 or np.fabs(vs) >= 1e4:
+            vstr = "%g" % vs
+        else:
+            if floatAdd in [None, 0]:
+#                print('1')
+                vstr = ("%%0.%df" % places) % vs
+            else:  # check and reformat if not a match...
+# #                print('2')
+#                 if np.floor(vs) == vs:
+#                     vstr = ("%%0.%df" % places) % vs
+#                 else:
+#                    print('3', vs, vstr)
+                vstr = ("%%0.%df" % floatAdd) % vs
+        strings.append(vstr)
+            
+    print('strings: ', strings)
+    return strings
+
+
+def talbotTicks(axl, **kwds):
+    """
+    Adjust the tick marks using the talbot et al algorithm, on an existing plot.
+    """
+    if type(axl) is not list:
+        axl = [axl]
+    for ax in axl:
+        do_talbotTicks(ax, **kwds)
+
+
+def do_talbotTicks(ax, axes='xy',
+                   density=(1.0, 1.0), insideMargin=0.05, pointSize=10, 
+                   tickPlacesAdd={'x': 0, 'y': 0}, floatAdd={'x': 0, 'y': 0}):
+    """
+    Change the axis ticks to use the talbot algorithm for ONE axis
+    Paramerters control the ticks
+    
+    Parameters
+    ----------
+    ax : matplotlib axis instance
+        the axis to change the ticks on
+    axes : str
+        'xy' for both x and y
+        'x' for just x, 'y' for just y
+    density : tuple
+        tick density (for talbotTicks), defaults to (1.0, 1.0)
+    insideMargin : float
+        Inside margin space for plot, defaults to 0.05 (5%)
+    pointSize : int
+         point size for tick text, defaults to 12
+    tickPlacesAdd : dict
+        number of decimal places to add in tickstrings for the ticks, pair for x and y axes, defaults to (0,0)
+    floatAdd : dict
+        if tickplaces is 0, but the number would be better represented by a float, how many plances?
+    
+    """
+    # get axis limits
+    # aleft = ax.getAxis('left')
+    # abottom = ax.getAxis('bottom')
+
+    if 'y' in axes:
+        yRange = ax.get_ylim()
+        yr = np.diff(yRange)[0]
+        ymin, ymax = (np.min(yRange) - yr * insideMargin, np.max(yRange) + yr * insideMargin)
+        ytick = ticks.Extended(density=density[1], figure=None, range=(ymin, ymax), axis='y')
+        yt = ytick()
+        yts = tickStrings(yt, scale=1, spacing=None, tickPlacesAdd=tickPlacesAdd['y'], floatAdd=floatAdd['y'])
+#        ytickl = [[(y, yts[i]) for i, y in enumerate(yt)] , []]  # no minor ticks here
+        ax.set_yticks(yt)
+        ax.set_yticklabels(yts, rotation='horizontal', fontsize=pointSize)  
+#        print ('yt, yts: ', yt, yts)
+    
+    if 'x' in axes:
+        xRange =  ax.get_xlim()
+        # now create substitue tick marks and labels, using Talbot et al algorithm
+        xr = np.diff(xRange)[0]
+        xmin, xmax = (np.min(xRange) - xr * insideMargin, np.max(xRange) + xr * insideMargin)
+        xtick = ticks.Extended(density=density[0], figure=None, range=(xmin, xmax), axis='x')
+        xt = xtick()
+        xts = tickStrings(xt, scale=1, spacing=None, tickPlacesAdd=tickPlacesAdd['x'], floatAdd=floatAdd['x'])
+#        xtickl = [[(x, xts[i]) for i, x in enumerate(xt)] , []]  # no minor ticks here
+        x_ticks_labels = ax.set_xticks(xt)
+        ax.set_xticklabels(xts, rotation='horizontal', fontsize=pointSize)  
+#        print ('xt, xts: ', xt, xts)
+        
+        
 
 def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05), 
         horizontalalignment='right', verticalalignment='bottom', rotation=0.):
@@ -429,8 +559,8 @@ def update_font(axl, size=9, font=stdFont):
               tick.label1.set_size(size)
         ax.set_xticklabels(ax.get_xticks(), fontProperties)
         ax.set_yticklabels(ax.get_yticks(), fontProperties)
-        ax.xaxis.set_smart_bounds(True)
-        ax.yaxis.set_smart_bounds(True) 
+        #ax.xaxis.set_smart_bounds(True)
+        #ax.yaxis.set_smart_bounds(True) 
         ax.tick_params(axis = 'both', labelsize = size)
 
 
@@ -1346,15 +1476,16 @@ if __name__ == '__main__':
 #    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
 #    test_sizergrid()
 #    exit(1)
-    labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+    labels = ['A', 'B'] # , 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     l = [(a, a+2, 0, 1) for a in range(0, 6, 2)]
     r = [(a, a+1, 1, 2) for a in range(0, 6)]
     axmap = OrderedDict(zip(labels, l+r))
-    P = Plotter((6,2), axmap=axmap, figsize=(6., 6.), label=True)
+    P = Plotter((1,2), axmap=axmap, figsize=(6., 6.), label=True)
 #    P = Plotter((2,3), label=True)  # create a figure with plots
-    # for a in P.axarr.flatten():
-    #     a.plot(np.random.random(10), np.random.random(10))
+    for a in P.axarr.ravel():
+        a.plot(np.random.random(10)*3, np.random.random(10)*72)
     nice_plot(P.axdict['A'])
+    talbotTicks(P.axdict['A'], tickPlacesAdd={'x': 0, 'y': 0}, floatAdd={'x': 1, 'y': 1})
     mpl.show()
     exit(1)
 #    hfig, ax = mpl.subplots(2, 3)
