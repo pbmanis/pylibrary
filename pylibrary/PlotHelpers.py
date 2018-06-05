@@ -263,31 +263,17 @@ def tickStrings(values, scale=1, spacing=None, tickPlacesAdd=1, floatAdd=None):
     places = tickPlacesAdd # int(np.max((0, np.ceil(-np.log10(spacing*scale)))) + tickPlacesAdd)
     if tickPlacesAdd == 0 and floatAdd in [0, None]:
         places = 0
-
-#    print('places, floatAdd, spacing: ', places, floatAdd, spacing)
     strings = []
-    
-    #ifor v in values:
-    
-        
     for v in values:
         vs = v * scale
         if np.fabs(vs) < 1e-3 or np.fabs(vs) >= 1e4:
             vstr = "%g" % vs
         else:
             if floatAdd in [None, 0]:
-#                print('1')
                 vstr = ("%%0.%df" % places) % vs
             else:  # check and reformat if not a match...
-# #                print('2')
-#                 if np.floor(vs) == vs:
-#                     vstr = ("%%0.%df" % places) % vs
-#                 else:
-#                    print('3', vs, vstr)
                 vstr = ("%%0.%df" % floatAdd) % vs
         strings.append(vstr)
-            
-    print('strings: ', strings)
     return strings
 
 
