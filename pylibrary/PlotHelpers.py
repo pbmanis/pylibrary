@@ -1270,7 +1270,7 @@ class Plotter():
             plo = labeloffset
             self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), 
                 xy=(-0.095+plo[0], 0.95+plo[1]), 
-                fontsize=self.fontsize['panel'], weight='Bold')
+                fontsize=self.fontsize['panel'], weight='bold')
             self.resize(rcshape)
         else:
             raise ValueError('Input rcshape must be list/tuple or dict')

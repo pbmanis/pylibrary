@@ -618,7 +618,6 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt',
     if True, the returned time is interpolated, based on a spline fit
     if False, the returned time is just taken as the data time. 
     """
-
     if mode not in ['schmitt', 'threshold', 'peak']:
         raise ValueError('pylibrary.utility.findspikes: mode must be one of "schmitt", "peak" : got %s' % mode)
     if t1 is not None and t0 is not None:
@@ -675,10 +674,11 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt',
                 except:
                     continue
             else:
+                #print('utility: yere', x)
                 st = np.append(st, x[1]) # always save the first one
 
     # clean spike times
-    st = clean_spiketimes(st, mindT=refract)
+    #st = clean_spiketimes(st, mindT=refract)
     if verify:
         import matplotlib.pyplot as mpl
         print('nspikes detected: ', len(st))
