@@ -1,3 +1,4 @@
+from __future__ import print_function
 #!/usr/bin/env python
 
 """
@@ -109,7 +110,7 @@ class Fitting():
         self.fitSum2Err = 0
 
     def getFunctions(self):
-        return self.fitfuncmap.keys()
+        return list(self.fitfuncmap.keys())
 
     def exp0eval(self, p, x, y=None, C=None, sumsq=False):
         """
@@ -540,7 +541,7 @@ class Fitting():
             t0 = numpy.min(tdat)
         func = self.fitfuncmap[fitFunc]
         if func is None:
-            print "FitRegion: unknown function %s" % (fitFunc)
+            print("FitRegion: unknown function %s" % (fitFunc))
             return
         xp = []
         xf = []
@@ -594,8 +595,8 @@ class Fitting():
                     # print 'plsq: ', plsq
                     # print 'cov: ', cov
                     if ier > 4:
-                        print "optimize.leastsq error flag is: %d" % (ier)
-                        print mesg
+                        print("optimize.leastsq error flag is: %d" % (ier))
+                        print(mesg)
                 elif method == 'curve_fit':
                     # print fpars
                     # print fixedPars
@@ -629,7 +630,7 @@ class Fitting():
                 # use OpenOpt's routines - usually slower, but sometimes they
                 # converge better
                 elif method == 'openopt' and openoptFound:
-                    print 'OpenOpt!!!'
+                    print('OpenOpt!!!')
                     if bounds is not None:
                         # unpack bounds
                         lb = [z[0] for z in bounds]
@@ -643,14 +644,14 @@ class Fitting():
                     else:
                         fopt = openopt.DFP(
                             func[0], fpars, tx, dy, df=fitFuncDer)
-                        print func[8]
+                        print(func[8])
                         #  fopt.df = func[7]
                         fopt.checkdf()
                         r = fopt.solve('nlp:ralg', plot=0, iprint=10)
                         plsq = r.xf
                         ier = 0
                 else:
-                    print 'method %s not recognized, please check Fitting.py' % (method)
+                    print('method %s not recognized, please check Fitting.py' % (method))
                     return
                 # min(tx), max(tx), (max(tx)-min(tx))/100.0)
                 xfit = numpy.linspace(t0, t1, num=100, endpoint=True)
@@ -780,8 +781,8 @@ class Fitting():
             try:
                 f[k] = d[pos + 1]
             except:
-                print "error in chebftd: k = %d (len f = %d)  pos = %d, len(d) = %d\n" % (k, len(f), pos, len(d))
-                print "you should probably make sure this doesn't happen"
+                print("error in chebftd: k = %d (len f = %d)  pos = %d, len(d) = %d\n" % (k, len(f), pos, len(d)))
+                print("you should probably make sure this doesn't happen")
         fac = 2.0 / n
         c = numpy.zeros(n)
         for j in range(0, n):
@@ -854,7 +855,7 @@ if __name__ == "__main__":
     # pylab.rcParams['text.dvipnghack'] = True
     # to here (matplotlib stuff - touchy!
 
-    print 'Testing Fitting'
+    print('Testing Fitting')
     Fits = Fitting()
     #    x = numpy.arange(0, 100.0, 0.1)
     #    y = 5.0-2.5*numpy.exp(-x/5.0)+0.5*numpy.random.randn(len(x))
@@ -913,13 +914,13 @@ if __name__ == "__main__":
     for func in Fits.fitfuncmap:
         if func != 'flattopngauss':
             continue
-        print "\nFunction: %s\nTarget: " % (func),
+        print("\nFunction: %s\nTarget: " % (func), end=' ')
         f = Fits.fitfuncmap[func]
         for k in range(0, len(f[1])):
-            print "%f " % (f[1][k]),
-        print "\nStarting:     ",
+            print("%f " % (f[1][k]), end=' ')
+        print("\nStarting:     ", end=' ')
         for k in range(0, len(f[5])):
-            print "%f " % (f[5][k]),
+            print("%f " % (f[5][k]), end=' ')
 
         #        nstep = 500.0
         #        if func == 'sin':
@@ -927,7 +928,7 @@ if __name__ == "__main__":
         x = numpy.array(numpy.arange(f[4][0], f[4][1], f[4][2]))
         C = None
         if func in ['expsum2', 'exppulse', 'ngauss', 'flattopgauss', 'flattopngauss']:
-            print '\n', f[7]
+            print('\n', f[7])
             C = f[7]
 
         y = f[0](f[1], x, C=C)
@@ -945,7 +946,7 @@ if __name__ == "__main__":
                                                    method=testMethod)
         elif func == 'FIGrowth1':
                 # Parameter p is [Fzero, Ibreak, F1amp, F2amp, Irate]
-            print '\nFIGrowth1: '
+            print('\nFIGrowth1: ')
             bounds = [
                 (0.0, 3.0), (0.0, 1000), (0.0, 5.0), (0.0, 100.0,), (0.0, 100.0)]
             initialgr = f[0](f[5], x, None)
@@ -1006,12 +1007,12 @@ if __name__ == "__main__":
             outstr = outstr + ('%s = %f, ' % (names[j][i], fpar[j][i]))
             initstr = initstr + '%s = %f, ' % (names[j][i], tv[i])
             truestr = truestr + '%s = %f, ' % (names[j][i], f[1][i])
-        print("\nTrue(%d) : %s" % (j, truestr))
-        print("FIT(%d)   : %s" % (j, outstr))
-        print("init(%d) : %s" % (j, initstr))
-        print("Error:   : %f" % (Fits.fitSum2Err))
+        print(("\nTrue(%d) : %s" % (j, truestr)))
+        print(("FIT(%d)   : %s" % (j, outstr)))
+        print(("init(%d) : %s" % (j, initstr)))
+        print(("Error:   : %f" % (Fits.fitSum2Err)))
         if func in ['exppulse', 'FIGrowth1', 'flattopgauss', 'flattopngauss']:
-            print "red o = data; blue line is fit; black dashed is initial guess"
+            print("red o = data; blue line is fit; black dashed is initial guess")
             pylab.figure()
             pylab.plot(numpy.array(x), yd, 'ro-')
             pylab.hold(True)

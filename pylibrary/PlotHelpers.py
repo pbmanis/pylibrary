@@ -54,7 +54,7 @@ rc('text', usetex=True)
 rcParams['text.latex.unicode'] = True
 seaborn.set_style('white')
 seaborn.set_style('ticks')
-import talbotetalTicks as ticks # logical tick formatting... 
+import pylibrary.talbotetalTicks as ticks # logical tick formatting... 
 
 
 def _ax_tolist(ax):
