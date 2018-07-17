@@ -386,17 +386,17 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     # if not isinstance(axl, list):
     #     axl = [axl]
     if axlist is None:
-        axlist = string.uppercase[0:len(axl)]
+        axlist = string.ascii_uppercase[0:len(axl)]
     else:
         axlist = list(axlist)
     # assume we wish to go in sequence
     if len(axlist) > len(axl):
         raise ValueError ('axl must have more entries than axlist: got axl=%d and axlist=%d for axlist:' % (len(axl), len(axlist)), axlist)
-    font = FontProperties()
-    font.set_family('sans-serif')
-    font.set_weight=weight
-    font.set_size=fontsize
-    font.set_style('normal')
+    # font = FontProperties()
+    # font.set_family('sans-serif')
+    # font.set_weight=weight
+    # font.set_size=fontsize
+    # font.set_style('normal')
     labels = []
     for i, ax in enumerate(axl):
         if i >= len(axlist):
@@ -405,11 +405,17 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
             continue
         if isinstance(ax, list):
             ax = ax[0]
-        ann = ax.annotate(axlist[i], xy=xy, xycoords='axes fraction',
-                annotation_clip=False,
-                color="k", verticalalignment=verticalalignment, weight=weight, horizontalalignment=horizontalalignment,
-                fontsize=fontsize, family='sans-serif', rotation=rotation
-                )
+       # print('xy: ', xy, axlist[i], weight)
+        # ann = ax.annotate(axlist[i], xytext=xy, textcoords='axes fraction',
+        #         annotation_clip=False,
+        #         color="k", verticalalignment=verticalalignment, weight=weight, horizontalalignment=horizontalalignment,
+        #         fontsize=fontsize, family='sans-serif', rotation=rotation
+        #         )
+        ann = ax.text(xy[0], xy[1], axlist[i], transform=ax.transAxes, 
+            fontdict={'fontsize': fontsize, 'weight': weight,
+            'family': 'sans-serif', 
+            'verticalalignment': verticalalignment, 'horizontalalignment': horizontalalignment,
+            'rotation': rotation})
         labels.append(ann)
     return(labels)
 
@@ -525,7 +531,7 @@ def setFormatter(axl, x0, x1, axis='x'):
             ax.yaxis.set_major_formatter(majorFormatter)
 
 
-def update_font(axl, size=9, font=stdFont):
+def update_font(axl, size=8, font=stdFont):
     axl = _ax_tolist(axl)
     # if type(axl) is not list:
     #     axl = [axl]
@@ -1047,7 +1053,7 @@ def delete_figure_grid(fig, grid):
 def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
                 verticalspacing=0.08, horizontalspacing=0.08,
                 margins={'leftmargin': 0.07, 'rightmargin': 0.05, 'topmargin': 0.03, 'bottommargin': 0.1},
-                labelposition=(-0.12, 0.95), **kwds):
+                labelposition=(0., 0.), parent_figure=None, prior_label=None, **kwds):
     """
     make a regular layout grid for plotters
                 
@@ -1073,6 +1079,10 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
     labelposition : tuple of floats (default: (-0.12, 0.95))
         panel label offset from axes. Axes are from 0 to 1, so default places label to left
         and just below the top of the left axis.
+    **kwds:
+        inciudes:
+        parent_figure
+        prior_label : last label of previous grid, so start labeling with next label in list
     """
                 
     lmar = margins['leftmargin']
@@ -1089,24 +1099,32 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
     plabels = list(string.ascii_uppercase)
     a2 = ['%c%c' % (plabels[i],b) for i in range(len(plabels)) for b in plabels]
     plabels.extend(a2)
+
     # auto generate sizer dict based on this
     i = 0
     sizer = OrderedDict()
+    if prior_label and parent_figure is not None:
+        lastlabel = list(parent_figure.axdict.keys())[-1]
+        if lastlabel in plabels:
+            istart = plabels.index(lastlabel) + 1
+    else:
+        istart = 0
     if order == 'columns':
         for r in range(rows):
             for c in range(cols):
                 pos = [xl[c], xw, yb[r], yh]
-                sizer[plabels[i]] = {'pos': pos, 'labelpos': labelposition, 'noaxes': False}
+                sizer[plabels[i+istart]] = {'pos': pos, 'labelpos': labelposition, 'noaxes': False}
                 i = i + 1
     else:
         for c in range(cols):
             for r in range(rows):
                 pos = [xl[c], xw, yb[r], yh]
-                sizer[plabels[i]] = {'pos': pos, 'labelpos': (-0.12, 0.95), 'noaxes': False}
+                sizer[plabels[i+istart]] = {'pos': pos, 'labelpos': labelposition, 'noaxes': False}
                 i = i + 1
     gr = [(a, a+1, 0, 1) for a in range(0, rows*cols)]   # just generate subplots - shape does not matter
     axmap = OrderedDict(zip(sizer.keys(), gr))
-    P = Plotter((rows, cols), axmap=axmap, label=True, figsize=(figsize), **kwds)
+    P = Plotter((rows, cols), axmap=axmap, label=True, figsize=(figsize), margins=margins, labeloffset=labelposition,
+            parent_figure=parent_figure, **kwds)
     if showgrid:
         show_figure_grid(P.figure_handle)
     P.resize(sizer)  # perform positioning magic
@@ -1123,7 +1141,9 @@ class Plotter():
     an row x column array.
     """
     def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
-        figsize=(11, 8.5), fontsize=10, fontweight='normal', position=0, labeloffset=[0., 0.], labelsize=12):
+        figsize=None, margins=None,
+        fontsize=10, fontweight='normal', position=0, labeloffset=[0., 0.], labelsize=12,
+        parent_figure=None):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
         and sets up an array of subplots as defined, initializes the counters
@@ -1204,14 +1224,32 @@ class Plotter():
 
         position : position of spines (0 means close, 0.05 means break out)
             x, y spines.. 
+        
+        parent_figure: instance of an existing plotter figure to add plots to
+
         Returns
         -------
         Nothing
         """
         self.arrangement = arrangement
         self.referenceLines = {}
-        self.figure_handle = mpl.figure(figsize=figsize) # create the figure
-        self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
+        self.parent = parent_figure
+        if self.parent is None:  # just create a new figure
+            figsize=(11.5, 8) # landscape
+            self.figure_handle = mpl.figure(figsize=figsize) # create the figure
+            self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
+            self.figsize = figsize
+            if title is not None:
+                self.figure_handle.canvas.set_window_title(title)
+                self.figure_handle.suptitle(title)
+
+        else:  # place into an existing figure - but it must have the same figsize
+            self.figure_handle = self.parent.figure_handle
+            fs = self.figure_handle.get_size_inches()  # get original figure size
+            # if figsize is not None and any(fs != figsize):
+            #     raise ValueError('Figure sizes must match when adding plots to figure: got fs=%s, figsize=%s'.format(
+            #         str(repr(fs)), str(repr(figsize))
+            #     ))
         self.axlabels = []
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
         if isinstance(fontsize, int):
@@ -1221,7 +1259,7 @@ class Plotter():
         else:
             raise ValueError('Plotter: Font size must be int or dict')
         if isinstance(fontweight, str):
-            self.fontweight= {'tick': fontweight, 'label': fontweight, 'panel': fontweight}
+            self.fontweight= {'tick': fontweight, 'label': 'bold', 'panel': fontweight}
         elif isinstance(fontweight, dict):
             self.fontweight = fontweight
         else:
@@ -1244,25 +1282,32 @@ class Plotter():
         # 1. nxm grid
         if isinstance(rcshape, list) or isinstance(rcshape, tuple):
             rc = rcshape
-            gs = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
+            self.GS = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
+            if margins is not None:
+                self.GS.update(top=1.0-margins['topmargin'], bottom=margins['bottommargin'],
+                    left=margins['leftmargin'], right=1.0-margins['rightmargin'])
             # assign to axarr
             self.axarr = np.empty(shape=(rc[0], rc[1],), dtype=object)  # use a numpy object array, indexing features
             ix = 0
             for r in range(rc[0]):
                 for c in range(rc[1]):
-                    self.axarr[r,c] = mpl.subplot(gs[ix])
+                    self.axarr[r,c] = mpl.subplot(self.GS[ix])
                     ix += 1
             gridbuilt = True
         # 2. specified values - starts with Nx1 subplots, then reorganizes according to shape boxes
         elif isinstance(rcshape, dict):  # true for OrderedDict also
             nplots = len(rcshape.keys())
-            gs = gridspec.GridSpec(nplots, 1)
+            self.GS = gridspec.GridSpec(nplots, 1)
+            if margins is not None:
+                self.GS.update(top=1.0-margins['topmargin'], bottom=margins['bottommargin'],
+                    left=margins['leftmargin'], right=1.0-margins['rightmargin'])
+                
             rc = (nplots, 1)
             self.axarr = np.empty(shape=(rc[0], rc[1],), dtype=object)  # use a numpy object array, indexing features
             ix = 0
             for r in range(rc[0]):
                 for c in range(rc[1]):
-                    self.axarr[r,c] = mpl.subplot(gs[ix])
+                    self.axarr[r,c] = mpl.subplot(self.GS[ix])
                     ix += 1
             gridbuilt = True
             for k, pk in enumerate(rcshape.keys()):
@@ -1298,9 +1343,7 @@ class Plotter():
                 label = string.uppercase[i]
                 self.axdict[label] = a
         
-        if title is not None:
-            self.figure_handle.canvas.set_window_title(title)
-            self.figure_handle.suptitle(title)
+
         self.nrows = self.axarr.shape[0]
         if len(self.axarr.shape) > 1:
             self.ncolumns = self.axarr.shape[1]
