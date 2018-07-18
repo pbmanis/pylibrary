@@ -6,7 +6,7 @@ pylibrary/*.py[cod]
 pylibrary/*.orig
 pylibrary/doc/build
 pylibrary/docs/build
-
+pylibrary/*.bak
 # pycharm
 .idea
 # R (not sure why it is even in there)

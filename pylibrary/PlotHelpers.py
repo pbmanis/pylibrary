@@ -1123,7 +1123,7 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
                 i = i + 1
     gr = [(a, a+1, 0, 1) for a in range(0, rows*cols)]   # just generate subplots - shape does not matter
     axmap = OrderedDict(zip(sizer.keys(), gr))
-    P = Plotter((rows, cols), axmap=axmap, label=True, figsize=(figsize), margins=margins, labeloffset=labelposition,
+    P = Plotter((rows, cols), axmap=axmap, label=True, figsize=figsize, margins=margins, labeloffset=labelposition,
             parent_figure=parent_figure, **kwds)
     if showgrid:
         show_figure_grid(P.figure_handle)
@@ -1235,7 +1235,8 @@ class Plotter():
         self.referenceLines = {}
         self.parent = parent_figure
         if self.parent is None:  # just create a new figure
-            figsize=(11.5, 8) # landscape
+            if figsize is None:
+                figsize=(11.5, 8) # landscape
             self.figure_handle = mpl.figure(figsize=figsize) # create the figure
             self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
             self.figsize = figsize
@@ -1259,7 +1260,7 @@ class Plotter():
         else:
             raise ValueError('Plotter: Font size must be int or dict')
         if isinstance(fontweight, str):
-            self.fontweight= {'tick': fontweight, 'label': 'bold', 'panel': fontweight}
+            self.fontweight= {'tick': fontweight, 'label': fontweight, 'panel': 'bold'}
         elif isinstance(fontweight, dict):
             self.fontweight = fontweight
         else:
