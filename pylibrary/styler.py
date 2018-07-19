@@ -58,319 +58,167 @@ def tight_layout(axes, style, filename, fig_width='small', label_order=[]):
 
 #--------------------------------------------------------------
 
-
-def style_Plos(figtype):
+class styler():
     '''
     Description
     -----------
     -rules defining figure style
-    Returns
-    -------
-    -Font     = dict
-    -Lines    = dict
-    -Axes     = dict
-    -Ticks    = dict
-    -Grid     = dict
-    -Legend   = dict
-    -Patch    = dict
-    -Text     = dict
-    -Savefig  = dict
-    -Figure   = dict
-    -Misc     = dict
-    -Colors   = dict
+    Creates an object with the following additional attributes:
+        -------
+        -Font     = dict
+        -Lines    = dict
+        -Axes     = dict
+        -Ticks    = dict
+        -Grid     = dict
+        -Legend   = dict
+        -Patch    = dict
+        -Text     = dict
+        -Savefig  = dict
+        -Figure   = dict
+        -Misc     = dict
+        -Colors   = dict
     '''
 
-    assert ((figtype in ['small', 'medium', 'large']) or 
-            (type(figtype) == float)) , \
-            "fig_width should be float or one of 'small','medium','large'"
-            
-    if figtype == 'small':
-        temp = 3.1 * 1         # figure x size in inches
-    elif figtype == 'medium':
-        temp = 3.1 * 1.5         # figure x size in inches
-    elif figtype == 'large':
-        temp = 3.1 * 2         # figure x size in inches
-    elif type(figtype) == float:
-        temp = 8.3 * figtype  # figure x size in inches
-    else:
-        raise ValueError
-
-    fig_width = temp      # figure x size in inches
-    # golden ratio of x to y subplot dimensions
-    x_to_y_ratio = (1. + np.sqrt(5)) / 2.
-    fig_height = fig_width/x_to_y_ratio
-
+    def __init__(self, journal=None, figuresize='small'):
+        if not journal in ['Plos', 'JNeurophys', 'JNeurosci', 'CerebralCortex']:
+            raise ValueError ('got journal: %s' % journal)
+        self.journal = journal
+        self.golden_ratio = (1. + np.sqrt(5.)) / 2.
+        self.font_pt = 8  # [pt] font size
+        self.figuresize = figuresize
+        self.set_style()  # init with a default - set later
     
-    font_pt = 8  # [pt] font size
+    def set_base_font_pt(self, font_pt):
+        self.font_pt = font_pt
+        self.set_style()
+    
+    def set_panel_fontweight(self, fontweight):
+        self.Panel['fontweight'] = fontweight
+        self.set_style()
 
-    # set default figure properties
-    Font = {'weight': 'normal',
-            'size': font_pt,
-            'family': 'sans-serif',
-            'sans-serif': 'Helvetica'
-            }
+    def set_style(self):
+        # set default figure properties
+        self.Font = {'weight': 'normal',
+                'size': self.font_pt,
+                'family': 'sans-serif',
+                'sans-serif': 'Helvetica'
+                }
 
-    Lines = {'linewidth': 1.0,  # [pt] line width
-             'markersize': 3.0, # [pt] markersize
-             'markeredgewidth': 1.0  # width of marker border
+        self.Lines = {'linewidth': 1.0,  # [pt] line width
+                 'markersize': 3.0, # [pt] markersize
+                 'markeredgewidth': 1.0  # width of marker border
+                 }
+
+        self.Axes = {'grid': False,
+                'titlesize': 'large',
+                'labelweight': 'normal',
+                'linewidth': 1.0     # edge linewidth
+                }
+
+        self.Ticks = {'labelsize': self.font_pt*0.75,
+                 'major.size': self.font_pt / 8.,  # [pt] major tick size
+                 'minor.size': self.font_pt / 12.,  # [pt] minor tick size
+                 'major.pad': self.font_pt / 4.,   # [pt] distance to major tick label
+                 'minor.pad': self.font_pt / 4.,  # [pt] distance to the minor tick label
+                 'direction': 'out',   # direction of ticks relative to axis
+                 }
+
+        self.Grid = {'linewidth': 0.5}
+
+        self.Legend = {'fontsize': self.font_pt,
+                  'fancybox': True,
+                  'markerscale': 1.,
+                  'shadow': True}
+    
+        self.Label = {'fontsize': self.font_pt,
+                 'fontweight': 'normal',
+             }
+    
+        self.Panel = {'fontsize': self.font_pt*1.25,
+                 'fontweight': 'bold',
              }
 
-    Axes = {'grid': False,
-            'titlesize': 'large',
-            'labelweight': 'normal',
-            'linewidth': 1.0     # edge linewidth
-            }
+        self.Patch = {'linewidth': 1.0}
 
-    Ticks = {'labelsize': font_pt/2.,
-             'major.size': font_pt / 8.,  # [pt] major tick size
-             'minor.size': font_pt / 12.,  # [pt] minor tick size
-             'major.pad': font_pt / 4.,   # [pt] distance to major tick label
-             'minor.pad': font_pt / 4.,  # [pt] distance to the minor tick label
-             'direction': 'out',   # direction of ticks relative to axis
-             }
+        self.Text = {'usetex': True}  # use latex for text handling
 
-    Grid = {'linewidth': 0.5}
-
-    Legend = {'fontsize': font_pt,
-              'fancybox': True,
-              'markerscale': 1.,
-              'shadow': True}
+        self.Savefig = {'dpi': 1200}  # resolution in dots per inch
     
-    Label = {'fontsize': font_pt,
-             'fontweight': 'normal',
-         }
+        self.Figure = {'figsize': self.set_figure()}
     
-    Panel = {'fontsize': font_pt,
-             'fontweight': 'bold',
-         }
+        self.Misc = {
+            'label_pad': 0,        # [pt] shift axis labels relative to ticks
+            'text_ratio': 2,       # average ratio of y to x dimensions of letters
+            'title_shift': 0.5 * self.font_pt,  # [pt] add this space to subplot
+                                           # title's position
+            'wspace': 1. * self.font_pt,  # [pt] extra horizontal space between subplots
+            'hspace': 1. * self.font_pt,  # [pt] extra vertical space between subplots
+            'cb_width': 1. * self.font_pt,  # [pt] thickness of color bars
+            'cb_pad':   1. * self.font_pt,  # [pt] distance between plot and color bar
+        }
 
-    Patch = {'linewidth': 1.0}
+        self.Colors = {
+            'magenta': '#882255',
+            'red': '#CC6677',
+            'yellow': '#DDCC77',
+            'green': '#117733',
+            'blue': '#88CCEE',
+            'white': '#FFFFFF',
+            'black': '#000000',
+        }
 
-    Text = {'usetex': True}  # use latex for text handling
-
-    Savefig = {'dpi': 1200}  # resolution in dots per inch
-    
-    Figure = {'figsize': [fig_width, fig_height]}
-    
-    Misc = {
-        'label_pad': 0,        # [pt] shift axis labels relative to ticks
-        'text_ratio': 2,       # average ratio of y to x dimensions of letters
-        'title_shift': 0.5 * font_pt,  # [pt] add this space to subplot
-                                       # title's position
-        'wspace': 1. * font_pt,  # [pt] extra horizontal space between subplots
-        'hspace': 1. * font_pt,  # [pt] extra vertical space between subplots
-        'cb_width': 1. * font_pt,  # [pt] thickness of color bars
-        'cb_pad':   1. * font_pt,  # [pt] distance between plot and color bar
-    }
-
-    Colors = {
-        'magenta': '#882255',
-        'red': '#CC6677',
-        'yellow': '#DDCC77',
-        'green': '#117733',
-        'blue': '#88CCEE',
-        'white': '#FFFFFF',
-        'black': '#000000',
-    }
-
-    for key in Colors.keys():
-        matplotlib.colors.cnames[key] = Colors[key]
+        for key in self.Colors.keys():
+            matplotlib.colors.cnames[key] = self.Colors[key]
     # style dict is rc params format
-    return {'font': Font, 'lines': Lines, 'axes': Axes,
-            'xtick': Ticks, 'ytick': Ticks, 'grid': Grid, 'legend': Legend, 
-            'patch': Patch, 'text': Text, 'savefig': Savefig,
-            'figure': Figure, 'misc': Misc, 'colors': Colors, 'label': Label, 'panel': Panel}
+    # return {'font': Font, 'lines': Lines, 'axes': Axes,
+    #         'xtick': Ticks, 'ytick': Ticks, 'grid': Grid, 'legend': Legend,
+    #         'patch': Patch, 'text': Text, 'savefig': Savefig,
+    #         'figure': Figure, 'misc': Misc, 'colors': Colors, 'label': Label, 'panel': Panel}
+        
 
-def style_CerebralCortex(figtype):
-    '''
-    Cerebral cortex. 2018
-    page size 240mmh x 180 mm w, 
-    single = 86mm wide, double 180 mm wide
-    
-    Description
-    -----------
-    -rules defining figure style
-    Returns
-    -------
-    -Font     = dict
-    -Lines    = dict
-    -Axes     = dict
-    -Ticks    = dict
-    -Grid     = dict
-    -Legend   = dict
-    -Patch    = dict
-    -Text     = dict
-    -Savefig  = dict
-    -Figure   = dict
-    -Misc     = dict
-    -Colors   = dict
-    '''
+    def set_figure(self, width=8.5):
+        """
+        compute figure size from a dict (table) of sizes
+        Also set the main font size to correspond
+        """
+        self.fig_widths = {'Plos': {'small': 3.1, 'medium': 3.1*1.5, 'large': 3.1*2, 'special': width},
+                            'CerebralCortex': {'single': 3.38582, 'double': 7.0866, 'special': width},
+                            'JNeurophys': {'single': 3.5, 'double': 4.5, 'full': 7.5, 'special': width},
+                            'JNeurosci': {'single': 3.346, 'double': 4.57, 'full': 6.929, 'special': width},
+                            'JPhysiol': {'single': 3.3, 'double': 4.33, 'full': 6.69, 'special': width},
+                            }
 
-    assert ((figtype in ['single', 'double']) or 
-            (type(figtype) == float)) , \
-            "fig_width should be float or one of 'single','double'"
-            
-    if figtype == 'single':
-        temp = 3.38582         # figure x size in inches
-    elif figtype == 'double':
-        temp = 7.0866         # figure x size in inches
-    elif type(figtype) == float:
-        temp = figtype  # figure x size in inches
-    else:
-        raise ValueError
-
-    fig_width = temp      # figure x size in inches
-    # golden ratio of x to y subplot dimensions
-    x_to_y_ratio = (1. + np.sqrt(5)) / 2.
-    fig_height = fig_width/x_to_y_ratio
-
-    
-    font_pt = 8  # [pt] font size
-
-    # set default figure properties
-    Font = {'weight': 'normal',
-            'size': font_pt,
-            'family': 'sans-serif',
-            'sans-serif': 'Arial'
-            }
-
-    Lines = {'linewidth': 1.0,  # [pt] line width
-             'markersize': 3.0, # [pt] markersize
-             'markeredgewidth': 1.0  # width of marker border
-             }
-
-    Axes = {'grid': False,
-            'titlesize': 'large',
-            'labelsize': font_pt,
-            'labelweight': 'normal',
-            'linewidth': 1.0     # edge linewidth
-            }
-
-    Ticks = {'labelsize': font_pt*0.75,
-             'major.size': font_pt / 8.,  # [pt] major tick size
-             'minor.size': font_pt / 12.,  # [pt] minor tick size
-             'major.pad': font_pt / 4.,   # [pt] distance to major tick label
-             'minor.pad': font_pt / 4.,  # [pt] distance to the minor tick label
-             'direction': 'out',   # direction of ticks relative to axis
-             }
-
-    Grid = {'linewidth': 0.5}
-
-    Legend = {'fontsize': font_pt,
-              'fancybox': True,
-              'markerscale': 1.,
-              'shadow': True}
-    
-    Label = {'fontsize': font_pt,
-             'fontweight': 'normal',
-         }
-    
-    Panel = {'fontsize': font_pt*1.25,
-             'fontweight': 'bold',
-         }
-
-    Patch = {'linewidth': 1.0}
-
-    Text = {'usetex': True}  # use latex for text handling
-
-    Savefig = {'dpi': 1200}  # resolution in dots per inch
-    
-    Figure = {'figsize': [fig_width, fig_height]}
-    
-    Misc = {
-        'label_pad': 0,        # [pt] shift axis labels relative to ticks
-        'text_ratio': 2,       # average ratio of y to x dimensions of letters
-        'title_shift': 0.5 * font_pt,  # [pt] add this space to subplot
-                                       # title's position
-        'wspace': 1. * font_pt,  # [pt] extra horizontal space between subplots
-        'hspace': 1. * font_pt,  # [pt] extra vertical space between subplots
-        'cb_width': 1. * font_pt,  # [pt] thickness of color bars
-        'cb_pad':   1. * font_pt,  # [pt] distance between plot and color bar
-    }
-
-    Colors = {
-        'magenta': '#882255',
-        'red': '#CC6677',
-        'yellow': '#DDCC77',
-        'green': '#117733',
-        'blue': '#88CCEE',
-        'white': '#FFFFFF',
-        'black': '#000000',
-    }
-    
-    Format = {'formats': ['eps', 'tiff']}
-    Fonttype = {'fonttype': 42}
-    
-    for key in Colors.keys():
-        matplotlib.colors.cnames[key] = Colors[key]
-    # style dict is rc params format
-    styledict =  {'font': Font, 'lines': Lines, 'axes': Axes,
-            'xtick': Ticks, 'ytick': Ticks, 'grid': Grid, 'legend': Legend, 
-            'patch': Patch, 'text': Text, 'savefig': Savefig,
-            'figure': Figure, 'misc': Misc, 'colors': Colors, 'label': Label,
-            'panel': Panel, 'fileformat': Format, 'pdf': Fonttype}
-    style_apply(styledict)
-    return styledict
-    
-#----------------------------------------------------------------------
-def style_apply(style):
-    '''
-    Description
-    -----------
-    -applies figure parameters defined in style as default for matplotlib
-    Parameters
-    ----------
-    -style: list - list of dictionaries: Font, Lines, Axes, Ticks, Grid, Legend,
-                   Patch, Text, Savefig, Figure, Misc. For details see example 
-                   style function,e.g. style_Plos()
-    Returns
-    -------
-    -None
-    '''
-    # (Font, Lines, Axes, Ticks, Grid, Legend, Patch, Text, Savefig, Figure,
-    #  Misc, Colors) = style
-    for sn in style.keys():
-        if sn in ['misc', 'colors', 'label', 'panel', 'fileformat']:
-            continue
-        matplotlib.rc(sn, **style[sn])
-    # matplotlib.rc('font', **Font)
-    # matplotlib.rc('lines', **Lines)
-    # matplotlib.rc('axes', **Axes)
-    # matplotlib.rc('grid', **Grid)
-    # matplotlib.rc('patch', **Patch)
-    # matplotlib.rc('xtick', **Ticks)
-    # matplotlib.rc('ytick', **Ticks)
-    # matplotlib.rc('figure', **Figure)
-    # matplotlib.rc('legend', **Legend)
-    # matplotlib.rc('text', **Text)
-    # matplotlib.rc('savefig', **Savefig)
-
-    return None
+        if not self.figuresize in self.fig_widths[self.journal]:
+            raise ValueError ("{0:s} fig_width should be float or one of {1:s}".
+                format(self.journal, str(self.fig_widths[self.journal].keys())))
+        
+        fig_width = self.fig_widths[self.journal][self.figuresize]
+        fig_height = fig_width/self.golden_ratio
+        return(fig_width, fig_height)
 
 
-def get_fontsizes(style):
-    """
-    make a font size dict with tick, label and panel font sizes from the style
-    for PlotHelpers plotter
-    """
-    fontsizes = {'tick': style['xtick']['labelsize'],
-                 'label': style['label']['fontsize'],
-                 'panel': style['panel']['fontsize'],
-                 'axes': style['axes']['labelsize'],
-             }
-    return fontsizes
+    def get_fontsizes(self):
+        """
+        make a font size dict with tick, label and panel font sizes from the style
+        for PlotHelpers plotter
+        """
+        fontsizes = {'tick': self.Ticks['labelsize'],
+                     'label': self.Label['fontsize'],
+                     'panel': self.Panel['fontsize'],
+                 }
+        return fontsizes
 
-def get_fontweights(style):
-    """
-    make a font size dict with tick, label and panel font sizes from the style
-    for PlotHelpers plotter
-    """
-    fontweights = {'tick': 'normal',  # ticks don't have a weight
-                 'label': style['label']['fontweight'],
-                 'panel': style['panel']['fontweight'],
-                 'axes': style['axes']['labelweight'],
-             }
-    return fontweights
+    def get_fontweights(self):
+        """
+        make a font size dict with tick, label and panel font sizes from the style
+        for PlotHelpers plotter
+        """
+        fontweights = {'tick': 'normal',  # ticks don't have a weight
+                     'label': self.Label['fontweight'],
+                     'panel': self.Panel['fontweight'],
+                     'axes': self.Axes['labelweight'],
+                 }
+        return fontweights
 #-------------------------------------------------------------------------
 
 def geometry_adjust(axes, style, fig_width, label_order=[]):
