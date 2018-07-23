@@ -110,12 +110,12 @@ class styler():
                  }
 
         self.Axes = {'grid': False,
-                'titlesize': 'large',
+                'titlesize': self.font_pt*1.2,
                 'labelweight': 'normal',
                 'linewidth': 1.0     # edge linewidth
                 }
 
-        self.Ticks = {'labelsize': self.font_pt*0.75,
+        self.Ticks = {'labelsize': self.font_pt,
                  'major.size': self.font_pt / 8.,  # [pt] major tick size
                  'minor.size': self.font_pt / 12.,  # [pt] minor tick size
                  'major.pad': self.font_pt / 4.,   # [pt] distance to major tick label
@@ -169,6 +169,9 @@ class styler():
 
         for key in self.Colors.keys():
             matplotlib.colors.cnames[key] = self.Colors[key]
+        
+        self.style_apply()
+        
     # style dict is rc params format
     # return {'font': Font, 'lines': Lines, 'axes': Axes,
     #         'xtick': Ticks, 'ytick': Ticks, 'grid': Grid, 'legend': Legend,
@@ -219,6 +222,38 @@ class styler():
                      'axes': self.Axes['labelweight'],
                  }
         return fontweights
+    
+    #----------------------------------------------------------------------
+    def style_apply(self):
+        '''
+        Description
+        -----------
+        -applies figure parameters defined in style as default for matplotlib
+        Parameters
+        ----------
+        -style: list - list of dictionaries: Font, Lines, Axes, Ticks, Grid, Legend,
+                       Patch, Text, Savefig, Figure, Misc. For details see example 
+                       style function,e.g. style_Plos()
+        Returns
+        -------
+        -None
+        '''
+
+        matplotlib.rc('font', **self.Font) # **Font)
+        matplotlib.rc('lines', **self.Lines) # **Lines)
+        matplotlib.rc('axes', **self.Axes) # **Axes)
+        matplotlib.rc('grid', **self.Grid) # **Grid)
+        matplotlib.rc('patch', **self.Patch) # **Patch)
+        matplotlib.rc('xtick', **self.Ticks) # **Ticks)
+        matplotlib.rc('ytick', **self.Ticks) # **Ticks)
+        matplotlib.rc('figure', **self.Figure) # **Figure)
+        matplotlib.rc('legend', **self.Legend) # **Legend)
+        matplotlib.rc('text', **self.Text) # **Text)
+        matplotlib.rc('savefig', **self.Savefig) # **Savefig)
+
+        return None
+    
+    
 #-------------------------------------------------------------------------
 
 def geometry_adjust(axes, style, fig_width, label_order=[]):
