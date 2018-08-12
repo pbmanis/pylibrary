@@ -1053,7 +1053,7 @@ def delete_figure_grid(fig, grid):
 def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
                 verticalspacing=0.08, horizontalspacing=0.08,
                 margins={'leftmargin': 0.07, 'rightmargin': 0.05, 'topmargin': 0.03, 'bottommargin': 0.1},
-                labelposition=(0., 0.), parent_figure=None, prior_label=None, **kwds):
+                labelposition=(0., 0.), parent_figure=None, panel_labels=None, **kwds):
     """
     make a regular layout grid for plotters
                 
@@ -1079,6 +1079,13 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
     labelposition : tuple of floats (default: (-0.12, 0.95))
         panel label offset from axes. Axes are from 0 to 1, so default places label to left
         and just below the top of the left axis.
+    parent_figure : Figure object
+        The object of a parent figure into which this plot will be inserted
+    panel_labels : None or list
+        The labels for the panels to be created in this grid.
+        If None, and there is a parent figure, we continue labeling in order from that figure A, B, C, etc.
+        Otherwise, the labels are in a list, and must be unique (no checking) to the figure and should match the rowsxcols
+    
     **kwds:
         inciudes:
         parent_figure
@@ -1096,19 +1103,24 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
     xl = [lmar + (xw+hs)*i for i in range(0, cols)]
     yh = ((1.0-tmar-bmar)-(rows-1.0)*vs)/rows
     yb = [1.0-tmar - (yh*(i+1))-vs*i for i in range(0, rows)]
-    plabels = list(string.ascii_uppercase)
-    a2 = ['%c%c' % (plabels[i],b) for i in range(len(plabels)) for b in plabels]
-    plabels.extend(a2)
+    if panel_labels is None:
+        plabels = list(string.ascii_uppercase)
+        a2 = ['%c%c' % (plabels[i],b) for i in range(len(plabels)) for b in plabels]
+        plabels.extend(a2)
 
     # auto generate sizer dict based on this
     i = 0
     sizer = OrderedDict()
-    if prior_label and parent_figure is not None:
+    if panel_labels is None and parent_figure is not None:
         lastlabel = list(parent_figure.axdict.keys())[-1]
         if lastlabel in plabels:
             istart = plabels.index(lastlabel) + 1
-    else:
+    elif panel_labels is not None:
         istart = 0
+        plabels = panel_labels
+    else:
+        istart = 0  # panel_labels is none and start at first index
+
     if order == 'columns':
         for r in range(rows):
             for c in range(cols):

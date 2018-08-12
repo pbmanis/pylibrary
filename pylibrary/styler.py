@@ -79,13 +79,15 @@ class styler():
         -Colors   = dict
     '''
 
-    def __init__(self, journal=None, figuresize='small'):
+    def __init__(self, journal=None, figuresize='small', height_factor=1.0, font='Arial'):
         if not journal in ['Plos', 'JNeurophys', 'JNeurosci', 'CerebralCortex']:
             raise ValueError ('got journal: %s' % journal)
         self.journal = journal
         self.golden_ratio = (1. + np.sqrt(5.)) / 2.
+        self.font = font
         self.font_pt = 8  # [pt] font size
         self.figuresize = figuresize
+        self.height_factor = height_factor
         self.set_style()  # init with a default - set later
     
     def set_base_font_pt(self, font_pt):
@@ -101,7 +103,7 @@ class styler():
         self.Font = {'weight': 'normal',
                 'size': self.font_pt,
                 'family': 'sans-serif',
-                'sans-serif': 'Helvetica'
+                'sans-serif': self.font,
                 }
 
         self.Lines = {'linewidth': 1.0,  # [pt] line width
@@ -196,7 +198,7 @@ class styler():
                 format(self.journal, str(self.fig_widths[self.journal].keys())))
         
         fig_width = self.fig_widths[self.journal][self.figuresize]
-        fig_height = fig_width/self.golden_ratio
+        fig_height = self.height_factor*fig_width/self.golden_ratio
         return(fig_width, fig_height)
 
 

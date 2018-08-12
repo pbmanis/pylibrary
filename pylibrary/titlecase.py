@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 """
 titlecase.py v0.2
 Original Perl version by: John Gruber http://daringfireball.net/ 10 May 2008
@@ -246,7 +246,7 @@ class TitlecaseTests(unittest.TestCase):
 if __name__ == '__main__':
     if not sys.stdin.isatty():
         for line in sys.stdin:
-            print titlecase(line)
+            print (titlecase(line))
 
     else:
         suite = unittest.TestLoader().loadTestsFromTestCase(TitlecaseTests)
