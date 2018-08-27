@@ -17,6 +17,8 @@ Copyright 2010-2015  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 
 import string
@@ -26,7 +28,7 @@ stdFont = 'Arial'
 import scipy.stats
 import numpy as np
 import pyqtgraph as pg
-import talbotetalTicks as ticks # logical tick formatting... 
+from . import talbotetalTicks as ticks # logical tick formatting... 
 
 """
 Basic functions:
@@ -92,7 +94,7 @@ def setY(ax1, ax2):
             list of target plots that will have the axes properties of ax1
     """
     if type(ax1) is list:
-        print 'PlotHelpers: cannot use list as source to set Y axis'
+        print('PlotHelpers: cannot use list as source to set Y axis')
         return
     if type(ax2) is not list:
         ax2 = [ax2]
@@ -113,7 +115,7 @@ def setX(ax1, ax2):
             list of target plots that will have the axes properties of ax1
     """
     if type(ax1) is list:
-        print 'PlotHelpers: cannot use list as source to set X axis'
+        print('PlotHelpers: cannot use list as source to set X axis')
         return
     if type(ax2) is not list:
         ax2 = [ax2]
@@ -175,7 +177,7 @@ def listAxes(axd):
         if type(axd) is list:
             return axd
         else:
-            print 'listAxes expects dictionary or list; type not known (fix the code)'
+            print('listAxes expects dictionary or list; type not known (fix the code)')
             raise
     axl = [axd[x] for x in axd]
     return axl
@@ -329,8 +331,8 @@ def calbar(plotlist, calbar=None, axesoff=True, orient='left', unitNames=None):
                     pen=pg.mkPen('k'), linestyle = '-', linewidth = 1.5)
                 ht = Htxt.setPos(calbar[0]+calbar[2]-0.05*calbar[2], calbar[1]+0.5*calbar[3])
             else:
-                print "PlotHelpers.py: I did not understand orientation: %s" % (orient)
-                print "plotting as if set to left... "
+                print("PlotHelpers.py: I did not understand orientation: %s" % (orient))
+                print("plotting as if set to left... ")
                 pl.plot([calbar[0], calbar[0], calbar[0]+calbar[2]],
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
                     pen=pg.mkPen('k'), linestyle = '-', linewidth = 1.5)
@@ -1063,7 +1065,7 @@ class LayoutMaker():
             self.gridLayout = pg.QtGui.QGridLayout()  # just create the grid layout to add to another item
         self.gridLayout.setContentsMargins(margins, margins, margins, margins)
         self.gridLayout.setSpacing(spacing)
-        self.plots = [[0 for x in xrange(self.cols)] for x in xrange(self.rows)]
+        self.plots = [[0 for x in range(self.cols)] for x in range(self.rows)]
         i = 0
         for r in range(self.rows):
             for c in range(self.cols):

@@ -6,6 +6,7 @@ A clsss to create parameter structures
 First version: Paul Manis on 2014-01-31.
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
+from __future__ import print_function
 
 
 class Params(object):
@@ -38,7 +39,7 @@ class Params(object):
         Useful when writing the data
         """
         res = {}
-        for dictelement in self.__dict__:
+        for dictelement in list(self.__dict__):
             if isinstance(self.__dict__[dictelement], Params):
                 #print 'nested: ', dictelement
                 res[dictelement] = self.__dict__[dictelement].todict()
@@ -50,10 +51,10 @@ class Params(object):
         """
         print the parameter block created in Parameter Init
         """
-        print "--------    Parameter Block    ----------"
-        for key in self.__dict__.keys():
-            print "%15s = " % (key), self.__dict__[key] # eval('self.%s' % key)
-        print "-------- ---------------------- ----------"
+        print("--------    Parameter Block    ----------")
+        for key in list(self.__dict__.keys()):
+            print("%15s = " % (key), self.__dict__[key]) # eval('self.%s' % key)
+        print("-------- ---------------------- ----------")
 
 
 class ParamTests(object):
@@ -67,11 +68,19 @@ class ParamTests(object):
         Run a simple test to verify this works
         """
 
-        print self.testpar.getkeys()
-        print self.testpar.haskey('number')
-        print self.testpar.haskey('notinkeys')
-        print self.testpar.todict()
+        print(self.testpar.getkeys())
+        print(self.testpar.haskey('number'))
+        print(self.testpar.haskey('notinkeys'))
+        print(self.testpar.todict())
         self.testpar.show()
+        import pickle
+        with open('testparams.pkl', 'wb') as f:
+            pickle.dump(self.testpar, f)
+            
+        with open('testparams.pkl', 'rb') as f:
+            self.testpar2 = pickle.load(f)
+        
+        
 
 
 if __name__ == '__main__':
