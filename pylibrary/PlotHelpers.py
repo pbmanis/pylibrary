@@ -16,6 +16,10 @@ or a list of axes objects.  2/10/2012 pbm.
 Plotter class: a simple class for managing figures with multiple plots.
 Uses gridspec to build sets of axes. 
 
+        Also allow quickaccess to things we like to do for publication plots, including:
+           using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
+           inserting a reference line (grey, 3pt dashed, 0.5pt, at refline = y position)
+    
 Created by Paul Manis on 2010-03-09.
 Copyright 2010-2016  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
@@ -28,7 +32,7 @@ import string
 from collections import OrderedDict
 
 stdFont = 'Arial'
-import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
+#import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.font_manager import FontProperties
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, DrawingArea, HPacker
@@ -40,20 +44,23 @@ from matplotlib.patches import Circle
 from matplotlib.patches import Rectangle
 from matplotlib.patches import Ellipse
 from matplotlib.collections import PatchCollection
+import matplotlib.transforms as mtransforms
+import matplotlib.ticker as ticker
+import matplotlib.scale as mscale
 import matplotlib
 rcParams = matplotlib.rcParams
-rcParams['svg.fonttype'] = 'none' # No text as paths. Assume font installed.
-rcParams['pdf.fonttype'] = 42
-rcParams['ps.fonttype'] = 42
-#rcParams['font.serif'] = ['Times New Roman']
+# rcParams['svg.fonttype'] = 'none' # No text as paths. Assume font installed.
+# rcParams['pdf.fonttype'] = 42
+# rcParams['ps.fonttype'] = 42
+# #rcParams['font.serif'] = ['TimesNew Roman']
 from matplotlib import rc
-rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
-#rcParams['font.sans-serif'] = ['Arial']
-#rcParams['font.family'] = 'sans-serif'
+#rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
+# rcParams['font.sans-serif'] = ['Arial']
+# rcParams['font.family'] = 'sans-serif'
 rc('text', usetex=True)
-rcParams['text.latex.unicode'] = True
-seaborn.set_style('white')
-seaborn.set_style('ticks')
+#rcParams['text.latex.unicode'] = True  # deprecated matplotlib3
+# seaborn.set_style('white')
+# seaborn.set_style('ticks')
 import pylibrary.talbotetalTicks as ticks # logical tick formatting... 
 
 
@@ -72,10 +79,7 @@ def _ax_tolist(ax):
     
 def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', axesoff=False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot.
-        Also allow quickaccess to things we like to do for publication plots, including:
-           using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
-           inserting a reference line (grey, 3pt dashed, 0.5pt, at refline = y position)
-    
+
     Parameters
     ----------
     axl : list of axes objects
@@ -341,8 +345,7 @@ def do_talbotTicks(ax, axes='xy',
         x_ticks_labels = ax.set_xticks(xt)
         ax.set_xticklabels(xts, rotation='horizontal', fontsize=pointSize)  
 #        print ('xt, xts: ', xt, xts)
-        
-        
+
 
 def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05), 
         horizontalalignment='right', verticalalignment='bottom', rotation=0.):
@@ -662,6 +665,31 @@ def getLayoutDimensions(n, pref='height'):
             
     return(inopth, inoptw)
 
+from decimal import Decimal
+
+def fexp(number):
+    (sign, digits, exponent) = Decimal(number).as_tuple()
+    return len(digits) + exponent - 1
+
+def fman(number):
+    return Decimal(number).scaleb(-fexp(number)).normalize()
+
+def nextup(x, steps=[1, 2, 5, 10]):
+    """
+    Find the next value up in 1,2,5 sequence
+    """
+    x_exp = fexp(x)
+    x_man = fman(x)
+    v = steps[0]
+    for i, s in enumerate(steps):
+        v = steps[i]
+        sd = Decimal.from_float(s)
+        if x_man <= Decimal.from_float(s):
+            break
+#     print(float(v)*np.power(10, x_exp))
+    return float(v)*np.power(10, x_exp)
+    
+    
 
 def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsize=11, weight='normal', font='Arial'):
     """
@@ -792,6 +820,58 @@ def violin_plot(ax, data, pos, bp=False, median = False):
         mpl.setp(bpf['boxes'], color='black')
         mpl.setp(bpf['whiskers'], color='black', linestyle='-')
 
+"""
+Pulled from a stack overflow answer:
+https://stackoverflow.com/questions/42277989/square-root-scale-using-matplotlib-python
+
+Probably should live in pylibrary/PlotHelpers.py
+"""
+
+class SquareRootScale(mscale.ScaleBase):
+    """
+    ScaleBase class for generating square root scale.
+    """
+
+    name = 'squareroot'
+
+    def __init__(self, axis, **kwargs):
+        mscale.ScaleBase.__init__(self)
+
+    def set_default_locators_and_formatters(self, axis):
+        axis.set_major_locator(ticker.AutoLocator())
+        axis.set_major_formatter(ticker.ScalarFormatter())
+        axis.set_minor_locator(ticker.NullLocator())
+        axis.set_minor_formatter(ticker.NullFormatter())
+
+    def limit_range_for_scale(self, vmin, vmax, minpos):
+        return  max(0., vmin), vmax
+
+    class SquareRootTransform(mtransforms.Transform):
+        input_dims = 1
+        output_dims = 1
+        is_separable = True
+
+        def transform_non_affine(self, a): 
+            return np.array(a)**0.5
+
+        def inverted(self):
+            return SquareRootScale.InvertedSquareRootTransform()
+
+    class InvertedSquareRootTransform(mtransforms.Transform):
+        input_dims = 1
+        output_dims = 1
+        is_separable = True
+
+        def transform(self, a):
+            return np.array(a)**2
+
+        def inverted(self):
+            return SquareRootScale.SquareRootTransform()
+
+    def get_transform(self):
+        return self.SquareRootTransform()
+
+mscale.register_scale(SquareRootScale)
 
 # # from somewhere on the web:
 
