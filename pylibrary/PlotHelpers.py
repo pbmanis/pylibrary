@@ -757,7 +757,7 @@ def nextup(x, steps=[1, 2, 5, 10]):
         if x_man <= Decimal.from_float(s):
             break
 #     print(float(v)*np.power(10, x_exp))
-    return float(v)*np.power(10, x_exp)
+    return float(v)*np.power(10.0, x_exp)
     
     
 
@@ -1285,7 +1285,11 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
                 i = i + 1
     gr = [(a, a+1, 0, 1) for a in range(0, rows*cols)]   # just generate subplots - shape does not matter
     axmap = OrderedDict(zip(sizer.keys(), gr))
-    P = Plotter((rows, cols), axmap=axmap, label=True, figsize=figsize, margins=margins, labeloffset=labelposition,
+    if panel_labels == None:
+        label = False
+    else:
+        label = True
+    P = Plotter((rows, cols), axmap=axmap, label=label, figsize=figsize, margins=margins, labeloffset=labelposition,
             parent_figure=parent_figure, **kwds)
     if showgrid:
         show_figure_grid(P.figure_handle)
@@ -1396,6 +1400,7 @@ class Plotter():
         self.arrangement = arrangement
         self.referenceLines = {}
         self.parent = parent_figure
+        self.panel_labels = label
         if self.parent is None:  # just create a new figure
             if figsize is None:
                 figsize=(11.5, 8) # landscape
@@ -1655,7 +1660,7 @@ class Plotter():
             bbox.y0 = sizer[s]['pos'][2]
             bbox.y1 = sizer[s]['pos'][3] + sizer[s]['pos'][2]  # offsets are in figure fractions
             ax.set_position(bbox)
-            if 'labelpos' in sizer[s].keys() and len(sizer[s]['labelpos']) == 2:
+            if self.panel_labels and 'labelpos' in sizer[s].keys() and len(sizer[s]['labelpos']) == 2:
                 x, y = sizer[s]['labelpos']
                 self.axlabels[i].set_x(x)
                 self.axlabels[i].set_y(y)
