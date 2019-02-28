@@ -739,6 +739,8 @@ from decimal import Decimal
 
 def fexp(number):
     (sign, digits, exponent) = Decimal(number).as_tuple()
+    if isinstance(exponent, str):
+        return 4
     return len(digits) + exponent - 1
 
 def fman(number):
@@ -752,12 +754,11 @@ def nextup(x, steps=[1, 2, 5, 10]):
     x_man = fman(x)
     v = steps[0]
     for i, s in enumerate(steps):
-        v = steps[i]
-        sd = Decimal.from_float(s)
-        if x_man <= Decimal.from_float(s):
+        sd = Decimal(str(s))
+        if sd > x_man:
             break
 #     print(float(v)*np.power(10, x_exp))
-    return float(v)*np.power(10, x_exp)
+    return float(s)*np.power(10.0, x_exp)
     
     
 
