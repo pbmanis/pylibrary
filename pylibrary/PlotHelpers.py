@@ -1308,7 +1308,7 @@ class Plotter():
     an row x column array.
     """
     def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
-        figsize=None, margins=None,
+        figsize=None, margins=None, labelalignment='left',
         fontsize=10, fontweight='normal', position=0, labeloffset=[0., 0.], labelsize=12,
         parent_figure=None):
         """
@@ -1375,6 +1375,9 @@ class Plotter():
         label : Boolean (default: False)
             If True, sets labels on panels
         
+        labelalignment : string (default: 'left')
+            Horizontaalignment of label ('center', 'left', 'right')
+        
         roworder : Boolean (default: True)
             Define whether labels run in row order first or column order first
         
@@ -1419,6 +1422,7 @@ class Plotter():
             #     raise ValueError('Figure sizes must match when adding plots to figure: got fs=%s, figsize=%s'.format(
             #         str(repr(fs)), str(repr(figsize))
             #     ))
+        self.labelalignment = labelalignment
         self.axlabels = []
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
         if isinstance(fontsize, int):
@@ -1484,7 +1488,7 @@ class Plotter():
             plo = labeloffset
             self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), 
                 xy=(-0.095+plo[0], 0.95+plo[1]), 
-                fontsize=self.fontsize['panel'], weight='bold')
+                fontsize=self.fontsize['panel'], weight='bold', horizontalalignment=self.labelalignment)
             self.resize(rcshape)
         else:
             raise ValueError('Input rcshape must be list/tuple or dict')
@@ -1535,7 +1539,7 @@ class Plotter():
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
                 self.axlabels = labelPanels(self.axarr.ravel().tolist(), axlist=axmap.keys(),
-                        xy=(-0.095+p[0], 0.95+p[1]),
+                        xy=(-0.095+p[0], 0.95+p[1]),  horizontalalignment=self.labelalignment,
                         fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
                 return
             self.axlist = []
@@ -1556,11 +1560,13 @@ class Plotter():
                     for j in range(self.ncolumns):
                         axl.append(ctxt[j]+rtxt[i])
                 self.axlabels = labelPanels(self.axlist, axlist=axl, xy=(-0.35+p[0], 0.75),
-                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
+                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'],
+                        horizontalalignment=self.labelalignment)
 
             else:
                 self.axlabels = labelPanels(self.axlist, xy=(-0.095+p[0], 0.95+p[1]),
-                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
+                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'],
+                        horizontalalignment=self.labelalignment)
 
     
     def _next(self):
