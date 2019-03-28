@@ -77,7 +77,7 @@ def _ax_tolist(ax):
     return(ax)
     
     
-def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', axesoff=False):
+def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', ticklength=5., axesoff=False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot.
 
     Parameters
@@ -128,21 +128,25 @@ def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', a
         if 'left' in spines and not axesoff:
             ax.yaxis.set_ticks_position('left')
             ax.yaxis.set_tick_params(color='k')
+            ax.yaxis.set_tick_params(length=ticklength)
         else:
             ax.yaxis.set_ticks([]) # no yaxis ticks
         if 'bottom' in spines and not axesoff:
             ax.xaxis.set_ticks_position('bottom')
             ax.xaxis.set_tick_params(color='k')
+            ax.xaxis.set_tick_params(length=ticklength)
         else:
             ax.xaxis.set_ticks([])  # no xaxis ticks
 
-        if direction == 'inward':
+        if direction in ['inward', 'in']:
             ax.tick_params(axis='y', direction='in')
             ax.tick_params(axis='x', direction='in')
-        else:
+        elif direction in ['outward', 'out']:
             ax.tick_params(axis='y', direction='out')
             ax.tick_params(axis='x', direction='out')
-
+        else:
+            pass
+        # or call adjust_spines?
 
 def noaxes(axl, whichaxes = 'xy'):
     """ take away all the axis ticks and the lines
@@ -330,9 +334,10 @@ def do_talbotTicks(ax, axes='xy',
         yts = tickStrings(yt, scale=1, spacing=None, tickPlacesAdd=tickPlacesAdd['y'], floatAdd=floatAdd['y'])
 #        ytickl = [[(y, yts[i]) for i, y in enumerate(yt)] , []]  # no minor ticks here
         ax.set_yticks(yt)
-        ax.set_yticklabels(yts, rotation='horizontal', fontsize=pointSize)  
+        ax.set_yticklabels(yts)#, rotation='horizontal', fontsize=pointSize)  
 #        print ('yt, yts: ', yt, yts)
-    
+    ytxt = ax.get_yticklabels()
+    ax.set_yticklabels(ytxt, {'fontsize': pointSize, 'rotation': 'horizontal'})
     if 'x' in axes:
         xRange =  ax.get_xlim()
         # now create substitue tick marks and labels, using Talbot et al algorithm
@@ -343,8 +348,10 @@ def do_talbotTicks(ax, axes='xy',
         xts = tickStrings(xt, scale=1, spacing=None, tickPlacesAdd=tickPlacesAdd['x'], floatAdd=floatAdd['x'])
 #        xtickl = [[(x, xts[i]) for i, x in enumerate(xt)] , []]  # no minor ticks here
         x_ticks_labels = ax.set_xticks(xt)
-        ax.set_xticklabels(xts, rotation='horizontal', fontsize=pointSize)  
-#        print ('xt, xts: ', xt, xts)
+        ax.set_xticklabels(xts) #, rotation='horizontal', fontsize=pointSize)  
+    xtxt = ax.get_xticklabels()
+    ax.set_xticklabels(xtxt, {'fontsize': pointSize, 'rotation': 'horizontal'})
+
 
 
 def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05), 
@@ -587,7 +594,7 @@ def lockPlot(axl, lims, ticks=None):
     return(plist)  # just in case you want to modify these plots later.
 
 
-def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', distance=5):
+def adjust_spines(axl, spines=['left', 'bottom'], direction='outward', length=5):
     """
     Change spine size, location and direction
     Parameters
@@ -598,7 +605,7 @@ def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', dista
         List of which spines to adjust
     direction: str (default: 'outward')
         Direction spines should point
-    distance : float (default: 5)
+    length : float (default: 5)
         Length of spines
     
     """
@@ -622,7 +629,7 @@ def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', dista
             ax.xaxis.set_ticks([])
         for loc, spine in ax.spines: #.iteritems():
             if loc in spines:
-                spine.set_position((direction,distance)) # outward by 10 points
+                spine.set_position((direction, length)) # outward by 10 points
                 if smart is True:
                     spine.set_smart_bounds(True)
                 else:
