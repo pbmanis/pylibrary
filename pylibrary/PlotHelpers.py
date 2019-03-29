@@ -77,7 +77,7 @@ def _ax_tolist(ax):
     return(ax)
     
     
-def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', axesoff=False):
+def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', ticklength=5., axesoff=False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot.
 
     Parameters
@@ -128,21 +128,25 @@ def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', a
         if 'left' in spines and not axesoff:
             ax.yaxis.set_ticks_position('left')
             ax.yaxis.set_tick_params(color='k')
+            ax.yaxis.set_tick_params(length=ticklength)
         else:
             ax.yaxis.set_ticks([]) # no yaxis ticks
         if 'bottom' in spines and not axesoff:
             ax.xaxis.set_ticks_position('bottom')
             ax.xaxis.set_tick_params(color='k')
+            ax.xaxis.set_tick_params(length=ticklength)
         else:
             ax.xaxis.set_ticks([])  # no xaxis ticks
 
-        if direction == 'inward':
+        if direction in ['inward', 'in']:
             ax.tick_params(axis='y', direction='in')
             ax.tick_params(axis='x', direction='in')
-        else:
+        elif direction in ['outward', 'out']:
             ax.tick_params(axis='y', direction='out')
             ax.tick_params(axis='x', direction='out')
-
+        else:
+            pass
+        # or call adjust_spines?
 
 def noaxes(axl, whichaxes = 'xy'):
     """ take away all the axis ticks and the lines
@@ -330,9 +334,10 @@ def do_talbotTicks(ax, axes='xy',
         yts = tickStrings(yt, scale=1, spacing=None, tickPlacesAdd=tickPlacesAdd['y'], floatAdd=floatAdd['y'])
 #        ytickl = [[(y, yts[i]) for i, y in enumerate(yt)] , []]  # no minor ticks here
         ax.set_yticks(yt)
-        ax.set_yticklabels(yts, rotation='horizontal', fontsize=pointSize)  
+        ax.set_yticklabels(yts)#, rotation='horizontal', fontsize=pointSize)  
 #        print ('yt, yts: ', yt, yts)
-    
+    ytxt = ax.get_yticklabels()
+    ax.set_yticklabels(ytxt, {'fontsize': pointSize, 'rotation': 'horizontal'})
     if 'x' in axes:
         xRange =  ax.get_xlim()
         # now create substitue tick marks and labels, using Talbot et al algorithm
@@ -343,8 +348,10 @@ def do_talbotTicks(ax, axes='xy',
         xts = tickStrings(xt, scale=1, spacing=None, tickPlacesAdd=tickPlacesAdd['x'], floatAdd=floatAdd['x'])
 #        xtickl = [[(x, xts[i]) for i, x in enumerate(xt)] , []]  # no minor ticks here
         x_ticks_labels = ax.set_xticks(xt)
-        ax.set_xticklabels(xts, rotation='horizontal', fontsize=pointSize)  
-#        print ('xt, xts: ', xt, xts)
+        ax.set_xticklabels(xts) #, rotation='horizontal', fontsize=pointSize)  
+    xtxt = ax.get_xticklabels()
+    ax.set_xticklabels(xtxt, {'fontsize': pointSize, 'rotation': 'horizontal'})
+
 
 
 def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05), 
@@ -587,7 +594,7 @@ def lockPlot(axl, lims, ticks=None):
     return(plist)  # just in case you want to modify these plots later.
 
 
-def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', distance=5):
+def adjust_spines(axl, spines=['left', 'bottom'], direction='outward', length=5):
     """
     Change spine size, location and direction
     Parameters
@@ -598,7 +605,7 @@ def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', dista
         List of which spines to adjust
     direction: str (default: 'outward')
         Direction spines should point
-    distance : float (default: 5)
+    length : float (default: 5)
         Length of spines
     
     """
@@ -622,7 +629,7 @@ def adjust_spines(axl, spines = ['left', 'bottom'], direction = 'outward', dista
             ax.xaxis.set_ticks([])
         for loc, spine in ax.spines: #.iteritems():
             if loc in spines:
-                spine.set_position((direction,distance)) # outward by 10 points
+                spine.set_position((direction, length)) # outward by 10 points
                 if smart is True:
                     spine.set_smart_bounds(True)
                 else:
@@ -1308,7 +1315,7 @@ class Plotter():
     an row x column array.
     """
     def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
-        figsize=None, margins=None,
+        figsize=None, margins=None, labelalignment='left',
         fontsize=10, fontweight='normal', position=0, labeloffset=[0., 0.], labelsize=12,
         parent_figure=None):
         """
@@ -1375,6 +1382,9 @@ class Plotter():
         label : Boolean (default: False)
             If True, sets labels on panels
         
+        labelalignment : string (default: 'left')
+            Horizontaalignment of label ('center', 'left', 'right')
+        
         roworder : Boolean (default: True)
             Define whether labels run in row order first or column order first
         
@@ -1419,6 +1429,7 @@ class Plotter():
             #     raise ValueError('Figure sizes must match when adding plots to figure: got fs=%s, figsize=%s'.format(
             #         str(repr(fs)), str(repr(figsize))
             #     ))
+        self.labelalignment = labelalignment
         self.axlabels = []
         self.axdict = OrderedDict()  # make axis label dictionary for indirect access (better!)
         if isinstance(fontsize, int):
@@ -1484,7 +1495,7 @@ class Plotter():
             plo = labeloffset
             self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), 
                 xy=(-0.095+plo[0], 0.95+plo[1]), 
-                fontsize=self.fontsize['panel'], weight='bold')
+                fontsize=self.fontsize['panel'], weight='bold', horizontalalignment=self.labelalignment)
             self.resize(rcshape)
         else:
             raise ValueError('Input rcshape must be list/tuple or dict')
@@ -1535,7 +1546,7 @@ class Plotter():
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
                 self.axlabels = labelPanels(self.axarr.ravel().tolist(), axlist=axmap.keys(),
-                        xy=(-0.095+p[0], 0.95+p[1]),
+                        xy=(-0.095+p[0], 0.95+p[1]),  horizontalalignment=self.labelalignment,
                         fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
                 return
             self.axlist = []
@@ -1556,11 +1567,13 @@ class Plotter():
                     for j in range(self.ncolumns):
                         axl.append(ctxt[j]+rtxt[i])
                 self.axlabels = labelPanels(self.axlist, axlist=axl, xy=(-0.35+p[0], 0.75),
-                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
+                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'],
+                        horizontalalignment=self.labelalignment)
 
             else:
                 self.axlabels = labelPanels(self.axlist, xy=(-0.095+p[0], 0.95+p[1]),
-                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
+                        fontsize=self.fontsize['panel'], weight=self.fontweight['panel'],
+                        horizontalalignment=self.labelalignment)
 
     
     def _next(self):
