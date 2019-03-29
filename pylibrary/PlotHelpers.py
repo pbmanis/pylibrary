@@ -1509,7 +1509,7 @@ class Plotter():
  
         if len(self.axdict) == 0:
             for i, a in enumerate(self.axarr.flatten()):
-                label = string.uppercase[i]
+                label = string.ascii_uppercase[i]
                 self.axdict[label] = a
         
 
@@ -1549,7 +1549,7 @@ class Plotter():
                         self.axlist.append(self.axarr[j, i])
                 
             if self.nrows*self.ncolumns > 26:  # handle large plot using "A1..."
-                ctxt = string.uppercase[0:self.ncolumns]  # columns are lettered
+                ctxt = string.ascii_uppercase[0:self.ncolumns]  # columns are lettered
                 rtxt = [str(x+1) for x in range(self.nrows)] # rows are numbered, starting at 1
                 axl = []
                 for i in range(self.nrows):
@@ -1689,7 +1689,7 @@ if __name__ == '__main__':
 #    hfig, ax = mpl.subplots(2, 3)
     axd = OrderedDict()
     for i, a in enumerate(P.axarr.flatten()):
-        label = string.uppercase[i]
+        label = string.ascii_uppercase[i]
         axd[label] = a
     for a in axd.keys():
         axd[a].plot(np.random.random(10), np.random.random(10))
