@@ -7,15 +7,10 @@ Provides Qt5 based, system independent file selection
 """
 
 import sys
-try:
-    from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QDialog
-    from PyQt5.QtGui import QIcon
-except:
-    from PyQt4.QtGui import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QDialog
-    from PyQt4.QtGui import QIcon
-    from PyQt4 import QtGui
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui
 
-class FileSelector(QWidget):
+class FileSelector():
 
     def __init__(self, title='', dialogtype='dir', extensions=None, startingdir='.'):
         """
@@ -38,9 +33,8 @@ class FileSelector(QWidget):
         Results are string (file, save, dir), list of strings (files)
         FS.fileName will be None if the dialog is cancelled
         """
-        super(FileSelector, self).__init__()
+        # super(FileSelector, self).__init__()
 
-        # self.app = QDialog(sys.argv)
         self.title = title
         self.left = 110
         self.top = 110
@@ -56,22 +50,22 @@ class FileSelector(QWidget):
         if dialogtype not in self.dialogs.keys():
             raise ValueError('Dialog type %s is not knowns to us ' % dialogtype)
         self.dialogtype = dialogtype
+        self.initUI()
 
     def initUI(self):
         self.app = QtGui.QApplication(sys.argv)
-        self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.win = QtGui.QWidget() # top le
+        self.win.setWindowTitle(self.title)
+        self.win.setGeometry(self.left, self.top, self.width, self.height)
         self.active_dialog = self.dialogs[self.dialogtype]()
         if self.active_dialog is not None:
             self.active_dialog.setFileMode(QtGui.QFileDialog.AnyFile)
             self.active_dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-        # print( self.active_dialog)
-        self.show()
 
     def openFileNameDialog(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName = QFileDialog.getOpenFileName(self, self.title, self.startingdir,
+        options = QtGui.QFileDialog.Options()
+        options |= QtGui.QFileDialog.DontUseNativeDialog
+        fileName = QtGui.QFileDialog.getOpenFileName(self.win, self.title, self.startingdir,
                 "All Files (*);;", options=options)
         self.savefilename(fileName)
 
@@ -80,31 +74,32 @@ class FileSelector(QWidget):
         options |= QFileDialog.DontUseNativeDialog
         options |= QFileDialog.DirectoryOnly
         #options |= QFileDialog.ShowDirsOnly
-        fileName = QFileDialog.getExistingDirectory(self, self.title,
+        fileName = QFileDialog.getExistingDirectory(self.win, self.title,
                 self.startingdir, options=options)
         self.savefilename(fileName)
 
     def openFileNamesDialog(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        files = QFileDialog.getOpenFileNames(self, self.title,
+        options = QtGui.QFileDialog.Options()
+        options |= QtGui.QFileDialog.DontUseNativeDialog
+        files = QtGui.QFileDialog.getOpenFileNames(self.win, self.title,
                 self.startingdir,"All Files (*);;Python Files (*.py)", options=options)
         self.savefilename(files)
 
     def saveFileDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self, self.title, self.startingdir,
+        fileName, _ = QFileDialog.getSaveFileName(self.win, self.title, self.startingdir,
             "All Files (*);;Text Files (*.txt)", options=options)
         self.savefilename(fileName)
 
     def savefilename(self, fileName):
         if fileName == '' or len(fileName) == 0:
             fileName = None
-        print('fs filename: ', fileName)
         self.fileName = fileName
+        self.win.close()
 
 
 if __name__ == '__main__':
     ex = FileSelector(dialogtype='files')
+    
     print('exfile: ', ex.fileName)
