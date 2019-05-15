@@ -769,7 +769,7 @@ def nextup(x, steps=[1, 2, 5, 10]):
     
     
 
-def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsize=11, weight='normal', font='Arial'):
+def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsize=11, weight='normal', color='k', font='Arial'):
     """
         draw a calibration bar and label it. The calibration bar is defined as:
         [x0, y0, xlen, ylen]
@@ -802,28 +802,28 @@ def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsi
             if orient == 'left':  # vertical part is on the left
                 ax.plot([calbar[0], calbar[0], calbar[0]+calbar[2]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
+                    color = color, linestyle = '-', linewidth = 1.5)
                 ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3], Vfmt.format(calbar[3]), 
-                    horizontalalignment = 'left', verticalalignment = 'center',
+                    horizontalalignment = 'left', verticalalignment = 'center', color=color,
                     fontsize = fontsize, weight=weight, family='sans-serif',)
             elif orient == 'right':  # vertical part goes on the right
                 ax.plot([calbar[0] + calbar[2], calbar[0]+calbar[2], calbar[0]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
+                    color = color, linestyle = '-', linewidth = 1.5)
                 ax.text(calbar[0]+calbar[2]-0.05*calbar[2], calbar[1]+0.5*calbar[3], Vfmt.format(calbar[3]), 
-                    horizontalalignment = 'right', verticalalignment = 'center',
+                    horizontalalignment = 'right', verticalalignment = 'center', color=color,
                     fontsize = fontsize, weight=weight, family='sans-serif',)
             else:
                 print ("PlotHelpers.py: I did not understand orientation: %s" % (orient))
                 print ("plotting as if set to left... ")
                 ax.plot([calbar[0], calbar[0], calbar[0]+calbar[2]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
+                    color = color, linestyle = '-', linewidth = 1.5)
                 ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3],Vfmt.format(calbar[3]), 
-                    horizontalalignment = 'left', verticalalignment = 'center',
+                    horizontalalignment = 'left', verticalalignment = 'center', color=color,
                     fontsize = fontsize, weight=weight, family='sans-serif',)
             ax.text(calbar[0]+calbar[2]*0.5, calbar[1]-0.1*calbar[3], Hfmt.format(calbar[2]), 
-                horizontalalignment = 'center', verticalalignment = 'top',
+                horizontalalignment = 'center', verticalalignment = 'top', color=color,
                 fontsize = fontsize, weight=weight, family='sans-serif',)
 
 
@@ -1520,7 +1520,7 @@ class Plotter():
  
         if len(self.axdict) == 0:
             for i, a in enumerate(self.axarr.flatten()):
-                label = string.uppercase[i]
+                label = string.ascii_uppercase[i]
                 self.axdict[label] = a
         
 
@@ -1560,7 +1560,7 @@ class Plotter():
                         self.axlist.append(self.axarr[j, i])
                 
             if self.nrows*self.ncolumns > 26:  # handle large plot using "A1..."
-                ctxt = string.uppercase[0:self.ncolumns]  # columns are lettered
+                ctxt = string.ascii_uppercase[0:self.ncolumns]  # columns are lettered
                 rtxt = [str(x+1) for x in range(self.nrows)] # rows are numbered, starting at 1
                 axl = []
                 for i in range(self.nrows):
@@ -1702,7 +1702,7 @@ if __name__ == '__main__':
 #    hfig, ax = mpl.subplots(2, 3)
     axd = OrderedDict()
     for i, a in enumerate(P.axarr.flatten()):
-        label = string.uppercase[i]
+        label = string.ascii_uppercase[i]
         axd[label] = a
     for a in axd.keys():
         axd[a].plot(np.random.random(10), np.random.random(10))
