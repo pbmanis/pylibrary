@@ -769,7 +769,8 @@ def nextup(x, steps=[1, 2, 5, 10]):
     
     
 
-def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsize=11, weight='normal', font='Arial'):
+def calbar(axl, calbar=None, scale=[1.0, 1.0],
+        axesoff=True, orient='left', unitNames=None, fontsize=11, weight='normal', color='k', font='Arial'):
     """
         draw a calibration bar and label it. The calibration bar is defined as:
         [x0, y0, xlen, ylen]
@@ -783,10 +784,10 @@ def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsi
         if axesoff is True:
             noaxes(ax)
         Hfmt = r'{:.0f}'
-        if calbar[2] < 1.0:
+        if calbar[2]*scale[0] < 1.0:
             Hfmt = r'{:.1f}'
         Vfmt = r' {:.0f}'
-        if calbar[3] < 1.0:
+        if calbar[3]*scale[1] < 1.0:
             Vfmt = r' {:.1f}'
         if unitNames is not None:
             Vfmt = Vfmt + r' ' + r'{:s}'.format(unitNames['y'])
@@ -802,29 +803,32 @@ def calbar(axl, calbar=None, axesoff=True, orient='left', unitNames=None, fontsi
             if orient == 'left':  # vertical part is on the left
                 ax.plot([calbar[0], calbar[0], calbar[0]+calbar[2]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
-                ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3], Vfmt.format(calbar[3]), 
-                    horizontalalignment = 'left', verticalalignment = 'center',
-                    fontsize = fontsize, weight=weight, family='sans-serif',)
+                    color = color, linestyle = '-', linewidth = 1.5)
+                if calbar[3] != 0.:
+                    ax.text(calbar[0]+0.05*calbar[2]*scale[0], calbar[1]+0.5*calbar[3], Vfmt.format(calbar[3]*scale[1]), 
+                        horizontalalignment='left', verticalalignment='center', color=color,
+                        fontsize=fontsize, weight=weight, family='sans-serif',)
             elif orient == 'right':  # vertical part goes on the right
                 ax.plot([calbar[0] + calbar[2], calbar[0]+calbar[2], calbar[0]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
-                ax.text(calbar[0]+calbar[2]-0.05*calbar[2], calbar[1]+0.5*calbar[3], Vfmt.format(calbar[3]), 
-                    horizontalalignment = 'right', verticalalignment = 'center',
-                    fontsize = fontsize, weight=weight, family='sans-serif',)
+                    color=color, linestyle='-', linewidth=1.5)
+                if calbar[3] != 0.:
+                    ax.text(calbar[0]+calbar[2]-0.05*calbar[2], calbar[1]+0.5*calbar[3], Vfmt.format(calbar[3]*scale[1]), 
+                        horizontalalignment='right', verticalalignment='center', color=color,
+                        fontsize=fontsize, weight=weight, family='sans-serif',)
             else:
                 print ("PlotHelpers.py: I did not understand orientation: %s" % (orient))
                 print ("plotting as if set to left... ")
                 ax.plot([calbar[0], calbar[0], calbar[0]+calbar[2]], 
                     [calbar[1]+calbar[3], calbar[1], calbar[1]],
-                    color = 'k', linestyle = '-', linewidth = 1.5)
-                ax.text(calbar[0]+0.05*calbar[2], calbar[1]+0.5*calbar[3],Vfmt.format(calbar[3]), 
-                    horizontalalignment = 'left', verticalalignment = 'center',
-                    fontsize = fontsize, weight=weight, family='sans-serif',)
-            ax.text(calbar[0]+calbar[2]*0.5, calbar[1]-0.1*calbar[3], Hfmt.format(calbar[2]), 
-                horizontalalignment = 'center', verticalalignment = 'top',
-                fontsize = fontsize, weight=weight, family='sans-serif',)
+                    color = color, linestyle = '-', linewidth = 1.5)
+                ax.text(calbar[0]+0.05*calbar[2]*scale[0], calbar[1]+0.5*calbar[3]*scale[1],Vfmt.format(calbar[3]*scale[1]), 
+                    horizontalalignment='left', verticalalignment='center', color=color,
+                    fontsize=fontsize, weight=weight, family='sans-serif',)
+            if calbar[2] != 0.:
+                ax.text(calbar[0]+calbar[2]*0.5, calbar[1]-0.1*calbar[3], Hfmt.format(calbar[2]*scale[0]), 
+                    horizontalalignment='center', verticalalignment='top', color=color,
+                    fontsize=fontsize, weight=weight, family='sans-serif',)
 
 
 def referenceline(axl, reference=None, limits=None, color='0.33', linestyle='--' ,linewidth=0.5, dashes=None):

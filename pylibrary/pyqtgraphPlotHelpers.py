@@ -1041,8 +1041,10 @@ class LayoutMaker():
             raise ValueError ('pyqtgraphPlotHelpers, LayoutMaker plot: index must be int or tuple(r,c)')
         return self.plots[r][c]
 
-    def plot(self, index, *args, **kwargs):
-        p = self.getPlot(index).plot(*args, **kwargs)
+    def plot(self, index, x=None, y=None, pen=None, **kwargs):
+        if x is None or y is None or pen is None:
+            return None
+        p = self.getPlot(index).plot(x=x,y=y, pen=pen, **kwargs)
         if self.ticks == 'talbot':
             talbotTicks(self.getPlot(index))
         return p
