@@ -23,12 +23,12 @@ import scipy
 import scipy.optimize
 from scipy.stats import norm
 
-openoptFound = False
-try:
-    import openopt
-    openoptFound = True
-except Exception:
-    pass
+# openoptFound = False
+# try:
+#     import openopt
+#     openoptFound = True
+# except Exception:
+#     pass
 
 import numpy.random
 #from numba import autojit
@@ -127,7 +127,7 @@ class Fitting():
 
     def expsumeval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         """
-        Sum of two exponentials with independent time constants and amplitudes, 
+        Sum of two exponentials with independent time constants and amplitudes,
         and a DC offset
         """
         yd = p[0] + (p[1] * numpy.exp(-x / p[2])) + \
@@ -338,7 +338,7 @@ class Fitting():
 
     def gausseval(self, p, x, y=None, C=None, sumsq=False, weights=None):
         """
-        Non-normalized version 
+        Non-normalized version
         """
         yd = p[0] * numpy.exp(-((x - p[1]) ** 2.0) / (2.0 * (p[2] ** 2.0)))
         if y is None:
@@ -367,7 +367,7 @@ class Fitting():
         xl = numpy.argwhere(x <= pl).flatten()  # all to the left of the ft
         # pts to the right of the flattop
         xr = numpy.argwhere(x >= pr).flatten()
-#        A = p[0] # / (numpy.sqrt(p[2] * 2.0 * numpy.pi))  # no need to scale... 
+#        A = p[0] # / (numpy.sqrt(p[2] * 2.0 * numpy.pi))  # no need to scale...
         yd = p[0] * numpy.ones(x.shape)
         al = x[xl] - pl
         ar = x[xr] - pr
@@ -629,27 +629,27 @@ class Fitting():
                 # approx_grad = True) # , disp=0, iprint=-1)
                 # use OpenOpt's routines - usually slower, but sometimes they
                 # converge better
-                elif method == 'openopt' and openoptFound:
-                    print('OpenOpt!!!')
-                    if bounds is not None:
-                        # unpack bounds
-                        lb = [z[0] for z in bounds]
-                        ub = [z[1] for z in bounds]
-                        fopt = openopt.DFP(
-                            func[0], fpars, tx, dy, df=fitFuncDer, lb=lb, ub=ub)
-                        # fopt.df = func[8]
-                        r = fopt.solve('nlp:ralg', plot=0, iprint=10)
-                        plsq = r.xf
-                        ier = 0
-                    else:
-                        fopt = openopt.DFP(
-                            func[0], fpars, tx, dy, df=fitFuncDer)
-                        print(func[8])
-                        #  fopt.df = func[7]
-                        fopt.checkdf()
-                        r = fopt.solve('nlp:ralg', plot=0, iprint=10)
-                        plsq = r.xf
-                        ier = 0
+                # elif method == 'openopt' and openoptFound:
+                #     print('OpenOpt!!!')
+                #     if bounds is not None:
+                #         # unpack bounds
+                #         lb = [z[0] for z in bounds]
+                #         ub = [z[1] for z in bounds]
+                #         fopt = openopt.DFP(
+                #             func[0], fpars, tx, dy, df=fitFuncDer, lb=lb, ub=ub)
+                #         # fopt.df = func[8]
+                #         r = fopt.solve('nlp:ralg', plot=0, iprint=10)
+                #         plsq = r.xf
+                #         ier = 0
+                #     else:
+                #         fopt = openopt.DFP(
+                #             func[0], fpars, tx, dy, df=fitFuncDer)
+                #         print(func[8])
+                #         #  fopt.df = func[7]
+                #         fopt.checkdf()
+                #         r = fopt.solve('nlp:ralg', plot=0, iprint=10)
+                #         plsq = r.xf
+                #         ier = 0
                 else:
                     print('method %s not recognized, please check Fitting.py' % (method))
                     return
