@@ -32,6 +32,15 @@ import string
 from collections import OrderedDict
 
 stdFont = 'Arial'
+
+import matplotlib
+matplotlib.rc('text', usetex=False)  # if true, you get computer modern fonts ALWAYS
+                                     # if false, symbols a rendered in deja vu sans...regardless
+matplotlib.rc('font',**{'family':'sans-serif','sans-serif':[stdFont, 'Helvetica']})
+# matplotlib.rcParams['pdf.fonttype'] = 42  # doesn't seem to do anything with Ill 2019.
+# matplotlib.rcParams['ps.fonttype'] = 42
+matplotlib.use('Qt4Agg')
+
 #import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.font_manager import FontProperties
@@ -47,18 +56,7 @@ from matplotlib.collections import PatchCollection
 import matplotlib.transforms as mtransforms
 import matplotlib.ticker as ticker
 import matplotlib.scale as mscale
-import matplotlib
-rcParams = matplotlib.rcParams
-# rcParams['svg.fonttype'] = 'none' # No text as paths. Assume font installed.
-# rcParams['pdf.fonttype'] = 42
-# rcParams['ps.fonttype'] = 42
-# #rcParams['font.serif'] = ['TimesNew Roman']
-from matplotlib import rc
-#rc('font',**{'family':'sans-serif','sans-serif':['Arial']})
-# rcParams['font.sans-serif'] = ['Arial']
-# rcParams['font.family'] = 'sans-serif'
-rc('text', usetex=True)
-#rcParams['text.latex.unicode'] = True  # deprecated matplotlib3
+
 # seaborn.set_style('white')
 # seaborn.set_style('ticks')
 import pylibrary.talbotetalTicks as ticks # logical tick formatting... 
@@ -177,7 +175,18 @@ def noaxes(axl, whichaxes = 'xy'):
         if 'xy' == whichaxes:
             ax.set_axis_off()
 
+def noaxeslabels(axl, whichaxes='xy'):
+    """
+    Remove the axes labels without removing the tick marks
+    """
+    axl = _ax_tolist(axl)
+    for ax in axl:
+        if 'x' in whichaxes:
+            ax.set_xticklabels([])
+        if 'y' in whichaxes:
+            ax.set_yticklabels([])
 
+    
 def setY(ax1, ax2):
     """
     Set the Y limits for an axes from a source axes to 
@@ -354,7 +363,8 @@ def do_talbotTicks(ax, axes='xy',
 
 
 
-def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05), 
+def labelPanels(axl, axlist=None, order='rowsfirst',
+        font='Arial', fontsize=18, weight='normal', xy=(-0.05, 1.05), 
         horizontalalignment='right', verticalalignment='bottom', rotation=0.):
     """
     Provide labeling of panels in a figure with multiple subplots (axes)
@@ -363,11 +373,17 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     ----------
     axl : list of axes objects
         If a single axis object is present, it will be converted to a list here.
+        if the array is a multidimensional numpy array (ndim = 2), 
+        the 
     
     axlist : list of string labels (default : None)
-        Contains a list of the string labels. If the default value is provided,
+        Contains a list of the string labels. If the default value  of None is provided,
         the axes will be lettered in alphabetical sequence. 
     
+    order : str (default "rowfirst")
+        A string describing the labeling order when axlist is None.
+        Must be "rowfirst" or "columnfirst".
+
     font : string (default : 'Arial')
         Name of a valid font to use for the panel labels
     
@@ -388,15 +404,16 @@ def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight='normal', xy
     """
     if isinstance(axl, dict):
         axlist = list(axl.keys())
+    if isinstance(axl, np.ndarray):
+        rc = axl.shape  # get row and column sizes before converting to list
     axl = _ax_tolist(axl)
-    # if isinstance(axl, dict):
-    #     axt = [axl[x] for x in axl]
-    #     axlist = axl.keys()
-    #     axl = axt
-    # if not isinstance(axl, list):
-    #     axl = [axl]
+
     if axlist is None:
-        axlist = string.ascii_uppercase[0:len(axl)]
+        if order == 'rowsfirst':
+            axlist = string.ascii_uppercase[0:len(axl)]
+        elif order == 'columnsfirst':
+            nl = np.array([i for i in string.ascii_uppercase[0:len(axl)]])
+            nl = nl.reshape(rc[1], rc[0]).T.ravel().tolist() # changes order
     else:
         axlist = list(axlist)
     # assume we wish to go in sequence
@@ -1212,7 +1229,7 @@ def hide_figure_grid(fig, grid):
 def delete_figure_grid(fig, grid):
     mpl.delete(grid)
 
-def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
+def regular_grid(rows, cols, order='columnsfirst', figsize=(8., 10), showgrid=False,
                 verticalspacing=0.08, horizontalspacing=0.08,
                 margins={'leftmargin': 0.07, 'rightmargin': 0.05, 'topmargin': 0.03, 'bottommargin': 0.1},
                 labelposition=(0., 0.), parent_figure=None, panel_labels=None, **kwds):
@@ -1283,7 +1300,7 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
     else:
         istart = 0  # panel_labels is none and start at first index
 
-    if order == 'columns':
+    if order == 'rowsfirst':
         for r in range(rows):
             for c in range(cols):
                 pos = [xl[c], xw, yb[r], yh]
@@ -1297,15 +1314,17 @@ def regular_grid(rows, cols, order='columns', figsize=(8., 10), showgrid=False,
                 i = i + 1
     gr = [(a, a+1, 0, 1) for a in range(0, rows*cols)]   # just generate subplots - shape does not matter
     axmap = OrderedDict(zip(sizer.keys(), gr))
-    if panel_labels == None:
-        label = False
-    else:
-        label = True
-    P = Plotter((rows, cols), axmap=axmap, label=label, figsize=figsize, margins=margins, labeloffset=labelposition,
-            parent_figure=parent_figure, **kwds)
+    if not 'label' in kwds.keys():  # keep label in kwds
+        if panel_labels == None:
+            kwds['label'] = False
+        else:
+            kwds['label'] = True
+    P = Plotter((rows, cols), axmap=axmap, figsize=figsize, margins=margins, labeloffset=labelposition,
+            parent_figure=parent_figure, order=order, **kwds)
     if showgrid:
         show_figure_grid(P.figure_handle)
     P.resize(sizer)  # perform positioning magic
+    P.sizer = sizer
     return P
     
 def test_sizergrid():
@@ -1318,7 +1337,8 @@ class Plotter():
     The Plotter class provides a simple convenience for plotting data in 
     an row x column array.
     """
-    def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, roworder=True, refline=None,
+    def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, 
+        order='rowsfirst', refline=None,
         figsize=None, margins=None, labelalignment='left',
         fontsize=10, fontweight='normal', position=0, labeloffset=[0., 0.], labelsize=12,
         parent_figure=None):
@@ -1372,9 +1392,7 @@ class Plotter():
             where r1t is the top for row 1 in the grid, r1b is the bottom, etc... 
             When using this mode, the axarr returned is a 1-D list, as if r is all plots indexed,
             and the number of columns is 1. The results match in order the list entered in axmap
-        
 
-        
         arrangement: Ordered Dict (default: None)
             Arrangement allows the data to be plotted according to a logical arrangement
             The dict keys are the names ("groups") for each column, and the elements are
@@ -1389,7 +1407,7 @@ class Plotter():
         labelalignment : string (default: 'left')
             Horizontaalignment of label ('center', 'left', 'right')
         
-        roworder : Boolean (default: True)
+        rowsfirst : Boolean (default: True)
             Define whether labels run in row order first or column order first
         
         refline : float (default: None)
@@ -1400,7 +1418,8 @@ class Plotter():
         
         fontsize : points (default : 10) OR dict {'tick', 'label', 'panel'}
             Defines the size of the font to use for panel labels
-        fontwieght : weights (str) dict {'tick', 'label', 'panel'}
+        
+        fontweight : weights (str) dict {'tick', 'label', 'panel'}
             Defines the weight of the font to use for labels: 'normal', 'bold', etc.
 
         position : position of spines (0 means close, 0.05 means break out)
@@ -1416,6 +1435,7 @@ class Plotter():
         self.referenceLines = {}
         self.parent = parent_figure
         self.panel_labels = label
+        self.order = order
         if self.parent is None:  # just create a new figure
             if figsize is None:
                 figsize=(11.5, 8) # landscape
@@ -1489,15 +1509,15 @@ class Plotter():
             rc = (nplots, 1)
             self.axarr = np.empty(shape=(rc[0], rc[1],), dtype=object)  # use a numpy object array, indexing features
             ix = 0
-            for r in range(rc[0]):
-                for c in range(rc[1]):
+            for r in range(rc[0]):  # rows
+                for c in range(rc[1]):  # columns
                     self.axarr[r,c] = mpl.subplot(self.GS[ix])
                     ix += 1
             gridbuilt = True
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k,0]
             plo = labeloffset
-            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), 
+            self.axlabels = labelPanels(self.axarr.tolist(), axlist=rcshape.keys(), order=self.order,
                 xy=(-0.095+plo[0], 0.95+plo[1]), 
                 fontsize=self.fontsize['panel'], weight='bold', horizontalalignment=self.labelalignment)
             self.resize(rcshape)
@@ -1526,15 +1546,13 @@ class Plotter():
             for i, a in enumerate(self.axarr.flatten()):
                 label = string.ascii_uppercase[i]
                 self.axdict[label] = a
-        
 
         self.nrows = self.axarr.shape[0]
         if len(self.axarr.shape) > 1:
             self.ncolumns = self.axarr.shape[1]
         else:
             self.ncolumns = 1
-        self.row_counter = 0
-        self.column_counter = 0
+        self.reset_axis_counters()
         for i in range(self.nrows):
             for j in range(self.ncolumns):
                 self.axarr[i, j].spines['top'].set_visible(False)
@@ -1549,20 +1567,20 @@ class Plotter():
 
         if label:
             if isinstance(axmap, dict) or isinstance(axmap, OrderedDict):  # in case predefined... 
-                self.axlabels = labelPanels(self.axarr.ravel().tolist(), axlist=axmap.keys(),
+                self.axlabels = labelPanels(self.axarr.ravel().tolist(),  order=self.order, axlist=axmap.keys(), 
                         xy=(-0.095+p[0], 0.95+p[1]),  horizontalalignment=self.labelalignment,
                         fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
                 return
             self.axlist = []
-            if roworder == True:
+            if self.rowsfirst:  # straight down rows in sequence
                 for i in range(self.nrows):
                     for j in range(self.ncolumns):
                         self.axlist.append(self.axarr[i, j])
-            else:
+            else: # go across in columns (zig zag)
                 for i in range(self.ncolumns):
                     for j in range(self.nrows):
                         self.axlist.append(self.axarr[j, i])
-                
+
             if self.nrows*self.ncolumns > 26:  # handle large plot using "A1..."
                 ctxt = string.ascii_uppercase[0:self.ncolumns]  # columns are lettered
                 rtxt = [str(x+1) for x in range(self.nrows)] # rows are numbered, starting at 1
@@ -1570,12 +1588,12 @@ class Plotter():
                 for i in range(self.nrows):
                     for j in range(self.ncolumns):
                         axl.append(ctxt[j]+rtxt[i])
-                self.axlabels = labelPanels(self.axlist, axlist=axl, xy=(-0.35+p[0], 0.75),
+                self.axlabels = labelPanels(self.axlist, axlist=axl,  order=self.order, xy=(-0.35+p[0], 0.75),
                         fontsize=self.fontsize['panel'], weight=self.fontweight['panel'],
                         horizontalalignment=self.labelalignment)
 
             else:
-                self.axlabels = labelPanels(self.axlist, xy=(-0.095+p[0], 0.95+p[1]),
+                self.axlabels = labelPanels(self.axlist,  order=self.order, xy=(-0.095+p[0], 0.95+p[1]),
                         fontsize=self.fontsize['panel'], weight=self.fontweight['panel'],
                         horizontalalignment=self.labelalignment)
 
@@ -1586,12 +1604,24 @@ class Plotter():
         _next gets the axis pointer to the next row, column index that is available
         Only sets internal variables
         """
-        self.column_counter += 1
-        if self.column_counter >= self.ncolumns:
-            self.row_counter += 1
-            self.column_counter = 0
-            if self.row_counter >= self.nrows:
-                raise ValueError('Call to get next row exceeds the number of rows requested initially: %d' % self.nrows)
+        # if self.order == 'rowsfirst':
+        self.row_counter += 1
+        if self.row_counter >= self.nrows:
+            self.column_counter += 1
+            self.row_counter = 0
+            if self.column_counter > self.ncolumns:
+                raise ValueError('Call to get next axis exceeds the number of columns requested initially: %d' % self.columns)
+        # else:
+        #     self.column_counter += 1
+        #     if self.column_counter >= self.ncolumns:
+        #         self.row_counter += 1
+        #         self.column_counter = 0
+        #         if self.row_counter >= self.nrows:
+        #             raise ValueError('Call to get next axis exceeds the number of rows requested initially: %d' % self.nrows)
+    
+    def reset_axis_counters(self):
+        self.column_counter = 0
+        self.row_counter = 0
     
     def getaxis(self, group=None):
         """
@@ -1615,6 +1645,14 @@ class Plotter():
             currentaxis = self.getRC(group)
                 
         return currentaxis
+
+    def getaxis_fromlabel(self, label):
+        axobj = self.axdict[label]
+        for i in range(self.nrows):
+            for j in range(self.ncolumns):
+                if axobj == self.axarr[i,j]:
+                    return(axobj)
+        return(None)  # not found
     
     def getRC(self, group):
         """
@@ -1643,10 +1681,10 @@ class Plotter():
         print('Group {:s} not in the arrangement'.format(group))
         return None
         
-        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4]}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3]}, 'B2': {'pos': [0.40, 0.25, 0.5, 0.1]},
-                'C1': {'pos': [0.72, 0.25, 0.60, 0.3]}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1]},
-                'D': {'pos': [0.08, 0.25, 0.1, 0.3]}, 'E': {'pos': [0.40, 0.25, 0.1, 0.3]}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3]},
-        }
+        # sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4]}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3]}, 'B2': {'pos': [0.40, 0.25, 0.5, 0.1]},
+        #         'C1': {'pos': [0.72, 0.25, 0.60, 0.3]}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1]},
+        #         'D': {'pos': [0.08, 0.25, 0.1, 0.3]}, 'E': {'pos': [0.40, 0.25, 0.1, 0.3]}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3]},
+        # }
     
     def resize(self, sizer):
         """
