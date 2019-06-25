@@ -394,6 +394,9 @@ def SignalFilter_LPFBessel(signal, LPF, samplefreq, NPole=8, reduce=False):
 # parses by breaking the string down and then reconstructing each element
 #
 def long_Eval(line):
+    u = eval(line) # seems not required to do all this stuff in Python3
+    return u
+
     inpunct = False
     sp = ''
     u={}

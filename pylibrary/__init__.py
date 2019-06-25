@@ -2,11 +2,10 @@
 __author__ = "Paul B. Manis"
 __version__ = "0.17"
 
-# import acq4read
-# import bootstrap
+# import pylibrary.bootstrap
 # import Fitting
-# import PlotHelpers
-# import Utility
+import pylibrary.PlotHelpers
+import pylibrary.Utility
 # import Params
 # import RStats
 # import pyqtgraphPlotHelpers
