@@ -6,6 +6,7 @@ __version__ = "0.17"
 # import Fitting
 import pylibrary.PlotHelpers
 import pylibrary.Utility
+import pylibrary.picker
 # import Params
 # import RStats
 # import pyqtgraphPlotHelpers

@@ -39,7 +39,7 @@ matplotlib.rc('text', usetex=False)  # if true, you get computer modern fonts AL
 matplotlib.rc('font',**{'family':'sans-serif','sans-serif':[stdFont, 'Helvetica']})
 # matplotlib.rcParams['pdf.fonttype'] = 42  # doesn't seem to do anything with Ill 2019.
 # matplotlib.rcParams['ps.fonttype'] = 42
-matplotlib.use('Qt4Agg')
+#matplotlib.use('Qt4Agg')
 
 #import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
@@ -306,7 +306,8 @@ def talbotTicks(axl, **kwds):
 
 def do_talbotTicks(ax, axes='xy',
                    density=(1.0, 1.0), insideMargin=0.05, pointSize=10, 
-                   tickPlacesAdd={'x': 0, 'y': 0}, floatAdd={'x': 0, 'y': 0}):
+                   tickPlacesAdd={'x': 0, 'y': 0}, floatAdd={'x': 0, 'y': 0},
+                   axrange={'x':None, 'y':None}):
     """
     Change the axis ticks to use the talbot algorithm for ONE axis
     Paramerters control the ticks
@@ -328,6 +329,11 @@ def do_talbotTicks(ax, axes='xy',
         number of decimal places to add in tickstrings for the ticks, pair for x and y axes, defaults to (0,0)
     floatAdd : dict
         if tickplaces is 0, but the number would be better represented by a float, how many plances?
+    axrange : dict. Default: {'x': None, 'y': None}
+        override the standard axis limits for the labeling
+        values can be list or tuple (0, 1), or can be (0, None) to use lower bound
+                   as 0. 
+        
     
     """
     # get axis limits
@@ -335,7 +341,12 @@ def do_talbotTicks(ax, axes='xy',
     # abottom = ax.getAxis('bottom')
 
     if 'y' in axes:
-        yRange = ax.get_ylim()
+        yRange = list(ax.get_ylim())
+        if axrange['y'] is not None: # any overrides
+            for ra in range(0, 2):
+                if axrange['y'][ra] is not None:
+                    yRange[ra] = axrange['y'][ra]
+            
         yr = np.diff(yRange)[0]
         ymin, ymax = (np.min(yRange) - yr * insideMargin, np.max(yRange) + yr * insideMargin)
         ytick = ticks.Extended(density=density[1], figure=None, range=(ymin, ymax), axis='y')
@@ -348,7 +359,11 @@ def do_talbotTicks(ax, axes='xy',
     ytxt = ax.get_yticklabels()
     ax.set_yticklabels(ytxt, {'fontsize': pointSize, 'rotation': 'horizontal'})
     if 'x' in axes:
-        xRange =  ax.get_xlim()
+        xRange =  list(ax.get_xlim())
+        if axrange['x'] is not None: # any overrides
+            for ra in range(0, 2):
+                if axrange['x'][ra] is not None:
+                    xRange[ra] = axrange['x'][ra]
         # now create substitue tick marks and labels, using Talbot et al algorithm
         xr = np.diff(xRange)[0]
         xmin, xmax = (np.min(xRange) - xr * insideMargin, np.max(xRange) + xr * insideMargin)
@@ -975,7 +990,7 @@ mscale.register_scale(SquareRootScale)
 # # from somewhere on the web:
 
 class NiceScale:
-    def __init__(self, minv,maxv):
+    def __init__(self, minv, maxv):
         self.maxTicks = 6
         self.tickSpacing = 0
         self.lst = 10
@@ -986,12 +1001,12 @@ class NiceScale:
         self.calculate()
 
     def calculate(self):
-        self.lst = self.niceNum(self.maxPoint - self.minPoint, False)
-        self.tickSpacing = self.niceNum(self.lst / (self.maxTicks - 1), True)
+        self.lst = self._niceNum(self.maxPoint - self.minPoint, False)
+        self.tickSpacing = self._niceNum(self.lst / (self.maxTicks - 1), True)
         self.niceMin = np.floor(self.minPoint / self.tickSpacing) * self.tickSpacing
         self.niceMax = np.ceil(self.maxPoint / self.tickSpacing) * self.tickSpacing
 
-    def niceNum(self, lst, rround):
+    def _niceNum(self, lst, rround):
         self.lst = lst
         exponent = 0 # exponent of range */
         fraction = 0 # fractional part of range */
@@ -1435,6 +1450,7 @@ class Plotter():
         self.referenceLines = {}
         self.parent = parent_figure
         self.panel_labels = label
+        assert order in ['rowsfirst', 'columnsfirst']
         self.order = order
         if self.parent is None:  # just create a new figure
             if figsize is None:
@@ -1572,7 +1588,7 @@ class Plotter():
                         fontsize=self.fontsize['panel'], weight=self.fontweight['panel'])
                 return
             self.axlist = []
-            if self.rowsfirst:  # straight down rows in sequence
+            if self.order == 'rowsfirst':  # straight down rows in sequence
                 for i in range(self.nrows):
                     for j in range(self.ncolumns):
                         self.axlist.append(self.axarr[i, j])

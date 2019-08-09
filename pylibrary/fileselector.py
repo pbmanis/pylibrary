@@ -70,11 +70,11 @@ class FileSelector():
         self.savefilename(fileName)
 
     def openDirNameDialog(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        options |= QFileDialog.DirectoryOnly
+        options = QtGui.QFileDialog.Options()
+        options |= QtGui.QFileDialog.DontUseNativeDialog
+        options |= QtGui.QFileDialog.DirectoryOnly
         #options |= QFileDialog.ShowDirsOnly
-        fileName = QFileDialog.getExistingDirectory(self.win, self.title,
+        fileName = QtGui.QFileDialog.getExistingDirectory(self.win, self.title,
                 self.startingdir, options=options)
         self.savefilename(fileName)
 
