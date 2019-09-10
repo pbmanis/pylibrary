@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtGui
 
 class FileSelector():
 
-    def __init__(self, title='', dialogtype='dir', extensions=None, startingdir='.'):
+    def __init__(self, title='', dialogtype='dir', extensions=None, startingdir='.', useNative=True):
         """
         File Selector
 
@@ -23,7 +23,7 @@ class FileSelector():
         dialogtype : str (default: dir)
             Type of dialog: [file, files, save, dir]
         extensions : str (default: None)
-            FIle extension string for the selector (not fully implemented yet)
+            File extension string for the selector (not fully implemented yet)
         startingdir : str (default '.')
             Path to directory to start in
 
@@ -41,7 +41,8 @@ class FileSelector():
         self.width = 400
         self.height = 300
         self.fileName = None
-        self.startingdir = startingdir
+        self.startingdir = str(startingdir) # remove path stuff... 
+        self.useNative = useNative
         self.dialogs = {'file': self.openFileNameDialog,
                    'files': self.openFileNamesDialog,
                    'save': self.saveFileDialog,
@@ -64,30 +65,34 @@ class FileSelector():
 
     def openFileNameDialog(self):
         options = QtGui.QFileDialog.Options()
-        options |= QtGui.QFileDialog.DontUseNativeDialog
+        if not self.useNative:
+            options |= QtGui.QFileDialog.DontUseNativeDialog
         fileName = QtGui.QFileDialog.getOpenFileName(self.win, self.title, self.startingdir,
                 "All Files (*);;", options=options)
         self.savefilename(fileName)
 
     def openDirNameDialog(self):
         options = QtGui.QFileDialog.Options()
-        options |= QtGui.QFileDialog.DontUseNativeDialog
+        if not self.useNative:
+            options |= QtGui.QFileDialog.DontUseNativeDialog
         options |= QtGui.QFileDialog.DirectoryOnly
         #options |= QFileDialog.ShowDirsOnly
-        fileName = QtGui.QFileDialog.getExistingDirectory(self.win, self.title,
+        dirName = QtGui.QFileDialog.getExistingDirectory(self.win, self.title,
                 self.startingdir, options=options)
-        self.savefilename(fileName)
+        self.savefilename(dirName)
 
     def openFileNamesDialog(self):
         options = QtGui.QFileDialog.Options()
-        options |= QtGui.QFileDialog.DontUseNativeDialog
+        if not self.useNative:
+            options |= QtGui.QFileDialog.DontUseNativeDialog
         files = QtGui.QFileDialog.getOpenFileNames(self.win, self.title,
                 self.startingdir,"All Files (*);;Python Files (*.py)", options=options)
         self.savefilename(files)
 
     def saveFileDialog(self):
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
+        if not self.useNative:
+            ptions |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getSaveFileName(self.win, self.title, self.startingdir,
             "All Files (*);;Text Files (*.txt)", options=options)
         self.savefilename(fileName)
