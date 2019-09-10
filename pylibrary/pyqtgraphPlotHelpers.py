@@ -28,6 +28,7 @@ stdFont = 'Arial'
 import scipy.stats
 import numpy as np
 import pyqtgraph as pg
+from PyQt5 import QtGui
 from . import talbotetalTicks as ticks # logical tick formatting... 
 
 """
@@ -930,7 +931,6 @@ def labelAxes(plot, xtext, ytext, **kwargs):
     **kwargs : keywords
         additional arguments to pass to pyqtgraph setLabel
     """
-
     plot.setLabel('bottom', xtext, **kwargs)
     plot.setLabel('left', ytext, **kwargs)
 
@@ -991,13 +991,16 @@ def setPlotLabel(plotitem, plotlabel='', **kwargs):
     
     plotitem.LabelItem = pg.LabelItem(plotlabel, **kwargs)
     plotitem.LabelItem.setMaximumHeight(30)
-    plotitem.layout.setRowFixedHeight(0, 30)
-    plotitem.layout.addItem(plotitem.LabelItem, 0, 0)
-    plotitem.LabelItem.setVisible(True)
-
+    # plotitem.layout.setRowFixedHeight(0, 30)
+    try:
+        plotitem.layout.addItem(plotitem.LabelItem, 0, 0)
+        plotitem.LabelItem.setVisible(True)
+    except:
+        pass # not a valid thing to do with the plotitem...
 
 class LayoutMaker():
-    def __init__(self, win=None, cols=1, rows=1, letters=True, titles=False, labelEdges=True, margins=4, spacing=4, ticks='default'):
+    def __init__(self, win=None, cols=1, rows=1, letters=True, titles=False, labelEdges=True,
+             margins=4, spacing=4, ticks='default', items='plots'):
         self.sequential_letters = string.ascii_uppercase
         self.cols = cols
         self.rows = rows
@@ -1008,6 +1011,7 @@ class LayoutMaker():
         self.spacing = spacing
         self.rcmap = [None]*cols*rows
         self.plots = None
+        self.items = items
         self.win = win
         self.ticks = ticks
         self._makeLayout(letters=letters, titles=titles, margins=margins, spacing=spacing)
@@ -1061,27 +1065,54 @@ class LayoutMaker():
         item; otherwise we just make a gridLayout that can be put into another container somewhere.
         """
         import string
-        if self.win is not None:
-            self.gridLayout = self.win.ci.layout  # the window's 'central item' is the main gridlayout.
-        else:
-            self.gridLayout = pg.QtGui.QGridLayout()  # just create the grid layout to add to another item
-        self.gridLayout.setContentsMargins(margins, margins, margins, margins)
-        self.gridLayout.setSpacing(spacing)
+        if self.win is None:
+            self.app = pg.mkQApp()
+            self.win = QtGui.QWidget()
+        self.layout = QtGui.QGridLayout()
+        self.win.setLayout(self.layout)
+        #     self.gridLayout = self.win.ci.layout  # the window's 'central item' is the main gridlayout.
+        # else:
+        #     print('b')
+        #     self.gridLayout = pg.QtGui.QGridLayout()  # just create the grid layout to add to another item
+        self.layout.setContentsMargins(margins, margins, margins, margins)
+        self.layout.setSpacing(spacing)
         self.plots = [[0 for x in range(self.cols)] for x in range(self.rows)]
+        self.gl = [[0 for x in range(self.cols)] for x in range(self.rows)]
         i = 0
         for r in range(self.rows):
             for c in range(self.cols):
-                self.plots[r][c] = self.win.addPlot(row=r, col=c) # pg.PlotWidget()
-                if letters:
-                    labelPanels(self.plots[r][c], label=self.sequential_letters[i], size='14pt', bold=True)
-                if titles:
-                    labelTitles(self.plots[r][c], title=self.sequential_letters[i], size='14pt', bold=False)
-
                 self.rcmap[i] = (r, c)
+                if self.items == 'plots':
+                    thisplot = pg.PlotWidget()
+                    self.layout.addWidget(thisplot, r, c)
+                    self.plots[r][c] =  thisplot # pg.PlotWidget()
+                    if letters:
+                        labelPanels(self.plots[r][c], label=self.sequential_letters[i], size='14pt', bold=True)
+                    if titles:
+                        labelTitles(self.plots[r][c], title=self.sequential_letters[i], size='14pt', bold=False)
+                
+                elif self.items == 'images':
+                    imgview = pg.ImageView()
+                    # imgview.ui.roiBtn.hide()
+ #                    imgview.ui.menuBtn.hide()
+                    # imgview.ui.histogram.hide()
+                    textlabel = pg.TextItem(f"t = 0", anchor=(0, 1.1))
+                    self.layout.addWidget(imgview, r, c, 1, 1)
+                    self.plots[r][c] = imgview
+                    v = self.layout.itemAtPosition(r, c) # imgview # self.gridLayout.addItem(pg.ViewBox(), row=r, col=c)
+                    self.gl[r][c] = v
+                    # if letters:
+                    #     labelPanels(self.plots[r][c], label=self.sequential_letters[i], size='14pt', bold=True)
+                    if titles:
+                        self.plots[r][c].getImageItem().getViewBox().setWindowTitle(self.sequential_letters[i], size='14pt')
+                        #labelTitles(self.plots[r][c], title=self.sequential_letters[i], size='14pt', bold=False)
+
                 i += 1
                 if i > 25:
                     i = 0
-        self.labelEdges('T(s)', 'Y', edgeOnly=self.edges)
+        if self.items == 'plots':
+            self.labelEdges('T(s)', 'Y', edgeOnly=self.edges)
+                
 
     def labelEdges(self, xlabel='T(s)', ylabel='Y', edgeOnly=True, **kwargs):
         """
