@@ -4,6 +4,17 @@ Removed much of the code in the geometry section, as this is handled by plothelp
 The style routines are useful for us however.
 pbmanis 7/2018
 
+How to use:
+
+call
+ST.styler(journal, figuresize, etc)
+ST.setxyz to adjust some factors.
+create figure (e.g., with PlotHelpers, such as rectangular grid,
+and use figsize=style.Figure['figsize'], etc during initial call.
+
+ST.apply()
+ST.geometry_adjust()
+
 """# -----------------------------------------------------------------------------
 # Distributed under the GNU General Public License.
 #
@@ -20,41 +31,6 @@ import numpy as np
 import string
 
 
-def tight_layout(axes, style, filename, fig_width='small', label_order=[]):
-    '''
-    Description
-    -----------
-    -function for optimizing figure layout
-    Parameters
-    ----------
-    -axes: list of matplotlib major axes instances
-    -style: list - list of dictionaries: Font, Lines, Axes, Ticks, Grid, Legend,
-                                         Patch, Text, Savefig, Figure, Misc.
-            For details see example style function, e.g., style_Plos()
-    -fig_width: str or float - 'small', 'medium', 'large' to adjust width to 
-                               1, 1.5, 2 columns; use float to set width 
-                               as a fraction of A4 width 
-    -filename: str - path + filename to which to save the figure. The file name 
-               should include the extension.
-    -label_order: defines order of labels across subplots. Possible values:
-           []: default - use standard left-to-right labeling
-           ['a', 'b', 'c', 'd']: use this template as left-to-right sequence. 
-                            Number of elements should be equal to number of axes      
-    Returns
-    -------
-    -None
-    '''
-
-   # print ('---Preparing awesomization engine---')
-    fig = axes[0]['ax'].get_figure()
-    fig.savefig(filename)  # necessary for this function to work properly
-
-    geometry_adjust(axes, style, fig_width, label_order)
-    fig.savefig(filename)
-
-   # print ('---Congratulations! Now your figure is AWESOME!!!---')
-
-    return None
 
 #--------------------------------------------------------------
 
@@ -255,8 +231,81 @@ class styler():
 
         return None
     
-    
+
+
 #-------------------------------------------------------------------------
+
+def create_inset_axes(dim, ax):
+    '''
+    Description
+    -----------
+    -creates new sub-axes of a given size in the given position of 
+     existing axes
+    Parameters
+    ----------
+    -dim: list/array - [x, y, size_x, size_y]. 
+            x, y - coordinates of the left bottom corner of the sub-axes relative
+            to existing axes (in units of axes 'ax' dimensions )
+            size_x, size_y - dimensions of created sub-axes in units of 
+            axes 'ax' dimensions
+    -ax:   axes - new axes are created relative to these axes
+    Returns
+    -------
+    -ax1  = new axes
+    '''
+
+    fig = ax.get_figure()
+    box = ax.get_position()
+    width = box.width
+    height = box.height
+    inax_position = ax.transAxes.transform(dim[0:2])
+    transFigure = fig.transFigure.inverted()
+    infig_position = transFigure.transform(inax_position)
+    x = infig_position[0]
+    y = infig_position[1]
+    width *= dim[2]
+    height *= dim[3]
+
+    return fig.add_axes([x, y, width, height], axisbg='w')
+        
+#-------------------------------------------------------------------------
+
+def tight_layout(axes, style, filename, fig_width='small', label_order=[]):
+    '''
+    Description
+    -----------
+    -function for optimizing figure layout
+    Parameters
+    ----------
+    -axes: list of matplotlib major axes instances
+    -style: list - list of dictionaries: Font, Lines, Axes, Ticks, Grid, Legend,
+                                         Patch, Text, Savefig, Figure, Misc.
+            For details see example style function, e.g., style_Plos()
+    -fig_width: str or float - 'small', 'medium', 'large' to adjust width to 
+                               1, 1.5, 2 columns; use float to set width 
+                               as a fraction of A4 width 
+    -filename: str - path + filename to which to save the figure. The file name 
+               should include the extension.
+    -label_order: defines order of labels across subplots. Possible values:
+           []: default - use standard left-to-right labeling
+           ['a', 'b', 'c', 'd']: use this template as left-to-right sequence. 
+                            Number of elements should be equal to number of axes      
+    Returns
+    -------
+    -None
+    '''
+
+   # print ('---Preparing awesomization engine---')
+    fig = axes[0]['ax'].get_figure()
+    fig.savefig(filename)  # necessary for this function to work properly
+
+    geometry_adjust(axes, style, fig_width, label_order)
+    fig.savefig(filename)
+
+   # print ('---Congratulations! Now your figure is AWESOME!!!---')
+
+    return None
+
 
 def geometry_adjust(axes, style, fig_width, label_order=[]):
     '''
@@ -729,36 +778,3 @@ def geometry_adjust(axes, style, fig_width, label_order=[]):
 
 
 #-----------------------------------------------------------------
-
-def create_inset_axes(dim, ax):
-    '''
-    Description
-    -----------
-    -creates new sub-axes of a given size in the given position of 
-     existing axes
-    Parameters
-    ----------
-    -dim: list/array - [x, y, size_x, size_y]. 
-            x, y - coordinates of the left bottom corner of the sub-axes relative
-            to existing axes (in units of axes 'ax' dimensions )
-            size_x, size_y - dimensions of created sub-axes in units of 
-            axes 'ax' dimensions
-    -ax:   axes - new axes are created relative to these axes
-    Returns
-    -------
-    -ax1  = new axes
-    '''
-
-    fig = ax.get_figure()
-    box = ax.get_position()
-    width = box.width
-    height = box.height
-    inax_position = ax.transAxes.transform(dim[0:2])
-    transFigure = fig.transFigure.inverted()
-    infig_position = transFigure.transform(inax_position)
-    x = infig_position[0]
-    y = infig_position[1]
-    width *= dim[2]
-    height *= dim[3]
-
-    return fig.add_axes([x, y, width, height], axisbg='w')

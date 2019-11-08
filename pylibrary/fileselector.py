@@ -55,7 +55,7 @@ class FileSelector():
 
     def initUI(self):
         self.app = QtGui.QApplication(sys.argv)
-        self.win = QtGui.QWidget() # top le
+        self.win = QtGui.QDialog() # top le
         self.win.setWindowTitle(self.title)
         self.win.setGeometry(self.left, self.top, self.width, self.height)
         self.active_dialog = self.dialogs[self.dialogtype]()
@@ -101,7 +101,9 @@ class FileSelector():
         if fileName == '' or len(fileName) == 0:
             fileName = None
         self.fileName = fileName
-        self.win.close()
+        self.app.flush()  # make sure no hanging events
+        self.win.close()  # supposed to close the window?
+        self.app.quit()  # close out the app we init'd
 
 
 if __name__ == '__main__':

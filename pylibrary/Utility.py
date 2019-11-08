@@ -1042,11 +1042,36 @@ def seqparse(sequence):
      pmanis@med.unc.edu
      """
 
+
+    if sequence == 'help':
+        print("""
+            Use for sequence parser:
+            Entry is a string (text)
+            
+            First arg is starting number for output array
+            second arg (optional) is final number
+            / indicates the skip arg type (optional)
+            basic: /n means skip n : e.g., 1;10/2 = 1,3,5,7,9
+            special: /##:r means randomize order (/##rn means use seed n for randomization)
+            special: /##:l means spacing of elements is logarithmic
+            special: /##:s means spacing is logarithmic, and order is randomized. (/##sn means use seed n for randomization)
+            special: /:a## means alternate with a number
+            multiple sequences are returned in a list... just like single sequences...
+
+            3 ways for list to be structured:
+            1. standard datac record parses. List is enclosed inbetween single quotes
+            2. matlab : (array) operator expressions. [0:10:100], for example
+            3. matlab functions (not enclosed in quotes). Each function generates a new list
+            note that matlab functions and matrices are treated identically
+            """)
+        return(None, None)
+
     seq=[]
     target=[]
     sequence.replace(' ', '') # remove all spaces - nice to read, not needed to calculate
     sequence = str(sequence) #make sure we have a nice string
     (seq2, sep, remain) = sequence.partition('&') # find and return nested sequences
+    
     while seq2 is not '':
         try:
             (oneseq, onetarget) = recparse(seq2)
@@ -1074,6 +1099,23 @@ def recparse(cmdstr):
     n, if present *n implies a "mode"
     such as linear, log, randomized, etc.
     """
+    if cmdstr == 'help':
+        print("""
+            recparse:
+            function to parse basic word unit of the list - a;b/c or the like
+            syntax is:
+            [target:]a;b[/c][*n]
+            where:
+            target is a parameter target identification (if present)
+            the target can be anything - a step, a duration, a level....
+            it just needs to be in a form that will be interepreted by the PyStim
+            sequencer.
+            a, b and c are numbers
+            n, if present *n implies a "mode"
+            such as linear, log, randomized, etc.
+            """
+        )
+        return None, None
 
     r = re_recparse.match(cmdstr)
     res = r.groups(0)
@@ -1084,7 +1126,7 @@ def recparse(cmdstr):
     if res[1] != '':
         n1 = float(res[1])
     else:
-        return((None, None)) # need at least ONE number
+        return None, None # need at least ONE number
     if res[2] == '':
         return(([n1], target))
     else:
@@ -1128,7 +1170,7 @@ def recparse(cmdstr):
         c = [altvalue]*len(recs)*2 # double the length of the sequence
         c[0:len(c):2] = recs # fill the alternate positions with the sequence
         recs = c # copy back
-    return((recs, target))
+    return recs, target
 
 
 def makeRGB(ncol = 16, minc = 32, maxc = 216):
