@@ -107,7 +107,12 @@ class FileSelector(QtGui.QMainWindow):
         # self.app.quit()  # close out the app we init'd
 
 
-if __name__ == '__main__':
+def main():
     ex = FileSelector(dialogtype='files')
     
     print('exfile: ', ex.fileName)
+    
+    
+if __name__ == '__main__':
+    main()
+

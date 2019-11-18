@@ -7,7 +7,7 @@ def tell(command):
     
     cmde = " -e 'end tell' END"
     cmd = cmds + "-e " + "'" + command + "'" + cmde
-    print cmd
+    print(cmd)
     os.system(cmd)
     
     

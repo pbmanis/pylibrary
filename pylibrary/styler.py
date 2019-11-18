@@ -15,15 +15,17 @@ and use figsize=style.Figure['figsize'], etc during initial call.
 ST.apply()
 ST.geometry_adjust()
 
-"""# -----------------------------------------------------------------------------
-# Distributed under the GNU General Public License.
-#
-# Contributors: Andrei Maksimov (maksimov.andrei7@gmail.com)
-# -----------------------------------------------------------------------------
-# File description:
-#
-# Contains functions used to improve appearance of figures
-# -----------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------
+Distributed under the GNU General Public License.
+
+Contributors: Andrei Maksimov (maksimov.andrei7@gmail.com)
+-----------------------------------------------------------------------------
+File description:
+
+Contains functions used to improve appearance of figures
+-----------------------------------------------------------------------------
+"""
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -308,16 +310,16 @@ def tight_layout(axes, style, filename, fig_width='small', label_order=[]):
 
 
 def geometry_adjust(axes, style, fig_width, label_order=[]):
-    '''
+    """
     Description
     -----------
     -adjusts figure appearance: 
     For each axis the following steps are performed:
     1) Compute geometrical position of corresponding subplot in the original 
-                figure
+        figure
     2) Compute size of the figure region for the present subplot
     3) Compute spacing [left, right, bottom, top] from the axes reserved for 
-                labels and tick labels
+        labels and tick labels
     4) Adjust size of axes to fit in a given subplot region
     5) In case of color bar in a subplot, perform steps 3-4 separately for 
                 image and color bar
@@ -350,7 +352,7 @@ def geometry_adjust(axes, style, fig_width, label_order=[]):
     Returns
     -------
     -None
-    '''
+    """
 
     # reconstruct the figure object
 

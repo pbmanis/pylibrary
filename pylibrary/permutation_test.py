@@ -62,17 +62,17 @@ if __name__ == '__main__':
             ks_test[j, nt] = pval_ks
             w_test[j, nt] = pval_w
              
-    print p_perm
+    print( p_perm)
     for i in range(len(deltas)):
-        print 'Delta: %.2f with n = %d' % (deltas[i], Nc)
+        print('Delta: %.2f with n = %d' % (deltas[i], Nc))
         perm_sig = count_thr(p_perm[i,:], thr)
         t_sig = count_thr(t_test[i,:], thr)
         ks_sig = count_thr(ks_test[i,:], thr)
         w_sig = count_thr(w_test[i,:], thr)
-        print '   perm:      %4d %7.5f  %7.5f' %( perm_sig, np.mean(p_perm[i,:]), np.std(p_perm[i,:]))
-        print '   ttest:     %4d %7.5f  %7.5f' %(t_sig, np.mean(t_test[i,:]), np.std(t_test[i,:]))
-        print '   wilcoxon:  %4d %7.5f  %7.5f' % (w_sig, np.mean(w_test[i,:]), np.std(w_test[i,:]))
-        print '   kstest:    %4d %7.5f  %7.5f' % (ks_sig, np.mean(ks_test[i,:]), np.std(ks_test[i,:]))
+        print('   perm:      %4d %7.5f  %7.5f' %( perm_sig, np.mean(p_perm[i,:]), np.std(p_perm[i,:])))
+        print('   ttest:     %4d %7.5f  %7.5f' %(t_sig, np.mean(t_test[i,:]), np.std(t_test[i,:])))
+        print('   wilcoxon:  %4d %7.5f  %7.5f' % (w_sig, np.mean(w_test[i,:]), np.std(w_test[i,:])))
+        print('   kstest:    %4d %7.5f  %7.5f' % (ks_sig, np.mean(ks_test[i,:]), np.std(ks_test[i,:])))
     
 
 

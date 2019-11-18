@@ -88,7 +88,7 @@ import random
 
 def transpose(data):
     """Transpose a 2-dimensional list."""
-    return zip(*data)
+    return list(zip(*data))
 
 
 def comparisons(labels, compareall):
@@ -244,7 +244,7 @@ def resample_pvals(data, compars, options):
     teststat = get_stats(options.teststat, data, compars)
     phits = [0 for _ in compars]
 
-    for _ in xrange(options.permutes):
+    for _ in range(options.permutes):
         pdata = options.resample_func(data, options.blocked)
         pteststat = get_stats(options.teststat, pdata, compars)
         phits = [phits[z] + int(teststat[z] <= pteststat[z])
@@ -264,7 +264,7 @@ def stepdown_adjust(data, compars, options):
     sortedt = sorted(tstat_help)
     phits = [0 for _ in compars]
 
-    for _ in xrange(options.stepdown):
+    for _ in range(options.stepdown):
         bdata = options.resample_func(data, options.blocked)
         btstat = get_stats(options.teststat, bdata, compars)
 
@@ -291,25 +291,25 @@ def stepdown_adjust(data, compars, options):
 def display_attrib(attrib, labels):
     """Display the given attribute list with the given list of labels."""
     for lbl in labels:
-        print "%8s " % lbl,
-    print
+        print("%8s " % lbl, end=' ')
+    print()
     for val in attrib:
-        print "%8.3f " % val,
-    print
-    print
+        print("%8.3f " % val, end=' ')
+    print()
+    print()
 
 
 def display_pvals(pvals, attrib, compars, labels, threshold=0.05):
     """Construct the matrix of comparisons and print the p-value for 
     each comparison. Mark each value more significant than the treshold.
     attrib should contain the means or medians as appropriate."""
-    print "         ",
+    print("         ", end=' ')
     # The valid comparisons have the shape of an upper-triangular matrix.
     # The first column would contain 1 element, but that is just the
     # first label compared to itself, so we skip it entirely.
     for lbl in labels[1:]:
-        print "%-8s " % lbl,
-    print
+        print("%-8s " % lbl, end=' ')
+    print()
     for y, yl in enumerate(labels):
         # number x-labels and drop the first one
         xes = [x for x, _ in enumerate(labels) if x != 0]
@@ -317,18 +317,18 @@ def display_pvals(pvals, attrib, compars, labels, threshold=0.05):
         if not any((x, y) in compars for x in xes):
             break
         # row with some real info, display it
-        print "%-8s " % yl,
+        print("%-8s " % yl, end=' ')
         for x in xes:
             if (x, y) in compars:
                 pv = pvals[compars.index((x, y))]
                 if pv < threshold:
-                    print "%1.3f*   " % pv,
+                    print("%1.3f*   " % pv, end=' ')
                 else:
-                    print "%1.3f    " % pv,
+                    print("%1.3f    " % pv, end=' ')
             else:
-                print "-        ",
-        print
-    print
+                print("-        ", end=' ')
+        print()
+    print()
     for x, y in compars:
         if attrib[x] > attrib[y]:
             direction = "better"
@@ -336,15 +336,15 @@ def display_pvals(pvals, attrib, compars, labels, threshold=0.05):
             direction = "worse"
         pval = pvals[compars.index((x, y))]
         if pval < threshold:
-            print "%s is %s than %s (p=%1.3f)" % (labels[x],
-                                                  direction, labels[y], pval)
-    print
+            print("%s is %s than %s (p=%1.3f)" % (labels[x],
+                                                  direction, labels[y], pval))
+    print()
 
 
 def main(options, filename):
     labels = None
     data = []
-    print "Reading from: %s" % filename
+    print("Reading from: %s" % filename)
     infile = open(filename, "r")
     for line in infile:
         if line.startswith("%"):
@@ -353,9 +353,9 @@ def main(options, filename):
             labels = line.split()
             continue
         data.append([float(x) for x in line.split()])
-    print "Read %d treatments, %d samples" % (len(transpose(data)), len(data)),
+    print("Read %d treatments, %d samples" % (len(transpose(data)), len(data)), end=' ')
     compars = comparisons(labels, options.compareall)
-    print "=> %d comparisons" % len(compars)
+    print("=> %d comparisons" % len(compars))
 
     if options.bootstrap:
         options.resample_func = bootstrap
@@ -367,32 +367,32 @@ def main(options, filename):
             options.teststat = wilcoxon
         else:
             options.teststat = mann_whitney
-        print "Medians:"
+        print("Medians:")
         attrib = medians(data)
     else:
         if options.blocked:
             options.teststat = student_paired
         else:
             options.teststat = welcht
-        print "Means:"
+        print("Means:")
         attrib = means(data)
     display_attrib(attrib, labels)
 
-    print "Unadjusted p-values:"
+    print("Unadjusted p-values:")
     pvals = resample_pvals(data, compars, options)
     display_pvals(pvals, attrib, compars, labels, threshold=options.alpha)
 
-    print "p-values adjusted for multiple comparison:"
+    print("p-values adjusted for multiple comparison:")
     adj_pvals = stepdown_adjust(data, compars, options)
     display_pvals(adj_pvals, attrib, compars, labels,
                   threshold=options.alpha)
 
 if __name__ == "__main__":
-    print "bootstrap.py %s" % REVISION
-    print "Copyright (C) 2011 Gian-Carlo Pascutto <gcp@sjeng.org>"
-    print "License Affero GPL version 3 or later",
-    print "<http://www.gnu.org/licenses/agpl.html>"
-    print
+    print("bootstrap.py %s" % REVISION)
+    print("Copyright (C) 2011 Gian-Carlo Pascutto <gcp@sjeng.org>")
+    print("License Affero GPL version 3 or later", end=' ')
+    print("<http://www.gnu.org/licenses/agpl.html>")
+    print()
     usage = "usage: %prog options datafile"
     parser = optparse.OptionParser(usage)
     parser.add_option("-p", action="store", type="int",

@@ -118,8 +118,8 @@ def sum_res(func, x):
 #   if(mask_flag > 0) vxv_s(vt, vt, vb, npts)  # zero the masked points so we don't use them in the
     x[m] = np.sum(d) # sum of squared difference is total lms error
     if not quiet:
-        print "Sumres\nPars", x
-        print "Error: %f " % (x[m])
+        print ("Sumres\nPars", x)
+        print( "Error: %f " % (x[m]))
 
 
 def order():
@@ -143,13 +143,13 @@ def first():
     """ print starting values of the simplex function
     """
     global n, m, simp, ncount
-    print "Starting simplex"
+    print ("Starting simplex")
     ncount = 1
     if not quiet:
         for j in range(0, n):
-            print "Simp [%2d]  " % (j)
+            print( "Simp [%2d]  " % (j))
             for i in range(0, n):
-                print"%9.3g  " % (simp[j][i])
+                print(f"{simp[j][i]:9.3g}  ")
 
 
 def new_vertex():
@@ -157,7 +157,7 @@ def new_vertex():
     """
     global niter, ndisp, n, m, anext, lb, hb, simp, error, quiet
     if not np.mod(niter, ndisp) and not quiet:
-       print "-- New Vertex for Simplex Iteration %5d --" % (niter)
+       print( "-- New Vertex for Simplex Iteration %5d --" % (niter))
     for i in range(0, n):
         if(i < n-1) :
             if(anext[i] < lb[i]):
@@ -168,9 +168,9 @@ def new_vertex():
         simp[h[m]][i] = anext[i]
         if(~(niter % ndisp)) and not quiet:
             if(i < (n-1)):
-                print "n[%1d]    %8.3g    %8.3e" %(i, anext[i], error[i])
+                print ("n[%1d]    %8.3g    %8.3e" %(i, anext[i], error[i]))
             else:
-                print "lms:    %8.3g" % (anext[n-1]) # for that last one
+                print ("lms:    %8.3g" % (anext[n-1])) # for that last one
 
 
 def report(func):
@@ -179,29 +179,29 @@ def report(func):
     global mean, m, n, simp, error, niter, quiet, npx
     i = j = 0
 
-    print "=====================================\n\nEnd of simplex iterations"
-    print "Total iterations: %d" % niter
-    print "Summary of results:"
+    print( "=====================================\n\nEnd of simplex iterations")
+    print( "Total iterations: %d" % niter)
+    print ("Summary of results:")
     for j in range(0, n):
-        print "\nSimp [%2d]  " % (j),
+        print ("\nSimp [%2d]  " % (j),)
         for i in range(0, n):
-            print "%7.3g  " % (simp[j][i]),
-    print " "
+            print ("%7.3g  " % (simp[j][i]),)
+    print( " ")
 
-    print "The final mean values & errors are: "
+    print ("The final mean values & errors are: ")
     for i in range(0, n - 1):
         # final values
-        print "n[%1d] %9.3g     frac err: %9.3g" % (i, mean[i], error[i])
+        print ("n[%1d] %9.3g     frac err: %9.3g" % (i, mean[i], error[i]))
     sum_res(func, mean)  # compute it with final parameters
     sigma = mean[m]
 
     sigma = np.sqrt((sigma/float(npx)))
-    print "The standard deviation is:  %9.3g" % (sigma)
+    print( "The standard deviation is:  %9.3g" % (sigma))
     if(npx >  m):
         sigma = sigma/np.sqrt(float(npx - m))
     else:
         sigma = sigma/np.sqrt(float(m-npx))
-    print "The estimated error is:     %9.3g" % (sigma)
+    print( "The estimated error is:     %9.3g" % (sigma))
 
 
 def simplex(func, ipars, X, Y, lbound=None, hbound=None, maxiters=1000,
@@ -272,17 +272,17 @@ def _simplex_fit(func):
     npts = len(dy)
     sum_res(func, simp[0])  # first vertex is the initial guess
     if not quiet:
-        print 'simp: ', simp
-        print 'Initial ', simp
-        print 'step ', step
+        print ('simp: ', simp)
+        print( 'Initial ', simp)
+        print( 'step ', step)
     #   maxerr[m] = 0.0
 
     for i in range(0, m): #  compute the offset of the vertex of the starting simplex
         p[i] = step[i] * (np.sqrt(float(n)) + float(m) -  1.0) / (float(m)*ROOT2) #* (np.random.randn()+1)
         q[i] = step[i] * (np.sqrt(float(n)) - 1.0) / (float(m)*ROOT2) #* (np.random.randn()+1)
     if not quiet:
-        print 'P ', p
-        print 'Q ', q
+        print( 'P ', p)
+        print( 'Q ', q)
     nerr_condx = 0
     for i in range(0, n):
         if maxerr[i] > 0.0:
@@ -293,7 +293,7 @@ def _simplex_fit(func):
         simp[i][i - 1] = simp[0][i - 1] + p[i - 1]
         sum_res(func, simp[i])  # and their residuals
     if not quiet:
-        print 'simp: ', simp
+        print( 'simp: ', simp)
     # preset
     l = [1] * N
     h = [1] * N
@@ -302,7 +302,7 @@ def _simplex_fit(func):
     #   ----- iteration loop ------
     for niter in range(0, maxiter):
         if not quiet:
-            print "Starting Iteration: %d" % (niter)
+            print ("Starting Iteration: %d" % (niter))
         center = np.zeros(n)
         nc = np.zeros(n)
         for i in range(0, n):  # compute the centroid
@@ -373,23 +373,25 @@ def testf(p, x, noise=0.):
         y = y + np.random.normal(loc=0., scale=noise, size=y.shape[0])
     return (np.array(y), np.mean(np.diff(x)))
 
+def main():
+     """ self test """
+ #    import matplotlib.pylab as MP
+     #app = QtGui.QApplication(sys.argv)
 
+     x = np.arange(0, 50, 0.01);
+     p0 = [2, 1, 3., -60]
+     (y, dt) = testf(p0, x, noise=0.05)
+     pnew = simplex(testf, p0, x, y, lbound=[0, 0.01, 0.01, -100], hbound=[10, 10, 10, 10],
+                    silent=True, watch=False, maxiters=1000)
+     print ('final parmaters: ', pnew)
+     import matplotlib.pylab as MP
+     MP.figure()
+     MP.plot(x, y, 'k')  # original functoin
+     #(ys, dt) = testf(p0, x)
+     #MP.plot(x, ys, 'g', linewidth=2)  # initial guess
+     (yf, dt) = testf(pnew, x)
+     MP.plot(x, yf, 'r--', linewidth=2.0)  # converged solution
+     MP.show()   
+    
 if __name__ == "__main__":
-    """ self test """
-#    import matplotlib.pylab as MP
-    #app = QtGui.QApplication(sys.argv)
-
-    x = np.arange(0, 50, 0.01);
-    p0 = [2, 1, 3., -60]
-    (y, dt) = testf(p0, x, noise=0.05)
-    pnew = simplex(testf, p0, x, y, lbound=[0, 0.01, 0.01, -100], hbound=[10, 10, 10, 10],
-                   silent=True, watch=False, maxiters=1000)
-    print ('final parmaters: ', pnew)
-    import matplotlib.pylab as MP
-    MP.figure()
-    MP.plot(x, y, 'k')  # original functoin
-    #(ys, dt) = testf(p0, x)
-    #MP.plot(x, ys, 'g', linewidth=2)  # initial guess
-    (yf, dt) = testf(pnew, x)
-    MP.plot(x, yf, 'r--', linewidth=2.0)  # converged solution
-    MP.show()
+    main()

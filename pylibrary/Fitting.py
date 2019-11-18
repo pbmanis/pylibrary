@@ -833,7 +833,7 @@ class Fitting():
 
 # run some tests if we are "main"
 
-if __name__ == "__main__":
+def main():
     #    import matplotlib.pyplot as pyplot
 
     #import matplotlib as MP
@@ -1019,3 +1019,6 @@ if __name__ == "__main__":
             pylab.plot(numpy.array(x), initialgr, 'k--')
             pylab.plot(xf[0], yf[0], 'b-')  # fit
             pylab.show()
+
+if __name__ == "__main__":
+    main()

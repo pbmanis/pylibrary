@@ -146,10 +146,10 @@ class Simplex:
 
             # Optionally, print progress information
             if monitor:
-                print 'Iteration = %d   Best = %f   Worst = %f\r' % (iter, self.errors[self.lowest], self.errors[self.highest]),
+                print('Iteration = %d   Best = %f   Worst = %f\r' % (iter, self.errors[self.lowest], self.errors[self.highest]), end=' ')
 
             if T <= epsilon:   # We converged!  Break out of loop!
-                print "CONVERGED!"
+                print("CONVERGED!")
                 break
             else:                   # Didn't converge.  Keep crunching.
                 # Calculate centroid of simplex, excluding highest vertex
@@ -302,9 +302,9 @@ def test():
     p0 = [0.5, 0.5, 0.5, 0.5]
     s = Simplex(testf, p0, xdata=x, ydata=y, increments=[2, 4, 6, 8])
     values, err, iter = s.minimize()
-    print 'args = ', values
-    print 'error = ', err
-    print 'iterations = ', iter
+    print('args = ', values)
+    print('error = ', err)
+    print('iterations = ', iter)
     
     import matplotlib.pylab as MP
     MP.figure()

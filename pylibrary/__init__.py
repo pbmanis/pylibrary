@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 __author__ = "Paul B. Manis"
-__version__ = "0.17"
+__version__ = "0.2"
 
 # import pylibrary.bootstrap
 # import Fitting

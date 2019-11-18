@@ -63,6 +63,15 @@ import pylibrary.talbotetalTicks as ticks # logical tick formatting...
 
 
 def _ax_tolist(ax):
+    """
+    Private
+    
+    Convert axis of different format to a list
+    Lists are just returned
+    Dictionaries are converted to a list without the keys
+    numpy arrays are just converted to a list
+    simple instances are made a list.
+    """
     if isinstance(ax, list):
         return(ax)
     elif isinstance(ax, dict):
@@ -333,7 +342,6 @@ def do_talbotTicks(ax, axes='xy',
         override the standard axis limits for the labeling
         values can be list or tuple (0, 1), or can be (0, None) to use lower bound
                    as 0. 
-        
     
     """
     # get axis limits
@@ -375,7 +383,6 @@ def do_talbotTicks(ax, axes='xy',
         ax.set_xticklabels(xts) #, rotation='horizontal', fontsize=pointSize)  
     xtxt = ax.get_xticklabels()
     ax.set_xticklabels(xtxt, {'fontsize': pointSize, 'rotation': 'horizontal'})
-
 
 
 def labelPanels(axl, axlist=None, order='rowsfirst',
@@ -1739,9 +1746,7 @@ class Plotter():
             if 'noaxes' in sizer[s] and sizer[s]['noaxes'] == True:
                 noaxes(ax)
                 
-
-
-if __name__ == '__main__':
+def main():
 #    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
 #    test_sizergrid()
 #    exit(1)
@@ -1769,6 +1774,9 @@ if __name__ == '__main__':
     calbar([axd['B'], axd['C']], calbar=[0.5, 0.5, 0.2, 0.2])
     #labelPanels([axd[a] for a in axd], axd.keys())
     #mpl.tight_layout(pad=2, w_pad=0.5, h_pad=2.0)
-    mpl.show()
+    mpl.show()    
+
+if __name__ == '__main__':
+    main()
     
                

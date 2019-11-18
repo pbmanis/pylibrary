@@ -2,7 +2,7 @@ from mpl_toolkits.axes_grid.axislines import SubplotZero
 import matplotlib.pyplot as plt
 import numpy as np
 
-if 1:
+def test():
     fig = plt.figure(1)
     ax = SubplotZero(fig, 111)
     fig.add_subplot(ax)
@@ -18,3 +18,6 @@ if 1:
     ax.plot(x, np.sin(x*np.pi))
 
     plt.show()
+
+if __name__ == "__main__":
+    test()

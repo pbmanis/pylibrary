@@ -175,7 +175,7 @@ def export_panel(plitem, ax):
         elif isinstance(item, pg.graphicsItems.ScatterPlotItem.ScatterPlotItem):
             export_scatterplot(fn, ax, item)
         else:
-            print 'unknown item encountered : ', item
+            print ('unknown item encountered : ', item)
             continue
     xr, yr = plitem.viewRange()
     # now clean up the matplotlib/pylab plot and annotations
@@ -243,7 +243,7 @@ def export_curve(fn, ax, item):
             y = y[:len(x)]
         if len(x) > len(y):
             x = x[:len(y)]
-        print 'len x,y: ', len(x), len(y)
+        print ('len x,y: ', len(x), len(y))
         pl = ax.bar(x, y, width=1.0, color=fillcolor, edgecolor=edgecolor, linewidth=pen.width())
         #ax.bar(left, height, width=1.0, bottom=None, hold=None, **kwargs)
     else: # any but step mode gets a regular plot

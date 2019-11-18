@@ -224,9 +224,9 @@ def ClementsBekkers(data, sign='+', samplerate=0.1, rise=2.0, decay=10.0, thresh
 
     nevent = len(eventlist)
     if nevent == 0:
-        print 'ClementsBekkers: No Events Detected'
+        print('ClementsBekkers: No Events Detected')
     else:
-        print 'ClementsBekkers:  %d Events Detected' % (nevent)
+        print('ClementsBekkers:  %d Events Detected' % (nevent))
     if dispFlag is True and nevent > 0:
         mpl.figure(1)
         t = samplerate * np.arange(0, nData)
@@ -488,7 +488,7 @@ def cb_multi(data, sign='+', samplerate=0.1, rise=[5.0, 3.0, 2.0, 0.5], decay=[3
         ksign = -1
     else:
         ksign = 1
-    print np.shape(icand)
+    print(np.shape(icand))
     nt = len(icand)
     if nt is 0:
         return
