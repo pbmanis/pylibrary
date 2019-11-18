@@ -997,7 +997,31 @@ mscale.register_scale(SquareRootScale)
 # # from somewhere on the web:
 
 class NiceScale:
+    """
+    Class to select what I condisider to be better scaling range
+    choices than the default
+    """
     def __init__(self, minv, maxv):
+        """
+        Parameters
+        ----------
+        minv : float (no default)
+            min value for axis
+        maxv : float (no default)
+            max value for axis
+        
+        Returns
+        -------
+        Nothing. all values are class variables.
+        self.maxTicks = 6
+        self.tickSpacing = 0
+        self.lst = 10
+        self.niceMin = 0
+        self.niceMax = 0
+        self.minPoint = minv
+        self.maxPoint = maxv
+        
+        """
         self.maxTicks = 6
         self.tickSpacing = 0
         self.lst = 10
@@ -1008,12 +1032,18 @@ class NiceScale:
         self.calculate()
 
     def calculate(self):
+        """
+        Perform the calculation based on the data we have been given
+        """
         self.lst = self._niceNum(self.maxPoint - self.minPoint, False)
         self.tickSpacing = self._niceNum(self.lst / (self.maxTicks - 1), True)
         self.niceMin = np.floor(self.minPoint / self.tickSpacing) * self.tickSpacing
         self.niceMax = np.ceil(self.maxPoint / self.tickSpacing) * self.tickSpacing
 
     def _niceNum(self, lst, rround):
+        """
+        Private
+        """
         self.lst = lst
         exponent = 0 # exponent of range */
         fraction = 0 # fractional part of range */
@@ -1044,11 +1074,18 @@ class NiceScale:
         return niceFraction * np.power(10, exponent)
 
     def setMinMaxPoints(self, minPoint, maxPoint):
-          self.minPoint = minPoint
-          self.maxPoint = maxPoint
-          self.calculate()
+        """
+        Adjust the maximum values and recalculate
+        """
+        self.minPoint = minPoint
+        self.maxPoint = maxPoint
+        self.calculate()
 
     def setMaxTicks(self, maxTicks):
+        """
+        Reset the max number of tick marks and
+        recalculate
+        """
         self.maxTicks = maxTicks;
         self.calculate()
 
@@ -1350,6 +1387,10 @@ def regular_grid(rows, cols, order='columnsfirst', figsize=(8., 10), showgrid=Fa
     return P
     
 def test_sizergrid():
+    """
+    Just display a regular grid in a test mode.
+    Grid should be 8x3
+    """
     P = regular_grid(8, 3)
     mpl.show()
     
