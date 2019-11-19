@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import print_function
-from six import iteritems
-# encoding: utf-8
 """
 PlotHelpers.py
 
@@ -17,15 +13,24 @@ Plotter class: a simple class for managing figures with multiple plots.
 Uses gridspec to build sets of axes. 
 
         Also allow quickaccess to things we like to do for publication plots, including:
-           using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
-           inserting a reference line (grey, 3pt dashed, 0.5pt, at refline = y position)
+        using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
+        inserting a reference line (grey, 3pt dashed, 0.5pt, at refline = y position)
     
 Created by Paul Manis on 2010-03-09.
 Copyright 2010-2016  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 
+Others:
+rectangles and circles use the following license:
+    
+    This code is under [The BSD 3-Clause License]
+    (http://opensource.org/licenses/BSD-3-Clause)
+
+
 """
 
+from __future__ import print_function
+from six import iteritems
 import sys
 import os
 import string
@@ -39,7 +44,7 @@ matplotlib.rc('text', usetex=False)  # if true, you get computer modern fonts AL
 matplotlib.rc('font',**{'family':'sans-serif','sans-serif':[stdFont, 'Helvetica']})
 # matplotlib.rcParams['pdf.fonttype'] = 42  # doesn't seem to do anything with Ill 2019.
 # matplotlib.rcParams['ps.fonttype'] = 42
-#matplotlib.use('Qt4Agg')
+matplotlib.use('Qt5Agg')
 
 #import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
@@ -57,8 +62,6 @@ import matplotlib.transforms as mtransforms
 import matplotlib.ticker as ticker
 import matplotlib.scale as mscale
 
-# seaborn.set_style('white')
-# seaborn.set_style('ticks')
 import pylibrary.talbotetalTicks as ticks # logical tick formatting... 
 
 
@@ -156,7 +159,8 @@ def nice_plot(axl, spines=['left', 'bottom'], position=0., direction='inward', t
         # or call adjust_spines?
 
 def noaxes(axl, whichaxes = 'xy'):
-    """ take away all the axis ticks and the lines
+    """
+    Take away all the axis ticks and the lines.
     
     Parameters
     ----------
@@ -187,6 +191,16 @@ def noaxes(axl, whichaxes = 'xy'):
 def noaxeslabels(axl, whichaxes='xy'):
     """
     Remove the axes labels without removing the tick marks
+    
+    Parameters
+    ----------
+    whichaxes : string (default: 'xy')
+        string indicating which axes will be unlabeled
+        'xy', 'x', 'y'
+    
+    Returns
+    -------
+        Nothing
     """
     axl = _ax_tolist(axl)
     for ax in axl:
@@ -306,6 +320,16 @@ def tickStrings(values, scale=1, spacing=None, tickPlacesAdd=1, floatAdd=None):
 def talbotTicks(axl, **kwds):
     """
     Adjust the tick marks using the talbot et al algorithm, on an existing plot.
+    
+    Parameters
+    ----------
+    axl : axis instance, list, etc
+    
+    \**kwds : keywords passed to do_talbotTicks
+    
+    Returns
+    -------
+    Nothing
     """
     if type(axl) is not list:
         axl = [axl]
@@ -341,9 +365,12 @@ def do_talbotTicks(ax, axes='xy',
     axrange : dict. Default: {'x': None, 'y': None}
         override the standard axis limits for the labeling
         values can be list or tuple (0, 1), or can be (0, None) to use lower bound
-                   as 0. 
-    
+        as 0. 
+    Returns
+    -------
+    Nothing
     """
+
     # get axis limits
     # aleft = ax.getAxis('left')
     # abottom = ax.getAxis('bottom')
@@ -474,6 +501,14 @@ def list_axes(axd): # convienence
 def listAxes(axd):
     """
     make a list of the axes from the dictionary
+    
+    Parameters
+    ----------
+    axd : axes (list, dict)
+    
+    Returns
+    -------
+    list of axes
     """
     if type(axd) is not dict:
         if type(axd) is list:
@@ -485,10 +520,35 @@ def listAxes(axd):
     return axl
 
 
-def clean_axes(axl):  # because I always forget which way I coded it
+def clean_axes(axl):
+    """
+    Remove top and right spines and ticks from the axes to make
+    a clean plot without the junk normally defaulted in matplotlib
+    (because I always forget which way I coded it)
+    Parameters
+    ----------
+    axl : list, dict, or single axis
+    
+    Returns
+    -------
+    Nothing
+    """
     cleanAxes(axl)
 
 def cleanAxes(axl):
+    """
+    Remove top and right spines and ticks from the axes to make
+    a clean plot without the junk normally defaulted in matplotlib
+    
+    Parameters
+    ----------
+    axl : list, dict, or single axis
+    
+    Returns
+    -------
+    Nothing
+    """
+    
     axl = _ax_tolist(axl)
     for ax in axl:
         if ax is None:
@@ -581,6 +641,17 @@ def setFormatter(axl, x0, x1, axis='x'):
 
 
 def update_font(axl, size=8, font=stdFont):
+    """
+    Change the font on a axis
+    
+    Parameters
+    ----------
+    size : float (default: 8)
+        New font size
+    font : str (default: stdFont)
+        New font (default is 'Arial')
+    
+    """
     axl = _ax_tolist(axl)
     # if type(axl) is not list:
     #     axl = [axl]
@@ -636,14 +707,18 @@ def lockPlot(axl, lims, ticks=None):
 def adjust_spines(axl, spines=['left', 'bottom'], direction='outward', length=5):
     """
     Change spine size, location and direction
+    
     Parameters
     ----------
     axl : axis or list of axes (no default)
         a Matplotlib axis instance, or a list fo axes    
+    
     spines : list (default ['left', 'bottom])
         List of which spines to adjust
+    
     direction: str (default: 'outward')
         Direction spines should point
+    
     length : float (default: 5)
         Length of spines
     
@@ -677,25 +752,7 @@ def adjust_spines(axl, spines=['left', 'bottom'], direction='outward', length=5)
                 spine.set_color('none')  # don't draw spine
 
 
-"""
-Pulled from a stack overflow answer:
-https://stackoverflow.com/questions/42277989/square-root-scale-using-matplotlib-python
 
-fig, ax = plt.subplots(1)
-
-ax.plot(np.arange(0, 9)**2, label='$y=x^2$')
-ax.legend()
-
-ax.set_yscale('squareroot')
-ax.set_yticks(np.arange(0,9,2)**2)
-ax.set_yticks(np.arange(0,8.5,0.5)**2, minor=True)
-
-plt.show()
-
-Because this registers the class in the matplotlib.scale module, it should be
-just "usable" by specifying the 'squareroot' scale.
-                      
-"""
 import matplotlib.transforms as mtransforms
 import matplotlib.ticker as ticker
 import matplotlib.scale as mscale
@@ -703,6 +760,26 @@ import matplotlib.scale as mscale
 class SquareRootScale(mscale.ScaleBase):
     """
     ScaleBase class for generating square root scale.
+    
+
+    Pulled from a stack overflow answer:
+    https://stackoverflow.com/questions/42277989/square-root-scale-using-matplotlib-python
+
+    Usage:
+        fig, ax = plt.subplots(1)
+
+        ax.plot(np.arange(0, 9)**2, label='$y=x^2$')
+        ax.legend()
+
+        ax.set_yscale('squareroot')
+        ax.set_yticks(np.arange(0,9,2)**2)
+        ax.set_yticks(np.arange(0,8.5,0.5)**2, minor=True)
+
+        plt.show()
+
+    Because this registers the class in the matplotlib.scale module, it should be
+    just "usable" by specifying the 'squareroot' scale.
+    
     """
 
     name = 'squareroot'
@@ -755,6 +832,7 @@ def getLayoutDimensions(n, pref='height'):
     ----------
     n : int (no default):
         Number of plots needed
+    
     pref : string (default : 'height')
         prefered way to organized the plots (height, or width)
     
@@ -811,8 +889,42 @@ def nextup(x, steps=[1, 2, 5, 10]):
 def calbar(axl, calbar=None, scale=[1.0, 1.0],
         axesoff=True, orient='left', unitNames=None, fontsize=11, weight='normal', color='k', font='Arial'):
     """
-        draw a calibration bar and label it. The calibration bar is defined as:
-        [x0, y0, xlen, ylen]
+    draw a calibration bar and label it. T
+        
+    Parameters
+    ----------
+    axl : axis or list of axes
+    
+    calbar :  cal position and size array [x0, y0, xlen, ylen] (default: None)
+    
+    scale : (default [1.0, 1.0])
+        scale factor to apply to the calibration bar in x and y axes
+    
+    axesoff : boolean (default: True)
+        If true, turns of the standard axes so we just sidplay the calibration bar
+    
+    orient : string (default: 'left')
+        Orientation ['left', 'right'], whether the vertical part is to the left or right
+    
+    unitNames : dict with 'x' and 'y' (default: None)
+        Names of the units for each of the axes, e.g., {'x': 'ms', 'y': 'pA'}
+    
+    fontsize : float (default: 11)
+        Text font size
+    
+    weight : string (default: 'normal')
+        Weight for the text
+    
+    color : string or matplotlib color (default: 'k')
+        Color for the bar and text
+    
+    font : string or matplotlib font (default: 'Arial')
+        The font to use for the text and labels
+    
+    Returns
+    -------
+    Nothing
+    
     """
     axl = _ax_tolist(axl)
     # if type(axl) is not list:
@@ -874,7 +986,34 @@ def referenceline(axl, reference=None, limits=None, color='0.33', linestyle='--'
     """
     draw a reference line at a particular level of the data on the y axis
     returns the line object.
+    
+    Parameters
+    ----------
+    axl : axes object (object, list of objects, etc)
+    
+    reference : float (default: None)
+        The value for the reference line. If None, we plot at y=0.
+    
+    limits : list or tuple of (xmin, xmax) (default: None)
+        limits over which the reference line will be drawn
+    
+    color : float or matplotlibcolor (default: 0.33)
+        line color
+    
+    linestyle : string (default: '--')
+        The style for the reference line
+    
+    linewidth : float (default: 0.5)
+        line width in points
+    
+    dashes : mpl dashes value (default: None)
+        Type of special dashes to use in line
+    
+    Returns
+    -------
+    The reference line instance
     """
+    
     axl = _ax_tolist(axl)
     # if type(axl) is not list:
     #     axl = [axl]
@@ -898,7 +1037,24 @@ def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
     """
     Make plot(s) with crossed axes at the data points set by xyzero, and optionally
     set axes limits
+    
+    Parameters
+    ----------
+    axl : axes objects (single, list, etc)
+        list or similar of axes that will be converted to crossed format
+    
+    xyzero : list or tuple of floats (length=2)
+        the position used for the zero in x and y where
+        the axes will cross
+    
+    limits: list or tuple of floats (length=4)
+        min and max for x, y in order of: [xmin, ymin, xmax, ymax]
+    
+    Returns
+    -------
+    Nothing
     """
+    
     axl = _ax_tolist(axl)
     # if type(axl) is not list:
     #     axl = [axl]
@@ -920,9 +1076,30 @@ def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
             ax.set_ylim(bottom=limits[1], top=limits[3])
             
 def violin_plot(ax, data, pos, bp=False, median = False):
-    '''
+    """
     create violin plots on an axis
-    '''
+    
+    Parameters
+    ----------
+    ax : axis object for the plot
+    
+    data : float array 
+        The data to be plotted
+    
+    pos : float array
+        The x position to be plotted
+    
+    bp : boolean (default: False)
+        If True, also plot a boxplot
+    
+    median : boolean (default: False)
+        If True, draw a line at the median of the data
+    
+    Returns
+    -------
+    Nothing
+    """
+    
     dist = max(pos)-min(pos)
     w = min(0.15*max(dist,1.0),0.5)
     for d,p in zip(data,pos):
@@ -1042,7 +1219,7 @@ class NiceScale:
 
     def _niceNum(self, lst, rround):
         """
-        Private
+        Private: compute nice numbers for the axes
         """
         self.lst = lst
         exponent = 0 # exponent of range */
@@ -1130,13 +1307,7 @@ def circles(x, y, s, c='b', ax=None, vmin=None, vmax=None, **kwargs):
     a = np.arange(11)
     circles(a, a, a*0.2, c=a, alpha=0.5, edgecolor='none')
 
-    License
-    --------
-    This code is under [The BSD 3-Clause License]
-    (http://opensource.org/licenses/BSD-3-Clause)
     """
-
-    #import matplotlib.colors as colors
 
     if ax is None:
         ax = mpl.gca()    
@@ -1206,10 +1377,7 @@ def rectangles(x, y, sw, sh=None, c='b', ax=None, vmin=None, vmax=None, **kwargs
     a = np.arange(11)
     squaress(a, a, a*0.2, c=a, alpha=0.5, edgecolor='none')
 
-    License
-    --------
-    This code is under [The BSD 3-Clause License]
-    (http://opensource.org/licenses/BSD-3-Clause)
+
     """
     #import matplotlib.colors as colors
 
@@ -1283,9 +1451,16 @@ def show_figure_grid(fig, figx=10., figy=10.):
     return backGrid
 
 def hide_figure_grid(fig, grid):
+    """
+    Hide the figure grid in the figure
+    """
     grid.grid(False)
 
 def delete_figure_grid(fig, grid):
+    """
+    Remove the figure grid from the figure
+    """
+    
     mpl.delete(grid)
 
 def regular_grid(rows, cols, order='columnsfirst', figsize=(8., 10), showgrid=False,
@@ -1400,6 +1575,7 @@ class Plotter():
     The Plotter class provides a simple convenience for plotting data in 
     an row x column array.
     """
+    
     def __init__(self, rcshape=None, axmap=None, arrangement=None, title=None, label=False, 
         order='rowsfirst', refline=None,
         figsize=None, margins=None, labelalignment='left',
@@ -1413,39 +1589,38 @@ class Plotter():
         --------
         Ex. 1: 
         One way to generate plots on a standard grid, uses gridspec to specify an axis map:
-            labels = ['A', 'B1', 'B2', 'C1', 'C2', 'D', 'E', 'F']
-            gr = [(0, 4, 0, 1), (0, 3, 1, 2), (3, 4, 1, 2), (0, 3, 2, 3), (3, 4, 2, 3), (5, 8, 0, 1), (5, 8, 1, 2), (5, 8, 2, 3)]
-            axmap = OrderedDict(zip(labels, gr))
-            P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
-            PH.show_figure_grid(P.figure_handle)
+        labels = ['A', 'B1', 'B2', 'C1', 'C2', 'D', 'E', 'F']
+        gr = [(0, 4, 0, 1), (0, 3, 1, 2), (3, 4, 1, 2), (0, 3, 2, 3), (3, 4, 2, 3), (5, 8, 0, 1), (5, 8, 1, 2), (5, 8, 2, 3)]
+        axmap = OrderedDict(zip(labels, gr))
+        P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
+        PH.show_figure_grid(P.figure_handle)
         
         Ex. 2:
         Place plots on defined locations on the page - no messing with gridspec or subplots. 
-            For this version, we just generate N subplots with labels (used to tag each plot)
-            The "sizer" array then maps the tags to specific panel locations
-            # define positions for each panel in Figure coordinages (0, 1, 0, 1)
-            # you don't have to use an ordered dict for this, I just prefer it when debugging
-            sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
-                     'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
-                    'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
-                    'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 
-                    'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
-                    }
-            # dict pos elements are [left, width, bottom, height] for the axes in the plot.
-            gr = [(a, a+1, 0, 1) for a in range(0, 8)]   # just generate subplots - shape does not matter
-            axmap = OrderedDict(zip(sizer.keys(), gr))
-            P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
-            PH.show_figure_grid(P.figure_handle)
-            P.resize(sizer)  # perform positioning magic
-            P.axdict['B1'] access the plot associated with panel B1
+        For this version, we just generate N subplots with labels (used to tag each plot)
+        The "sizer" array then maps the tags to specific panel locations
+        # define positions for each panel in Figure coordinages (0, 1, 0, 1)
+        # you don't have to use an ordered dict for this, I just prefer it when debugging
+        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
+        'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
+        'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
+        'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 
+        'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
+        }
+        # dict pos elements are [left, width, bottom, height] for the axes in the plot.
+        gr = [(a, a+1, 0, 1) for a in range(0, 8)]   # just generate subplots - shape does not matter
+        axmap = OrderedDict(zip(sizer.keys(), gr))
+        P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
+        PH.show_figure_grid(P.figure_handle)
+        P.resize(sizer)  # perform positioning magic
+        P.axdict['B1'] access the plot associated with panel B1
 
         Parameters
         ----------
         rcshape : a list or tuple: 2x1 (no default)
-                    rcshape is an array [row, col] telling us how many rows and columns to build.
-                    default defines a rectangular array r x c of plots
-                  a dict : 
-                  None: expect axmap to provide the input... 
+                  rcshape is an array [row, col] telling us how many rows and columns to build.
+                  default defines a rectangular array r x c of plots
+                  a dict :  None: expect axmap to provide the input... 
         
         axmap : 
             list of gridspec slices (default : None)
@@ -1493,7 +1668,9 @@ class Plotter():
         Returns
         -------
         Nothing
+        
         """
+        
         self.arrangement = arrangement
         self.referenceLines = {}
         self.parent = parent_figure
@@ -1684,6 +1861,10 @@ class Plotter():
         #             raise ValueError('Call to get next axis exceeds the number of rows requested initially: %d' % self.nrows)
     
     def reset_axis_counters(self):
+        """
+        Set the column and row counters back to zero
+        """
+        
         self.column_counter = 0
         self.row_counter = 0
     
@@ -1711,6 +1892,18 @@ class Plotter():
         return currentaxis
 
     def getaxis_fromlabel(self, label):
+        """
+        Parameters
+        ----------
+        label : str
+            Find the plot instance axis object that has the
+            specified label
+        
+        Returns
+        -------
+        axisobject or None if the labe is not found
+        """
+        
         axobj = self.axdict[label]
         for i in range(self.nrows):
             for j in range(self.ncolumns):

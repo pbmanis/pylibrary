@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# encoding: utf-8
 """
 RSTATS.py
 Wrappers for using R, scipy and a custom permutation routine for data anlsysis
@@ -79,8 +77,8 @@ def KS(dataDict=None, dataLabel='data', mode='two.sided'):
     """
     KS performs a two-sample Kolmogorov-Smirnov test using the R package
 
-    Params
-    ------
+    Parameters
+    ----------
     dataDict: Dictionary
         Data format {'group1': [dataset], 'group2': [dataset]}.
     dataLabel: string
@@ -236,20 +234,24 @@ def permTS(dataDict=None, dataLabel='data', mode='exact.ce'):
     but is "exact"
     This routine is a wrapper for permTS in R.
 
-    Params
-    ------
+    Parameters
+    ----------
     dataDict: Dictionary
         Data format {'group1': [dataset], 'group2': [dataset]}.
+    
     dataLabel: string
         title to use for print out of data
+    
     mode: string
         test mode (see manual. Usually 'exact.ce' for "complete enumeration", or
         'exact.mc' for montecarlo)
+    
     Returns
     -------
     (p, n) : tuple
         p value for test (against null hypothesis), and n, number of mc 
         replications or 0 for other tests
+    
     """
 
     # test calling values
@@ -365,29 +367,34 @@ def ttest(
     Comment: This routine first tests the equal varaince assumption.
     There are reasons that this might be viewed askance.
     Therefore, a simple test just using Welch's test, and
-        assuming unequal variance may be prefered (Ruxton, G. Behav. Ecol.,
-        17:688, 2006)
+    assuming unequal variance may be prefered (Ruxton, G. Behav. Ecol.,
+    17:688, 2006)
     The current version no longer performs a prior test for equal variances,
-        nor does it report the results for that test.
+    nor does it report the results for that test.
     We always assume variances are unequal.
+
     Parameters
     ----------
     data : Dictionary (default: None)
         Data format {'group1': [dataset], 'group2': [dataset]}.
+    
     dataLabel : string (default: None)
         title to use for print out of data
+    
     paired : Boolean (default: False)
         Set true to do "paired" t-test, false to do unpaired 
         independent samples) test.
+    
     decimals : int (default 4)
         decimals in formatted printout
 
     Returns
     -------
-     (df, t, p) : tuple
+    (df, t, p) : tuple
         df : degrees of freedom calculated assuming unequal variance
         t : t statistic for the difference
         p : p value
+    
     """
 
     # test calling values

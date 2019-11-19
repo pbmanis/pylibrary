@@ -38,11 +38,11 @@ import string
 
 class styler():
     '''
-    Description
-    -----------
-    -rules defining figure style
+    Rules defining figure style
     Creates an object with the following additional attributes:
-        -------
+    
+    Parameters
+    ----------
         -Font     = dict
         -Lines    = dict
         -Axes     = dict
@@ -206,9 +206,8 @@ class styler():
     #----------------------------------------------------------------------
     def style_apply(self):
         '''
-        Description
-        -----------
-        -applies figure parameters defined in style as default for matplotlib
+        Applies figure parameters defined in style as default for matplotlib
+        
         Parameters
         ----------
         -style: list - list of dictionaries: Font, Lines, Axes, Ticks, Grid, Legend,
@@ -239,10 +238,9 @@ class styler():
 
 def create_inset_axes(dim, ax):
     '''
-    Description
-    -----------
-    -creates new sub-axes of a given size in the given position of 
-     existing axes
+    Creates new sub-axes of a given size in the given position of 
+    existing axes
+    
     Parameters
     ----------
     -dim: list/array - [x, y, size_x, size_y]. 
@@ -251,6 +249,7 @@ def create_inset_axes(dim, ax):
             size_x, size_y - dimensions of created sub-axes in units of 
             axes 'ax' dimensions
     -ax:   axes - new axes are created relative to these axes
+    
     Returns
     -------
     -ax1  = new axes
@@ -274,24 +273,24 @@ def create_inset_axes(dim, ax):
 
 def tight_layout(axes, style, filename, fig_width='small', label_order=[]):
     '''
-    Description
-    -----------
-    -function for optimizing figure layout
+    Function for optimizing figure layout
+    
     Parameters
     ----------
     -axes: list of matplotlib major axes instances
     -style: list - list of dictionaries: Font, Lines, Axes, Ticks, Grid, Legend,
-                                         Patch, Text, Savefig, Figure, Misc.
+            Patch, Text, Savefig, Figure, Misc.
             For details see example style function, e.g., style_Plos()
     -fig_width: str or float - 'small', 'medium', 'large' to adjust width to 
-                               1, 1.5, 2 columns; use float to set width 
-                               as a fraction of A4 width 
+             1, 1.5, 2 columns; use float to set width 
+             as a fraction of A4 width 
     -filename: str - path + filename to which to save the figure. The file name 
-               should include the extension.
+             should include the extension.
     -label_order: defines order of labels across subplots. Possible values:
-           []: default - use standard left-to-right labeling
-           ['a', 'b', 'c', 'd']: use this template as left-to-right sequence. 
-                            Number of elements should be equal to number of axes      
+            []: default - use standard left-to-right labeling
+            ['a', 'b', 'c', 'd']: use this template as left-to-right sequence. 
+            Number of elements should be equal to number of axes      
+    
     Returns
     -------
     -None
@@ -311,47 +310,48 @@ def tight_layout(axes, style, filename, fig_width='small', label_order=[]):
 
 def geometry_adjust(axes, style, fig_width, label_order=[]):
     """
-    Description
-    -----------
-    -adjusts figure appearance: 
+    Adjusts figure appearance: 
+    
     For each axis the following steps are performed:
     1) Compute geometrical position of corresponding subplot in the original 
-        figure
+    figure
     2) Compute size of the figure region for the present subplot
     3) Compute spacing [left, right, bottom, top] from the axes reserved for 
-        labels and tick labels
+    labels and tick labels
     4) Adjust size of axes to fit in a given subplot region
     5) In case of color bar in a subplot, perform steps 3-4 separately for 
-                image and color bar
+    image and color bar
+    
     Parameters
     ----------
-    -axes: list of matplotlib major axes instances.
+    axes: list of matplotlib major axes instances.
            axes[i]={'ax':axes,'cb':None, 'twin':None} where axes=axes instance, 
            cb=colorbar instance, twin=twin axes instance
-    -style: list - list of dictionaries:
+    style: list - list of dictionaries:
                    Font, Lines, Axes, Ticks, Grid, 
                    Legend, Patch,Text,Savefig,Figure,Misc.
                    For details see example style function, e.g., style_Plos()  
-    -fig_width: str or float - 'small', 'medium', 'large' to adjust width to 1, 
+    fig_width: str or float - 'small', 'medium', 'large' to adjust width to 1, 
                 1.5, 2 columns; use float to set width as a fraction of A4 width 
-    -label_order: defines order of labels across subplots. Possible values:
+    label_order: defines order of labels across subplots. Possible values:
               []: default - use standard left-to-right labeling
               ['a', 'b', 'c', 'd']: use this template as left-to-right sequence. 
               Number of elements should be equal to number of axes
     Notes
     -----
-    -The present implementation is valid only for color bars used with option 
-                "use_gridspec=False".
-    -When creating color bars, do not specify 'fraction' or 'pad' arguments.
-    -To use mathematical symbols in labels: 
-                First, create a random label with a shape roughly similar to 
-                the expected one.          
-                Second, after geometry optimization, assign the mathematical 
-                expression to the label.
-    -3D plots still require manual adjustment.
+    The present implementation is valid only for color bars used with option 
+    "use_gridspec=False".
+    When creating color bars, do not specify 'fraction' or 'pad' arguments.
+    To use mathematical symbols in labels: 
+    First, create a random label with a shape roughly similar to 
+    the expected one.          
+    Second, after geometry optimization, assign the mathematical 
+    expression to the label.
+    3D plots still require manual adjustment.
+    
     Returns
     -------
-    -None
+    None
     """
 
     # reconstruct the figure object

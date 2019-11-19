@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from __future__ import print_function
 """
 titlecase.py v0.2
 Original Perl version by: John Gruber http://daringfireball.net/ 10 May 2008

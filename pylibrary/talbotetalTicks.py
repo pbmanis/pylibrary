@@ -1,6 +1,3 @@
-import math
-import numpy as np
-
 """
 An alpha version of the Talbot, Lin, Hanrahan tick mark generator for matplotlib.
 Described in "An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"
@@ -24,6 +21,9 @@ A shortcoming:
     manually set your view extent to include the min and max ticks if they are outside
     the data range. This should produce the same results as the paper.
 """
+
+import math
+import numpy as np
 
 class Extended():
 	# density is labels per inch

@@ -37,6 +37,7 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx_automodapi.automodapi',
     ]
 
 napoleon_google_docstring = False
@@ -62,7 +63,7 @@ autoclass_content = 'both'
 # a list of builtin themes.
 #
 #html_theme = 'alabaster'
-html_theme = 'nature'
+html_theme = 'sphinxdoc'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

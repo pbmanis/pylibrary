@@ -1,11 +1,10 @@
-#!/usr/bin/env python
-# encoding: utf-8
 """
 Params.py
 A clsss to create parameter structures
 First version: Paul Manis on 2014-01-31.
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
+
 from __future__ import print_function
 
 

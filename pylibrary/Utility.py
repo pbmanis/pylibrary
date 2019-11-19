@@ -1,6 +1,5 @@
-from __future__ import print_function
 """
-Utils.py - general utility routines
+Utility.py - general utility routines
 - power spectrum
 - elliptical filtering
 - handling very long input lines for dictionaries
@@ -16,7 +15,7 @@ Paul B. Manis, Ph.D.
 UNC Chapel Hill
 Department of Otolaryngology/Head and Neck Surgery
 Supported by NIH Grants DC000425-22 and DC004551-07 to PBM.
-Copyright 2010-2014  Paul Manis
+Copyright 2010-2019  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
@@ -60,8 +59,9 @@ def pSpectrum(data=None, samplefreq=44100):
     sampled in the time domain.
 
     Parameters
+    ----------
     data : list or numpy array
-            the signal for which the power spectrume will be computed
+        the signal for which the power spectrume will be computed
     arg2 : float
         The sample frequency for the data set, in Hz
 
@@ -72,6 +72,7 @@ def pSpectrum(data=None, samplefreq=44100):
         the associated frequency arrays (in Hz)
 
     """
+
     npts = len(data)
 # we should window the data here
     if npts == 0:
@@ -1087,31 +1088,33 @@ fpn='([-+]?\d*[\.]?\d*|\d+)'  # re for floating point number (no exponents)
 re_recparse = re.compile('(\w*:{1,1})?'+fpn+';?'+fpn+'/?'+fpn+'([ltnra]?)'+fpn+'?')  # re for recparse
 
 def recparse(cmdstr):
-    """ function to parse basic word unit of the list - a;b/c or the like
+    """
+    Function to parse basic word unit of the list - a;b/c or the like
     syntax is:
-    [target:]a;b[/c][*n]
+    [target:]a;b[/c][\*n]
     where:
     target is a parameter target identification (if present)
     the target can be anything - a step, a duration, a level....
     it just needs to be in a form that will be interepreted by the PyStim
     sequencer.
     a, b and c are numbers
-    n, if present *n implies a "mode"
+    n, if present \*n implies a "mode"
     such as linear, log, randomized, etc.
     """
+    
     if cmdstr == 'help':
         print("""
             recparse:
             function to parse basic word unit of the list - a;b/c or the like
             syntax is:
-            [target:]a;b[/c][*n]
+            [target:]a;b[/c][\*n]
             where:
             target is a parameter target identification (if present)
             the target can be anything - a step, a duration, a level....
             it just needs to be in a form that will be interepreted by the PyStim
             sequencer.
             a, b and c are numbers
-            n, if present *n implies a "mode"
+            n, if present \*n implies a "mode"
             such as linear, log, randomized, etc.
             """
         )

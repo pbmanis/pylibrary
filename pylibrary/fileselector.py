@@ -1,9 +1,8 @@
-#!/usr/bin/env python
-from __future__ import print_function
 """
 Standalone file/directory selector dialog
 Provides Qt5 based, system independent file selection
 
+pbmanis 2019
 """
 
 import sys

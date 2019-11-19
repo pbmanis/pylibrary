@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# encoding: utf-8
 """
 pyqtgraphPlotHelpers.py
 
@@ -13,7 +11,7 @@ Therefore, the first argument to these calls can either be a pyqtgraph axis obje
 or a list of axes objects.  2/10/2012 pbm.
 
 Created by Paul Manis on 2010-03-09.
-Copyright 2010-2015  Paul Manis
+Copyright 2010-2019  Paul Manis
 Distributed under MIT/X11 license. See license.txt for more infofmation.
 
 """
@@ -38,24 +36,32 @@ Basic functions:
 
 def nice_plot(plotlist, spines=['left', 'bottom'], position=10, direction='inward', axesoff = False):
     """ Adjust a plot so that it looks nicer than the default matplotlib plot
-        Also allow quickaccess to things we like to do for publication plots, including:
-           using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
-           inserting a reference line (grey, 3pt dashed, 0.5pt, at refline = y position)
+        Also allow quick access to things we like to do for publication plots, including:
+        using a calbar instead of an axes: calbar = [x0, y0, xs, ys]
+        inserting a reference line (grey, 3pt dashed, 0.5pt, at refline = y position)
         
-        Paramaetrs
+        Parameters
         ----------
         plotlist : list
             a plot handle or list of plot handles to which the "niceplot" will be applied
+        
         spines : list
             a list of which axes should have spines. Not relevant for pyqtgraph
+        
         position : int
             not relevant for pyqtgraph
+        
         direction : string
             need to implement for pyqtgraph
+        
         axesoff : boolean
             flag that forces plots to turn axes off
         
+        Returns
+        -------
+        Nothing
     """
+    
     if type(plotlist) is not list:
         plotlist = [plotlist]
     for pl in plotlist:
@@ -129,20 +135,25 @@ def setX(ax1, ax2):
 def labelPanels(axl, axlist=None, font='Arial', fontsize=18, weight = 'normal'):
     """
     Label the panels like a specific panel
-    
+
     Parameters
     ----------
     axl : dict or list
+
     axlist : list, optional
-         list of labels to use for the axes, defaults to None
+        list of labels to use for the axes, defaults to None
+
     font : str, optional
         Font to use for the labels, defaults to Arial
+
     fontsize : int, optional
         Font size in points for the labels, defaults to 18
+
     weight : str, optional
         Font weight to use, defaults to 'normal'
     
     """
+    
     if type(axl) is dict:
         axt = [axl[x] for x in axl]
         axlist = axl.keys()
@@ -538,20 +549,21 @@ def make_crossedAxes(ax, xyzero=[0., 0.], limits=[None, None, None, None], ndec=
 class polarPlot():
     """
     Create a polar plot, as a PlotItem for pyqtgraph.
-    
-    
     """
+
     def __init__(self, plot=None):
         """
         Instantiate a plot as a polar plot
         
-        Parmeters
+        Parameters
         ---------
         plot : pyqtgraph plotItem
             the plot that will be converted to a polar plot, defaults to None
             if None, then a new PlotItem will be created, accessible
             as polarPlot.plotItem
+        
         """
+        
         if plot is None:
             self.plotItem = pg.PlotItem()  # create a plot item for the plot
         else:
@@ -937,12 +949,15 @@ def labelAxes(plot, xtext, ytext, **kwargs):
 
 def labelPanels(plot, label=None, **kwargs):
     """
-        helper to label up the plot
-        Inputs: plot item
-                text for x axis
-                text for yaxis
-                plot title (on top) OR
-                plot panel label (for example, "A", "A1")
+    Helper to label up the plot
+    
+    Parameters
+    ----------
+    plot : plot item
+    
+    label : plot panel label (for example, "A", "A1")
+
+    \**kwargs : arguments for setPlotLabel
     """
 
     if label is not None:

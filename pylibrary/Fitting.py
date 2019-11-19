@@ -1,6 +1,3 @@
-from __future__ import print_function
-#!/usr/bin/env python
-
 """
 Python class wrapper for data fitting.
 Includes the following external methods:
@@ -276,10 +273,8 @@ class Fitting():
         exponential growth thereafter
 
         Parameter p is a list containing: [Fzero, Ibreak, F1amp, F2amp, Irate]
-        for I < break:
-            F = Fzero + I*F1amp
-        for I >= break:
-            F = F(break)+ F2amp(1-exp^(-t * Irate))
+        for I < break: F = Fzero + I*F1amp
+        for I >= break: F = F(break)+ F2amp(1-exp^(-t * Irate))
         """
         Fzero, Ibreak, F1amp, F2amp, Irate = p
         yd = numpy.zeros(x.shape)
