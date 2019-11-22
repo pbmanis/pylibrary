@@ -40,7 +40,8 @@ from rpy2.robjects import numpy2ri
 
 numpy2ri.activate()
 RStats = importr('stats')
-perm = importr("perm", "/Library/Frameworks/R.framework/Versions/3.4/Resources/library")  # may need to point to lib on system...
+perm = importr("perm", "/Library/Frameworks/R.framework/Versions/Current/Resources/library")  # may need to point to lib on system
+# Note - the perm package has to be installed in the current version of the installed R for this to work.
 
 R_imported = True
 #robjects.r.options(digits = 7)
