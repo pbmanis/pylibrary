@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 
 class FileSelector(QtGui.QMainWindow):
 
-    def __init__(self, title='', dialogtype='dir', extensions=None, startingdir='.', useNative=True):
+    def __init__(self, title='', dialogtype='dir', extensions=None, startingdir='.', useNative=True, standalone=False):
         """
         File Selector
 
@@ -50,10 +50,12 @@ class FileSelector(QtGui.QMainWindow):
         if dialogtype not in self.dialogs.keys():
             raise ValueError('Dialog type %s is not knowns to us ' % dialogtype)
         self.dialogtype = dialogtype
+        self.standalone = standalone
         self.initUI()
 
     def initUI(self):
-        # self.app = QtGui.QApplication(sys.argv)
+        if self.standalone:
+            self.app = QtGui.QApplication(sys.argv)
         self.win = QtGui.QDialog() # top level
         self.win.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.win.setWindowTitle(self.title)
