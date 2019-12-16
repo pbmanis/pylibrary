@@ -7,7 +7,7 @@ import os
 
 # Use Semantic Versioning, http://semver.org/
 
-version_info = (0, 3, 0, '')
+version_info = (0, 4, 0, '')
 __version__ = '%d.%d.%d%s' % version_info
 
 
@@ -32,7 +32,7 @@ setup(name='pylibrary',
           'numpy>-1.16', 'scipy>=1.2', 'cycler>=0.10.0', 'six>=1.12',
           'pyparsing>=2.4', 'python-dateutil>=2.8', 'kiwisolver>=1.1',
           ],
-      packages=find_packages(include=['pylibrary*', 'pylibrary.xlsx']),
+      packages=find_packages(include=['pylibrary*']),
       zip_safe=False,
       entry_points={
           'console_scripts': [

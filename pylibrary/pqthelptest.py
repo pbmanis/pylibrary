@@ -1,5 +1,5 @@
 import pyqtgraph as pg
-from . import pyqtgraphPlotHelpers as PH
+from . import plotting.pyqtgraph_plothelpers as PH
 from pyqtgraph.Qt import QtCore, QtGui
 
 

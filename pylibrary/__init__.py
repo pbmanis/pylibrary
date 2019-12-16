@@ -1,22 +1,14 @@
 #!/usr/bin/env python
 __author__ = "Paul B. Manis"
-__version__ = "0.3"
+__version__ = "0.4"
 
-import pylibrary.Params
-import pylibrary.Fitting
-import pylibrary.PlotHelpers
-import pylibrary.RStats
-import pylibrary.Utility
-
-import pylibrary.bootstrap
-import pylibrary.matplotlibexporter
-import pylibrary.permutation
-import pylibrary.picker
-import pylibrary.pyqtgraphPlotHelpers
-import pylibrary.simplex
-import pylibrary.tau_lmfit
+import pylibrary.params
+import pylibrary.fitting
+import pylibrary.plotting
+import pylibrary.stats
 import pylibrary.tifffile
 import pylibrary.titlecase
+import pylibrary.utility
 
 # try:
 #     import RStats
