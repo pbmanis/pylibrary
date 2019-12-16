@@ -1,5 +1,5 @@
 .. pylibrary documentation master file, created by
-   sphinx-quickstart on Mon Nov 18 16:46:21 2019.
+   sphinx-quickstart on Mon Dec 16 13:25:00 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -10,16 +10,19 @@ are generally useful.
 
 Particularly important modules are:
 
-PlotHelpers : A set of routines and classes to help make nice organized
+plotting: 
+    contains plothelpers : A set of routines and classes to help make nice organized
 plots with matplotlib.
 
-pyqtgraphHelpers : a set of similar routines for pyqtgraph; not as well developed
+    pyqtgraph_plothelpers : a set of similar routines for pyqtgraph; not as well developed
 and missing some important components.
 
-Utility : General utilities including simple digital filter setups, spike-detection,
+    utility : General utilities including simple digital filter setups, spike-detection,
 and a datac-like sequence parser.
 
-Routines for stats (old, may not work with current versions of libraries)
+    fitting : some fitting functions
+
+    stats : Routines for stats (old, may not work with current versions of libraries)
 
 Several sets of routines for python 2.7 that need to be updated. 
 
