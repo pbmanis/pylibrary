@@ -8,3 +8,4 @@ import pylibrary.plotting.picker
 import pylibrary.plotting.pyqtgraph_plothelpers
 import pylibrary.plotting.styler
 import pylibrary.plotting.talbotetalticks
+import pylibrary.plotting.colormaps
