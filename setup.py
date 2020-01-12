@@ -7,8 +7,8 @@ import os
 
 # Use Semantic Versioning, http://semver.org/
 
-version_info = (0, 4, 0, '')
-__version__ = '%d.%d.%d%s' % version_info
+# version_info = (0, 4, 0, '')
+# __version__ = '%d.%d.%d%s' % version_info
 
 
 path = os.path.join(os.path.dirname(__file__), 'pylibrary')
@@ -20,6 +20,7 @@ for line in open(os.path.join(path, '__init__.py'), 'r').readlines():
 if version is None:
     raise Exception("Could not read __version__ from pylibrary/__init__.py")
 
+__version__ =  version
 setup(name='pylibrary',
       version=__version__,
       description='General routines to assist in plotting and data analysis',
@@ -32,11 +33,11 @@ setup(name='pylibrary',
           'numpy>-1.16', 'scipy>=1.2', 'cycler>=0.10.0', 'six>=1.12',
           'pyparsing>=2.4', 'python-dateutil>=2.8', 'kiwisolver>=1.1',
           ],
-      packages=find_packages(include=['pylibrary*']),
+      packages=find_packages(include=['pylibrary']),
       zip_safe=False,
       entry_points={
           'console_scripts': [
-               
+               # no scripts for this library
                ],
           'gui_scripts': [
           ],
