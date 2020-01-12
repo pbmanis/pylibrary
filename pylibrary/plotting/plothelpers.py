@@ -62,7 +62,7 @@ import matplotlib.transforms as mtransforms
 import matplotlib.ticker as ticker
 import matplotlib.scale as mscale
 
-import pylibrary.plotting.talbotetalticks as ticks # logical tick formatting... 
+from pylibrary.plotting import talbotetalticks as ticks # logical tick formatting... 
 
 
 def _ax_tolist(ax):
