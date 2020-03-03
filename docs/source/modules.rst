@@ -24,11 +24,11 @@ Contents:
         :no-inheritance-diagram:
 .. automodapi:: pylibrary.fitting.fitting
         :no-inheritance-diagram:
-.. automodapi:: pylibrary.utility
+.. automodapi:: pylibrary.tools
         :no-inheritance-diagram:
-.. automodapi:: pylibrary.digital_filters
+.. automodapi:: pylibrary.tools.digital_filters
         :no-inheritance-diagram:
 
-.. automodapi:: pylibrary.params
+.. automodapi:: pylibrary.tools.params
         :no-inheritance-diagram:
 
