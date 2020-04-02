@@ -671,8 +671,7 @@ def update_font(axl, size=8, font=stdFont):
               tick.label1.set_size(size)
         ax.set_xticklabels(ax.get_xticks(), fontProperties)
         ax.set_yticklabels(ax.get_yticks(), fontProperties)
-        #ax.xaxis.set_smart_bounds(True)
-        #ax.yaxis.set_smart_bounds(True) 
+
         ax.tick_params(axis = 'both', labelsize = size)
 
 
@@ -744,10 +743,10 @@ def adjust_spines(axl, spines=['left', 'bottom'], direction='outward', length=5)
         for loc, spine in ax.spines: #.iteritems():
             if loc in spines:
                 spine.set_position((direction, length)) # outward by 10 points
-                if smart is True:
-                    spine.set_smart_bounds(True)
-                else:
-                    spine.set_smart_bounds(False)
+                # if smart is True:
+               #      spine.set_bounds(True)
+               #  else:
+               #      spine.set_bounds(False)
             else:
                 spine.set_color('none')  # don't draw spine
 
@@ -1067,8 +1066,8 @@ def crossAxes(axl, xyzero=[0., 0.], limits=[None, None, None, None]):
         ax.spines['right'].set_color('none')
         ax.spines['bottom'].set_position(('data',xyzero[1]))
         ax.spines['top'].set_color('none')
-        ax.spines['left'].set_smart_bounds(True)
-        ax.spines['bottom'].set_smart_bounds(True)
+        # ax.spines['left'].set_smart_bounds(True)
+        # ax.spines['bottom'].set_smart_bounds(True)  # deprecated, not sure what to do
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
         if limits[0] is not None:
