@@ -189,11 +189,28 @@ def NotchFilter(signal, notchf=[60.], Q=90., QScale=True, samplefreq=None):
         Qf = (w0/bw)**np.sqrt(2)  # Bandwidth is constant, Qf varies
     else:
         Qf = Q * np.ones(len(notchf))  # all Qf are the same (so bandwidth varies)
+    signalo = signal.copy()
     for i, f0 in enumerate(notchf):
         b, a = spSignal.iirnotch(w0[i], Qf[i])
-        signal = spSignal.lfilter(b, a, signal, axis=-1, zi=None)
-    return signal
+        signalo = spSignal.lfilter(b, a, signalo, axis=-1, zi=None)
+    return signalo
     
+def NotchFilterZP(signal, notchf=[60.], Q=90., QScale=True, samplefreq=None):
+    """
+    Zero Phase
+    """
+    assert samplefreq is not None
+    w0 = np.array(notchf)/(float(samplefreq)/2.0)  # all W0 for the notch frequency
+    if QScale:
+        bw = w0[0]/Q
+        Qf = (w0/bw)**np.sqrt(2)  # Bandwidth is constant, Qf varies
+    else:
+        Qf = Q * np.ones(len(notchf))  # all Qf are the same (so bandwidth varies)
+    signalo = signal.copy()
+    for i, f0 in enumerate(notchf):
+        b, a = spSignal.iirnotch(w0[i], Qf[i])
+        signalo = spSignal.filtfilt(b, a, signalo, axis=-1)
+    return signalo
 
 def downsample(data, n, axis=0, xvals='subsample'):
     """Downsample by averaging points together across axis.
