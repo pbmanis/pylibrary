@@ -185,7 +185,7 @@ def NotchFilter(signal, notchf=[60.], Q=90., QScale=True, samplefreq=None):
     assert samplefreq is not None
     w0 = np.array(notchf)/(float(samplefreq)/2.0)  # all W0 for the notch frequency
     if QScale:
-        bw = w0[0]/Q
+        bw = w0[0]/Qgit
         Qf = (w0/bw)**np.sqrt(2)  # Bandwidth is constant, Qf varies
     else:
         Qf = Q * np.ones(len(notchf))  # all Qf are the same (so bandwidth varies)

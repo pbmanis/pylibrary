@@ -678,8 +678,9 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt',
                 except:
                     continue
             else:
-                #print('utility: yere', x)
-                st = np.append(st, x[1]) # always save the first one
+                print('utility: here', x)
+                if len(x) > 1:  # be sure the index can be reached.
+                    st = np.append(st, x[1]) # always save the first one
 
     # clean spike times
     #st = clean_spiketimes(st, mindT=refract)
