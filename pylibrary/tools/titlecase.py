@@ -10,8 +10,8 @@ import sys
 import re
 
 
-SMALL = 'a|an|and|as|at|but|by|en|for|if|in|of|on|or|the|to|v\.?|via|vs\.?'
-PUNCT = "[!\"#$%&'‘()*+,-./:;?@[\\\\\\]_`{|}~]"
+SMALL = r'a|an|and|as|at|but|by|en|for|if|in|of|on|or|the|to|v\.?|via|vs\.?'
+PUNCT = r"[!\"#$%&'‘()*+,-./:;?@[\\\\\\]_`{|}~]"
 
 SMALL_WORDS = re.compile(r'^(%s)$' % SMALL, re.I)
 INLINE_PERIOD = re.compile(r'[a-zA-Z][.][a-zA-Z]')
@@ -34,7 +34,7 @@ def titlecase(text):
 
     """
 
-    words = re.split('\s', text)
+    words = re.split(r'\s', text)
     line = []
     for word in words:
         if INLINE_PERIOD.search(word) or UC_ELSEWHERE.match(word):

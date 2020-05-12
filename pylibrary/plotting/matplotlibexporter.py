@@ -73,11 +73,11 @@ def cleanRepl(matchobj):
         Replace backslashes with forward slashes
         replace underscores (subscript) with escaped underscores
     """
-    if matchobj.group(0) == '\\':
+    if matchobj.group(0) == r'\\':
         return '/'
-    if matchobj.group(0) == '_':
-        return '\_'
-    if matchobj.group(0) == '/':
+    if matchobj.group(0) == r'_':
+        return r'\_'
+    if matchobj.group(0) == r'/':
         return '/'
     else:
         return ''
@@ -114,7 +114,7 @@ def matplotlibExport(object=None, title=None, show=True, size=None):
     pylab.rcParams['text.usetex'] = False
     # escape filename information so it can be rendered by removing
     # common characters that trip up latex...:
-    escs = re.compile('[\\\/_]')
+    escs = re.compile(r'[\\\/_]')
     #print title
     if title is not None:
         title = remove_html_markup(title)

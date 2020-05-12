@@ -1085,11 +1085,11 @@ def seqparse(sequence):
     return (seq, target)
 
 
-fpn='([-+]?\d*[\.]?\d*|\d+)'  # re for floating point number (no exponents)
-re_recparse = re.compile('(\w*:{1,1})?'+fpn+';?'+fpn+'/?'+fpn+'([ltnra]?)'+fpn+'?')  # re for recparse
+fpn=r'([-+]?\d*[\.]?\d*|\d+)'  # re for floating point number (no exponents)
+re_recparse = re.compile(r'(\w*:{1,1})?'+fpn+';?'+fpn+'/?'+fpn+'([ltnra]?)'+fpn+'?')  # re for recparse
 
 def recparse(cmdstr):
-    """
+    r"""
     Function to parse basic word unit of the list - a;b/c or the like
     syntax is:
     [target:]a;b[/c][\*n]
@@ -1104,7 +1104,7 @@ def recparse(cmdstr):
     """
     
     if cmdstr == 'help':
-        print("""
+        print(r"""
             recparse:
             function to parse basic word unit of the list - a;b/c or the like
             syntax is:
