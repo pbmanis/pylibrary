@@ -267,7 +267,7 @@ def create_inset_axes(dim, ax):
     width *= dim[2]
     height *= dim[3]
 
-    return fig.add_axes([x, y, width, height], axisbg='w')
+    return fig.add_axes([x, y, width, height]) # , axisbg='w')  # keyword removed in 3.2?
         
 #-------------------------------------------------------------------------
 

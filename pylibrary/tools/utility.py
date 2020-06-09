@@ -678,7 +678,7 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt',
                 except:
                     continue
             else:
-                print('utility: here', x)
+                # print('Utility: here', x)
                 if len(x) > 1:  # be sure the index can be reached.
                     st = np.append(st, x[1]) # always save the first one
 
