@@ -337,7 +337,7 @@ def tickStrings(
 
 
 def talbotTicks(axl: [object, list], **kwds):
-    """
+    r"""
     Adjust the tick marks using the talbot et al algorithm, on an existing plot.
     
     Parameters

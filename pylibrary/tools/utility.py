@@ -678,8 +678,9 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt',
                 except:
                     continue
             else:
-                #print('utility: yere', x)
-                st = np.append(st, x[1]) # always save the first one
+                # print('Utility: here', x)
+                if len(x) > 1:  # be sure the index can be reached.
+                    st = np.append(st, x[1]) # always save the first one
 
     # clean spike times
     #st = clean_spiketimes(st, mindT=refract)
@@ -1084,11 +1085,11 @@ def seqparse(sequence):
     return (seq, target)
 
 
-fpn='([-+]?\d*[\.]?\d*|\d+)'  # re for floating point number (no exponents)
-re_recparse = re.compile('(\w*:{1,1})?'+fpn+';?'+fpn+'/?'+fpn+'([ltnra]?)'+fpn+'?')  # re for recparse
+fpn=r'([-+]?\d*[\.]?\d*|\d+)'  # re for floating point number (no exponents)
+re_recparse = re.compile(r'(\w*:{1,1})?'+fpn+';?'+fpn+'/?'+fpn+'([ltnra]?)'+fpn+'?')  # re for recparse
 
 def recparse(cmdstr):
-    """
+    r"""
     Function to parse basic word unit of the list - a;b/c or the like
     syntax is:
     [target:]a;b[/c][\*n]
@@ -1103,7 +1104,7 @@ def recparse(cmdstr):
     """
     
     if cmdstr == 'help':
-        print("""
+        print(r"""
             recparse:
             function to parse basic word unit of the list - a;b/c or the like
             syntax is:

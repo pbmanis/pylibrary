@@ -948,7 +948,7 @@ def labelAxes(plot, xtext, ytext, **kwargs):
 
 
 def labelPanels(plot, label=None, **kwargs):
-    """
+    r"""
     Helper to label up the plot
     
     Parameters

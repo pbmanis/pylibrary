@@ -13,7 +13,7 @@ colors = {'red': '\x1b[31m', 'r': '\x1b[31m',
           'backgray': '\x1b[100m'}
 
 def cprint(c, txt, default='white', **kwds):
-    """
+    r"""
     color print: one line
     
     Parameters
