@@ -34,15 +34,15 @@ usingMPlot=False
 pyqt = False
 
 
-def debug_trace():
-    '''Set a tracepoint in the Python debugger that works with Qt'''
-    if pyqt:
-        from PyQt4.QtCore import pyqtRemoveInputHook
-    from pdb import set_trace
-
-    if pyqt:
-        pyqtRemoveInputHook()
-    set_trace()
+# def debug_trace():
+#     '''Set a tracepoint in the Python debugger that works with Qt'''
+#     if pyqt:
+#         from PyQt4.QtCore import pyqtRemoveInputHook
+#     from pdb import set_trace
+#
+#     if pyqt:
+#         pyqtRemoveInputHook()
+#     set_trace()
 
 
 class Fitting():
@@ -830,13 +830,7 @@ class Fitting():
 
 def main():
     #    import matplotlib.pyplot as pyplot
-
-    #import matplotlib as MP
-
-    # MP.use('Qt4Agg')
-    #
-    # stdFont = 'Arial'
-    #
+    
     import matplotlib.pyplot as pylab
     #
     # pylab.rcParams['text.usetex'] = True
