@@ -35,15 +35,6 @@ import numpy as np
 import numpy.random as random
 import sys
 
-#from PyQt4 import Qt, QtCore, QtGui
-#import PyQt4.Qwt5 as Qwt
-#from PyQt4.Qwt5.anynp import *
-#from lib.qtgraph.graphicsItems import *
-#import lib.qtgraph.widgets
-#from lib.qtgraph.GraphicsView import *
-#import lib.util.PlotWidget
-#import lib.util
-
 
 
 NVP = 2   #total number of variables per data pts

@@ -1784,7 +1784,30 @@ def test_sizergrid():
     P = regular_grid(8, 3)
     mpl.show()
 
+def arbitrary_grid(sizer, **kwds):
+    """
+    Helper function
+    Takes a plot definition array dict: 
+        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
+        'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
+        'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
+        'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 
+        'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
+        }
+        # dict pos elements are [left, width, bottom, height] for the axes in the plot.
+    A minimum dict would just have the panel labels as keys, and the position information
+    Sets up figure panels, returing the plotter instance
+    All keywords are passed to plotter
+    """
+    nplots = len(sizer)
+    gr = [(a, a+1, 0, 1) for a in range(0, nplots)]   # just generate subplots - shape does not matter
+    axmap = OrderedDict(zip(sizer.keys(), gr))
+    P = Plotter((nplots, 1), axmap=axmap, **kwds)
+    # PH.show_figure_grid(P.figure_handle)
+    P.resize(sizer)  # perform positioning magic
+    return P
 
+    
 class Plotter:
     """
     The Plotter class provides a simple convenience for plotting data in 

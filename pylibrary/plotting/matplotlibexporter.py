@@ -11,14 +11,7 @@ Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
 import re
-try:
-    from PyQt4 import QtGui, QtCore
-except:
-    try:
-        from PyQt5 import QtGui, QtCore
-    except:
-        raise ImportError()
-
+from PyQt5 import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 

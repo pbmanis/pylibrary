@@ -6,7 +6,7 @@ Routine to perform color printing of text, wrapping standard pyton print functio
 colors = {'red': '\x1b[31m', 'r': '\x1b[31m', 
           'yellow': '\x1b[33m', 'y': '\x1b[33m',
           'green': '\x1b[32m', 'g': '\x1b[32m', 
-          'magenta': '\x1b[35m', 'ma': '\x1b[35m',
+          'magenta': '\x1b[35m', 'm': '\x1b[35m',
           'blue': '\x1b[34m', 'b': '\x1b[34m',
           'cyan': '\x1b[36m' , 'c': '\x1b[36m' ,
           'white': '\x1b[0m', 'w': '\x1b[0m',
