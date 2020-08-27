@@ -236,7 +236,7 @@ class styler():
 
 #-------------------------------------------------------------------------
 
-def create_inset_axes(dim, ax):
+def create_inset_axes(dim, ax, label):
     '''
     Creates new sub-axes of a given size in the given position of 
     existing axes
@@ -249,6 +249,8 @@ def create_inset_axes(dim, ax):
             size_x, size_y - dimensions of created sub-axes in units of 
             axes 'ax' dimensions
     -ax:   axes - new axes are created relative to these axes
+    
+    label: a unique label for this inset axis (required).
     
     Returns
     -------
@@ -267,7 +269,7 @@ def create_inset_axes(dim, ax):
     width *= dim[2]
     height *= dim[3]
 
-    return fig.add_axes([x, y, width, height]) # , axisbg='w')  # keyword removed in 3.2?
+    return fig.add_axes([x, y, width, height], label=label) # , axisbg='w')  # keyword removed in 3.2?
         
 #-------------------------------------------------------------------------
 
