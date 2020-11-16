@@ -406,28 +406,28 @@ def long_Eval(line):
     colonFound = False
     inquote = False
     for c in line:
-        if c is '{':
+        if c == '{':
             continue
-        if (c is ',' or c is '}') and colonFound and not inpunct and not inquote: # separator is ','
+        if (c == ',' or c == '}') and colonFound and not inpunct and not inquote: # separator is ','
             r = eval('{%s}' % sp)
             u[r.keys()[0]] = r[r.keys()[0]]
             colonFound = False
             sp = ''
             continue
         sp = sp + c
-        if c is ':':
+        if c == ':':
             colonFound = True
             continue
-        if c is '(' or c is '[' :
+        if c == '(' or c == '[' :
             inpunct += 1
             continue
-        if c is ')' or c is ']':
+        if c == ')' or c == ']':
             inpunct -= 1
             continue
-        if c is "'" and inquote:
+        if c == "'" and inquote:
             inquote = False
             continue
-        if c is "'" and not inquote:
+        if c == "'" and not inquote:
             inquote = True
     return u
 
@@ -518,29 +518,34 @@ def clementsBekkers(t, data, template, threshold=2.5, minpeakdist=5):
     d_start = data[evp[u]]
     return (t_start, d_start) # just return the list of the starts
 
-def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, ntau=2.5, lpfilter=0):
+def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, 
+        ntau=2.5, lpfilter=0, predelay=0.5, dur=5):
     dual_fraction = 0.5
     if dual_fraction == 0.0:
         decay2 = 0.5
 
     if type == 'alpha':
-        predelay = 0.5
-        if decay*ntau < 2.5:
+
+        if ntau == None:
+            ntau = dur
+        elif decay*ntau < 2.5:
             ntau = 2.5 / decay
         N = np.floor((decay*ntau+predelay)/samplerate)
         tb = np.arange(0., N*samplerate, samplerate)
-        template = np.zeros(N)
+        template = np.zeros(int(N))
         for i, t in enumerate(tb):
             if t >= predelay:
                 template[i] = ((t - predelay)/decay)*np.exp((-(t - predelay))/decay)
 
     if type == 'EPSC':  #  for EPSC detection
-        predelay = 0.5
+        predelay = predelay
+        if ntau is None:
+            ntau = dur
         if predelay <= 0.5:
             predelay = 0.5
         if decay*ntau < 2.5: # less than 5 msec is a problem though
             ntau = 2.5/decay
-        N = np.floor((decay*ntau+predelay)/samplerate)
+        N = int((decay*ntau+predelay)/samplerate)
         tb = np.arange(0., N*samplerate, samplerate)
         template = np.zeros(N)
         for i, t in enumerate(tb):
@@ -641,7 +646,7 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt',
     sp.sort() # make sure all detected events are in order (sets is unordered)
     spl = sp
     sp = tuple(sp) # convert to tuple
-    if sp is ():
+    if sp == ():
         return(st) # nothing detected
 
     if mode in  ['schmitt', 'Schmitt', 'threshold']: # normal operating mode is fixed voltage threshold
@@ -678,9 +683,13 @@ def findspikes(x, v, thresh, t0=None, t1=None, dt=1.0, mode='schmitt',
                 except:
                     continue
             else:
-                # print('Utility: here', x)
+                print('Utility:x, st', x, st)
                 if len(x) > 1:  # be sure the index can be reached.
-                    st = np.append(st, x[1]) # always save the first one
+                    try:
+                        st = np.append(st, x[0]) # always save the first one
+                    except:
+                        print('failed append, ', stt, x[0])
+                        raise ValueError()
 
     # clean spike times
     #st = clean_spiketimes(st, mindT=refract)
@@ -1074,7 +1083,7 @@ def seqparse(sequence):
     sequence = str(sequence) #make sure we have a nice string
     (seq2, sep, remain) = sequence.partition('&') # find and return nested sequences
     
-    while seq2 is not '':
+    while len(seq2) > 0:
         try:
             (oneseq, onetarget) = recparse(seq2)
             seq.append(oneseq)
@@ -1159,7 +1168,7 @@ def recparse(cmdstr):
     elif mode == 't': # just repeat the first value
         recs = n1
     elif mode == 'n': # use the number of steps, not the step size
-        if skip is 1.0:
+        if skip == 1.0:
             sk = (n2 - n1)
         else:
             sk = (n2-n1)/(skip-1.0)

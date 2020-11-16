@@ -1826,11 +1826,11 @@ class Plotter:
         figsize=None,
         margins=None,
         labelalignment="left",
-        fontsize=10,
+        fontsize=None,
         fontweight="normal",
         position=0,
         labeloffset=[0.0, 0.0],
-        labelsize=12,
+        labelsize=None,
         parent_figure=None,
     ):
         """
@@ -1922,7 +1922,6 @@ class Plotter:
         Nothing
         
         """
-
         self.arrangement = arrangement
         self.referenceLines = {}
         self.parent = parent_figure
@@ -1951,16 +1950,22 @@ class Plotter:
         self.axdict = (
             OrderedDict()
         )  # make axis label dictionary for indirect access (better!)
+        
+        # the following would override fonts
         if isinstance(fontsize, int):
             self.fontsize = {"tick": fontsize, "label": fontsize, "panel": fontsize}
         elif isinstance(fontsize, dict):
             self.fontsize = fontsize
+        elif fontsize is None:
+            self.fontsize ={"tick": None, "label": fontsize, "panel": fontsize}
         else:
             raise ValueError("Plotter: Font size must be int or dict")
         if isinstance(fontweight, str):
             self.fontweight = {"tick": fontweight, "label": fontweight, "panel": "bold"}
         elif isinstance(fontweight, dict):
             self.fontweight = fontweight
+        elif fontweight is None:
+            self.fontweight ={"tick": None, "label": 'normal', "panel": "bold"}
         else:
             raise ValueError("Plotter: Font size must be int or dict")
         # otherwise we assume it is a dict and the sizes are set in the dict.
@@ -2077,9 +2082,10 @@ class Plotter:
                 self.axarr[i, j].get_yaxis().set_tick_params(
                     direction="out", width=0.8, length=4.0
                 )
-                self.axarr[i, j].tick_params(
-                    axis="both", which="major", labelsize=self.fontsize["tick"]
-                )
+                if self.fontsize["tick"] is not None:
+                    self.axarr[i, j].tick_params(
+                        axis="both", which="major", labelsize=self.fontsize["tick"]
+                    )
                 #                if i < self.nrows-1:
                 #                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
                 nice_plot(self.axarr[i, j], position=position)

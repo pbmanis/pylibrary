@@ -62,7 +62,7 @@ def nice_plot(plotlist, spines=['left', 'bottom'], position=10, direction='inwar
         Nothing
     """
     
-    if type(plotlist) is not list:
+    if not isinstance(plotlist, list):
         plotlist = [plotlist]
     for pl in plotlist:
         if axesoff is True:
@@ -81,7 +81,7 @@ def noaxes(plotlist, whichaxes = 'xy'):
             string describing which axes to remove: 'x', 'y', or 'xy' for both
     
     """
-    if type(plotlist) is not list:
+    if not isinstance(plotlist, list):
         plotlist = [plotlist]
     for pl in plotlist:
         if 'x' in whichaxes:
@@ -391,13 +391,13 @@ def refline(axl, refline=None, color=[64, 64, 64], linestyle='--' ,linewidth=0.5
         style = pg.QtCore.Qt.DashDotDotLine
     else:
         style = pg.QtCore.Qt.SolidLine # default is solid
-    if orient is 'horizontal':
+    if orient == 'horizontal':
         for ax in axl:
             if refline is not None:
                 x = ax.getAxis('bottom')
                 xlims = x.range
                 ax.plot(xlims, [refline, refline], pen=pg.mkPen(color, width=linewidth, style=style))
-    if orient is 'vertical':
+    if orient == 'vertical':
         for ax in axl:
             if refline is not None:
                 y = ax.getAxis('left')
@@ -755,7 +755,7 @@ class polarPlot():
         yp = rhist * np.sin(bins[:-1] + binwidth)
         arcinc = np.pi/100.  # arc increments
         for i in range(len(xp)):
-            if mode is 'arc':
+            if mode == 'arc':
                 self.plotItem.plot([xo[i], 0., xp[i]], [yo[i], 0., yp[i]], **kwds) # "v" segement
                 arcseg = np.arange(bins[i], bins[i+1], arcinc)
                 x = np.array(rhist[i] * np.cos(arcseg))
