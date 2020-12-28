@@ -428,7 +428,7 @@ def do_talbotTicks(
         ax.set_yticklabels(yts)  # , rotation='horizontal', fontsize=pointSize)
     #        print ('yt, yts: ', yt, yts)
     ytxt = ax.get_yticklabels()
-    ax.set_yticklabels(ytxt, {"fontsize": pointSize, "rotation": "horizontal"})
+    ax.set_yticklabels(ytxt, fontdict={"fontsize": pointSize, "rotation": "horizontal"})
     if "x" in axes:
         xRange = list(ax.get_xlim())
         if axrange["x"] is not None:  # any overrides
@@ -744,8 +744,8 @@ def update_font(axl, size=8, font=stdFont):
             # tick.label1.set_family('sans-serif')
             #  tick.label1.set_fontname(stdFont)
             tick.label1.set_size(size)
-        ax.set_xticklabels(ax.get_xticks(), fontProperties)
-        ax.set_yticklabels(ax.get_yticks(), fontProperties)
+        ax.set_xticklabels(ax.get_xticks(), fontdict=fontProperties)
+        ax.set_yticklabels(ax.get_yticks(), fontdict=fontProperties)
 
         ax.tick_params(axis="both", labelsize=size)
 
