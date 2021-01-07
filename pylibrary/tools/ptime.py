@@ -19,8 +19,9 @@ def winTime():
 
 def unixTime():
     """Return the current time in seconds with high precision (unix version, use Manager.time() to stay platform independent)."""
-    return systime.time()
-
+    # return systime.time()
+    return systime.process_time()
+    
 if 'win' in sys.platform:
     #cstart = systime.clock()  ### Required to start the clock in windows
     START_TIME = systime.perf_counter()
