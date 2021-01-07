@@ -361,7 +361,7 @@ def do_talbotTicks(
     axes="xy",
     density=(1.0, 1.0),
     insideMargin=0.05,
-    pointSize=10,
+    pointSize=None,
     tickPlacesAdd={"x": 0, "y": 0},
     floatAdd={"x": 0, "y": 0},
     axrange={"x": None, "y": None},
@@ -427,8 +427,9 @@ def do_talbotTicks(
         ax.set_yticks(yt)
         ax.set_yticklabels(yts)  # , rotation='horizontal', fontsize=pointSize)
     #        print ('yt, yts: ', yt, yts)
-    ytxt = ax.get_yticklabels()
-    ax.set_yticklabels(ytxt, {"fontsize": pointSize, "rotation": "horizontal"})
+    if pointSize is not None:
+            ytxt = ax.get_yticklabels()
+            ax.set_yticklabels(ytxt, {"fontsize": pointSize, "rotation": "horizontal"})
     if "x" in axes:
         xRange = list(ax.get_xlim())
         if axrange["x"] is not None:  # any overrides
@@ -455,8 +456,9 @@ def do_talbotTicks(
         #        xtickl = [[(x, xts[i]) for i, x in enumerate(xt)] , []]  # no minor ticks here
         x_ticks_labels = ax.set_xticks(xt)
         ax.set_xticklabels(xts)  # , rotation='horizontal', fontsize=pointSize)
-    xtxt = ax.get_xticklabels()
-    ax.set_xticklabels(xtxt, {"fontsize": pointSize, "rotation": "horizontal"})
+    if pointSize is not None:
+        xtxt = ax.get_xticklabels()
+        ax.set_xticklabels(xtxt, {"fontsize": pointSize, "rotation": "horizontal"})
 
 
 def labelPanels(
@@ -976,7 +978,7 @@ def calbar(
     axesoff=True,
     orient="left",
     unitNames=None,
-    fontsize=11,
+    fontsize=None,
     weight="normal",
     color="k",
     font="Arial",
@@ -1051,6 +1053,7 @@ def calbar(
                     color=color,
                     linestyle="-",
                     linewidth=1.5,
+                    clip_on=False,
                 )
                 if calbar[3] != 0.0:
                     ax.text(
@@ -1063,6 +1066,7 @@ def calbar(
                         fontsize=fontsize,
                         weight=weight,
                         family="sans-serif",
+                        clip_on=False,
                     )
             elif orient == "right":  # vertical part goes on the right
                 ax.plot(
@@ -1071,6 +1075,7 @@ def calbar(
                     color=color,
                     linestyle="-",
                     linewidth=1.5,
+                    clip_on=False,
                 )
                 if calbar[3] != 0.0:
                     ax.text(
@@ -1083,6 +1088,7 @@ def calbar(
                         fontsize=fontsize,
                         weight=weight,
                         family="sans-serif",
+                        clip_on=False,
                     )
             else:
                 print("PlotHelpers.py: I did not understand orientation: %s" % (orient))
@@ -1093,6 +1099,7 @@ def calbar(
                     color=color,
                     linestyle="-",
                     linewidth=1.5,
+                    clip_on=False,
                 )
                 ax.text(
                     calbar[0] + 0.05 * calbar[2] * scale[0],
@@ -1104,6 +1111,7 @@ def calbar(
                     fontsize=fontsize,
                     weight=weight,
                     family="sans-serif",
+                    clip_on=False,
                 )
             if calbar[2] != 0.0:
                 ax.text(
@@ -1116,6 +1124,7 @@ def calbar(
                     fontsize=fontsize,
                     weight=weight,
                     family="sans-serif",
+                    clip_on=False,
                 )
 
 
@@ -1680,6 +1689,9 @@ def regular_grid(
         fractional height spacing between rows
     margins : dict (default: 'leftmargin': 0.07, 'rightmargin': 0.05, 'topmargin': 0.03, 'bottommargin': 0.1})
         fraxtional spacing around borders of graphs relative to edge of "paper"
+        You can also use 'width' and 'height' to use absolute settings where
+        rightmargin = width of the plot after allowing for left margin
+        topmargin = height of plot after allowing for bottom margin
     labelposition : tuple of floats (default: (-0.12, 0.95))
         panel label offset from axes. Axes are from 0 to 1, so default places label to left
         and just below the top of the left axis.
@@ -1699,10 +1711,25 @@ def regular_grid(
     """
 
     lmar = margins["leftmargin"]
-    rmar = margins["rightmargin"]
-    hs = horizontalspacing
-    tmar = margins["topmargin"]
+    mkeys = list(margins.keys())
+    assert(('rightmargin' in mkeys) or ('width' in mkeys))
+    if 'rightmargin' in mkeys:
+        rmar = margins["rightmargin"]
+    else:
+        rmar = 1.0 - (lmar + margins['width'])
+        margins['rightmargin'] = rmar
+    assert('bottommargin' in mkeys or 'height' in mkeys)
     bmar = margins["bottommargin"]
+    if 'topmargin' in mkeys:
+        tmar = margins['topmargin']
+    else:
+        tmar = 1.0 - (bmar + margins['height'])
+        margins['topmargin'] = tmar
+    assert((tmar+bmar) < 1.0)
+    assert((lmar+rmar) < 1.0)
+    hs = horizontalspacing
+    # tmar = margins["topmargin"]
+    # bmar = margins["bottommargin"]
     vs = verticalspacing
 
     xw = ((1.0 - lmar - rmar) - (cols - 1.0) * hs) / cols
@@ -1764,7 +1791,7 @@ def regular_grid(
         axmap=axmap,
         figsize=figsize,
         margins=margins,
-        labeloffset=labelposition,
+        labelposition=labelposition,
         parent_figure=parent_figure,
         order=order,
         **kwds
@@ -1784,7 +1811,7 @@ def test_sizergrid():
     P = regular_grid(8, 3)
     mpl.show()
 
-def arbitrary_grid(sizer, **kwds):
+def arbitrary_grid(sizer, showgrid=False, **kwds):
     """
     Helper function
     Takes a plot definition array dict: 
@@ -1805,6 +1832,8 @@ def arbitrary_grid(sizer, **kwds):
     P = Plotter((nplots, 1), axmap=axmap, **kwds)
     # PH.show_figure_grid(P.figure_handle)
     P.resize(sizer)  # perform positioning magic
+    if showgrid:
+        show_figure_grid(P.figure_handle)
     return P
 
     
@@ -1829,7 +1858,7 @@ class Plotter:
         fontsize=None,
         fontweight="normal",
         position=0,
-        labeloffset=[0.0, 0.0],
+        labelposition=[0.0, 0.0],
         labelsize=None,
         parent_figure=None,
     ):
@@ -1973,12 +2002,12 @@ class Plotter:
         # compute label offsets
         p = [0.0, 0.0]
         if label:
-            if type(labeloffset) is int:
-                p = [labeloffset, labeloffset]
-            elif type(labeloffset) is dict:
+            if type(labelposition) is int:
+                p = [labelposition, labelposition]
+            elif type(labelposition) is dict:
                 p = [position["left"], position["bottom"]]
-            elif type(labeloffset) in [list, tuple]:
-                p = labeloffset
+            elif type(labelposition) in [list, tuple]:
+                p = labelposition
             else:
                 p = [0.0, 0.0]
 
@@ -2028,7 +2057,7 @@ class Plotter:
             gridbuilt = True
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k, 0]
-            plo = labeloffset
+            plo = labelposition
             self.axlabels = labelPanels(
                 self.axarr.tolist(),
                 axlist=rcshape.keys(),
