@@ -746,8 +746,8 @@ def update_font(axl, size=8, font=stdFont):
             # tick.label1.set_family('sans-serif')
             #  tick.label1.set_fontname(stdFont)
             tick.label1.set_size(size)
-        ax.set_xticklabels(ax.get_xticks(), fontProperties)
-        ax.set_yticklabels(ax.get_yticks(), fontProperties)
+        ax.set_xticklabels(ax.get_xticks(), fontdict=fontProperties)
+        ax.set_yticklabels(ax.get_yticks(), fontdict=fontProperties)
 
         ax.tick_params(axis="both", labelsize=size)
 
