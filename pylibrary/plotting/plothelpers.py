@@ -1606,7 +1606,7 @@ def show_figure_grid(fig: object, figx: int=10, figy: int=10) -> object:
 
     """
     
-    backGrid = fig.figure_handle.add_axes([0, 0, 1, 1], frameon=False)
+    backGrid = fig.add_axes([0, 0, 1, 1], frameon=False)
     backGrid.set_ylim(0.0, figy)
     backGrid.set_xlim(0.0, figx)
     backGrid.grid(True)
@@ -1819,7 +1819,7 @@ def regular_grid(
         **kwds
     )
     if showgrid:
-        show_figure_grid(P.figure_handle)
+        show_figure_grid(P)
     P.resize(sizer)  # perform positioning magic
     P.sizer = sizer
     return P
@@ -1853,16 +1853,21 @@ def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds)
     gr = [
         (a, a + 1, 0, 1) for a in range(0, nplots)
     ]  # just generate subplots - shape does not matter
+    cm_scale = 1.0
+    if units == 'cm':
+        cm_scale=2.54
+        figsize[0] = figsize[0]/cm_scale
+        figsize[1] = figsize[1]/cm_scale
     if units != 'page':  # use figsize to convert positions to page
         for ax in sizer:
             p = sizer[ax]['pos']
-            p[0] = p[0]/figsize[0]
-            p[1] = p[1]/figsize[0]
-            p[2] = p[2]/figsize[1]
-            p[3] = p[3]/figsize[1]
+            p[0] = p[0]/figsize[0]/cm_scale
+            p[1] = p[1]/figsize[0]/cm_scale
+            p[2] = p[2]/figsize[1]/cm_scale
+            p[3] = p[3]/figsize[1]/cm_scale
     
     axmap = OrderedDict(zip(sizer.keys(), gr))
-    P = Plotter((nplots, 1), axmap=axmap, figsize=figsize,  **kwds)
+    P = Plotter((nplots, 1), axmap=axmap, figsize=figsize, units="page", **kwds)
     # PH.show_figure_grid(P.figure_handle)
     P.resize(sizer)  # perform positioning magic
     if showgrid:
