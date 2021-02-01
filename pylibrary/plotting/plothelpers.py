@@ -1606,7 +1606,7 @@ def show_figure_grid(fig: object, figx: int=10, figy: int=10) -> object:
 
     """
     
-    backGrid = fig.add_axes([0, 0, 1, 1], frameon=False)
+    backGrid = fig.figure_handle.add_axes([0, 0, 1, 1], frameon=False)
     backGrid.set_ylim(0.0, figy)
     backGrid.set_xlim(0.0, figx)
     backGrid.grid(True)
@@ -1645,16 +1645,18 @@ def figure_scaling(
     horizontalspacing: Union[float, None] = None,
 ):
     # perform all unit conversions now
+    # this converts all measures to the "unit measures" on a page
+    # e.g. page is 0..1 x 0..1
     assert units in ["page", "inches", "in", "cm", "centimeters"]
     if units in ["cm", "centimeters", "inches", "in"]:
         margins["leftmargin"] = margins["leftmargin"] / figsize[0]
         margins["rightmargin"] = margins["rightmargin"] / figsize[0]
         margins["topmargin"] = margins["topmargin"] / figsize[1]
         margins["bottommargin"] = margins["bottommargin"] / figsize[1]
-    if verticalspacing is not None and units == "page":
-        verticalspacing = verticalspacing * figsize[1]
-    if horizontalspacing is not None and units == "page":
-        horizontalspacing = horizontalspacing * figsize[0]
+    if verticalspacing is not None and units != "page":
+        verticalspacing = verticalspacing / figsize[1]
+    if horizontalspacing is not None and units != "page":
+        horizontalspacing = horizontalspacing / figsize[0]
     if units in ["cm", "centimeters"] and figsize is not None:
         figsize = [f / 2.54 for f in figsize]  # rescale figure page size
     return figsize, margins, verticalspacing, horizontalspacing
@@ -1729,6 +1731,7 @@ def regular_grid(
         verticalspacing=verticalspacing,
         horizontalspacing=horizontalspacing
     )
+    original_units = units
     units = "page"  # we have already converted, so no further action
     lmar = margins["leftmargin"]
     mkeys = list(margins.keys())
@@ -1745,8 +1748,13 @@ def regular_grid(
     else:
         tmar = 1.0 - (bmar + margins["height"])
         margins["topmargin"] = tmar
-    assert (tmar + bmar) < 1.0
-    assert (lmar + rmar) < 1.0
+    if original_units == "page":
+        assert (tmar + bmar) < 1.0
+        assert (lmar + rmar) < 1.0
+    else:
+        assert (tmar + bmar) < figsize[1]
+        assert (lmar + rmar) < figsize[0]
+        
     hs = horizontalspacing
     # tmar = margins["topmargin"]
     # bmar = margins["bottommargin"]
@@ -1861,17 +1869,17 @@ def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds)
     if units != 'page':  # use figsize to convert positions to page
         for ax in sizer:
             p = sizer[ax]['pos']
-            p[0] = p[0]/figsize[0]/cm_scale
-            p[1] = p[1]/figsize[0]/cm_scale
-            p[2] = p[2]/figsize[1]/cm_scale
-            p[3] = p[3]/figsize[1]/cm_scale
+            p[0] = p[0]/figsize[0]
+            p[1] = p[1]/figsize[0]
+            p[2] = p[2]/figsize[1]
+            p[3] = p[3]/figsize[1]
     
     axmap = OrderedDict(zip(sizer.keys(), gr))
     P = Plotter((nplots, 1), axmap=axmap, figsize=figsize, units="page", **kwds)
     # PH.show_figure_grid(P.figure_handle)
     P.resize(sizer)  # perform positioning magic
     if showgrid:
-        show_figure_grid(P.figure_handle)
+        show_figure_grid(P)
     return P
 
 
@@ -2024,7 +2032,8 @@ class Plotter:
         else:  # place into an existing figure - but it must have the same figsize
             self.figure_handle = self.parent.figure_handle
             self.figure_handle.get_size_inches()  # get original figure size
-
+            self.figsize = self.parent.figsize
+            
         self.labelalignment = labelalignment
         self.axlabels = []
         self.axdict = (
