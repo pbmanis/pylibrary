@@ -425,9 +425,30 @@ def do_talbotTicks(
         ax.set_yticks(yt)
         ax.set_yticklabels(yts)  # , rotation='horizontal', fontsize=pointSize)
     #        print ('yt, yts: ', yt, yts)
-    if pointSize is not None:
-        ytxt = ax.get_yticklabels()
-        ax.set_yticklabels(ytxt, {"fontsize": pointSize, "rotation": "horizontal"})
+
+    # ytxt = ax.get_yticklabels()
+        ytxt = ax.get_yticks().tolist()
+        ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ytxt))
+        # ax.set_yticklabels([label_format.format(x) for x in ytxt], fontsize=pointSIze,
+        #         rotation='horizontal')
+        xRange = list(ax.get_xlim())
+        if axrange["x"] is not None:  # any overrides
+            for ra in range(0, 2):
+                if axrange["x"][ra] is not None:
+                    xRange[ra] = axrange["x"][ra]
+        # now create substitue tick marks and labels, using Talbot et al algorithm
+        xr = np.diff(xRange)[0]
+        xmin, xmax = (
+            np.min(xRange) - xr * insideMargin,
+            np.max(xRange) + xr * insideMargin,
+        )
+        xtick = ticks.Extended(
+            density=density[0], figure=None, range=(xmin, xmax), axis="x"
+        )
+        if pointSize is not None:
+            ytxt = ax.get_yticklabels()
+            ax.set_yticklabels(ytxt, {"fontsize": pointSize, "rotation": "horizontal"})
+            
     if "x" in axes:
         xRange = list(ax.get_xlim())
         if axrange["x"] is not None:  # any overrides
@@ -454,9 +475,10 @@ def do_talbotTicks(
         #        xtickl = [[(x, xts[i]) for i, x in enumerate(xt)] , []]  # no minor ticks here
         # x_ticks_labels = ax.set_xticks(xt)
         ax.set_xticklabels(xts)  # , rotation='horizontal', fontsize=pointSize)
-    if pointSize is not None:
-        xtxt = ax.get_xticklabels()
-        ax.set_xticklabels(xtxt, {"fontsize": pointSize, "rotation": "horizontal"})
+        if pointSize is not None:
+            xtxt = ax.get_xticklabels()
+            ax.set_xticklabels(xtxt, {"fontsize": pointSize, "rotation": "horizontal"})
+
 
 
 def labelPanels(
