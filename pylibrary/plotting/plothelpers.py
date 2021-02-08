@@ -858,7 +858,7 @@ class SquareRootScale(mscale.ScaleBase):
 
     name = "squareroot"
 
-    def __init__(self, axis, **kwargs):
+    def __init__(self,  **kwargs):
         mscale.ScaleBase.__init__(self)
 
     def set_default_locators_and_formatters(self, axis):
@@ -1873,13 +1873,13 @@ def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds)
             p[1] = p[1]/figsize[0]
             p[2] = p[2]/figsize[1]
             p[3] = p[3]/figsize[1]
-    
+
     axmap = OrderedDict(zip(sizer.keys(), gr))
     P = Plotter((nplots, 1), axmap=axmap, figsize=figsize, units="page", **kwds)
     # PH.show_figure_grid(P.figure_handle)
     P.resize(sizer)  # perform positioning magic
     if showgrid:
-        show_figure_grid(P)
+        show_figure_grid(P, figsize[0], figsize[1])
     return P
 
 
