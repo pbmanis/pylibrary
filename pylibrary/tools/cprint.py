@@ -4,6 +4,7 @@ Routine to perform color printing of text, wrapping standard pyton print functio
 """
 # ANSI terminal colors  - just put in as part of the string to get color terminal output
 colors = {'red': '\x1b[31m', 'r': '\x1b[31m', 
+          'orange': '\x1b[48:5:208:0m', 'o': '\x1b[48:5:208:0m',
           'yellow': '\x1b[33m', 'y': '\x1b[33m',
           'green': '\x1b[32m', 'g': '\x1b[32m', 
           'magenta': '\x1b[35m', 'm': '\x1b[35m',
