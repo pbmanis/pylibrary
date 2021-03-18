@@ -765,7 +765,7 @@ def findspikes(
                 except:
                     continue
             else:
-                print('Utility:x, st', x, st)
+                # print('Utility:x, st', x, st)
                 if len(x) > 1:  # be sure the index can be reached.
                     try:
                         st = np.append(st, x[0]) # always save the first one
