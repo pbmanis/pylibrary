@@ -26,12 +26,12 @@ from six import iteritems
 
 from pylibrary.plotting import talbotetalticks as ticks  # logical tick formatting...
 
-matplotlib.rc("text", usetex=False)  # if true, you get computer modern fonts ALWAYS
-# if false, symbols a rendered in deja vu sans...regardless
-matplotlib.rc("font", **{"family": "sans-serif", "sans-serif": ["Arial", "Helvetica"]})
-# matplotlib.rcParams['pdf.fonttype'] = 42  # doesn't seem to do anything with Ill 2019.
-# matplotlib.rcParams['ps.fonttype'] = 42
-matplotlib.use("Qt5Agg")
+# matplotlib.rc("text", usetex=False)  # if true, you get computer modern fonts ALWAYS
+# # if false, symbols a rendered in deja vu sans...regardless
+# matplotlib.rc("font", **{"family": "sans-serif", "sans-serif": ["Arial", "Helvetica"]})
+# # matplotlib.rcParams['pdf.fonttype'] = 42  # doesn't seem to do anything with Ill 2019.
+# # matplotlib.rcParams['ps.fonttype'] = 42
+# matplotlib.use("Qt5Agg")
 
 """
 PlotHelpers.py
@@ -447,8 +447,8 @@ def do_talbotTicks(
         )
         if pointSize is not None:
             ytxt = ax.get_yticklabels()
-            ax.set_yticklabels(ytxt, {"fontsize": pointSize, "rotation": "horizontal"})
-            
+            ax.set_yticklabels(ytxt, fontsize = pointSize, rotation ="horizontal")
+
     if "x" in axes:
         xRange = list(ax.get_xlim())
         if axrange["x"] is not None:  # any overrides
@@ -474,10 +474,10 @@ def do_talbotTicks(
         )
         #        xtickl = [[(x, xts[i]) for i, x in enumerate(xt)] , []]  # no minor ticks here
         # x_ticks_labels = ax.set_xticks(xt)
-        ax.set_xticklabels(xts)  # , rotation='horizontal', fontsize=pointSize)
+        # ax.set_xticklabels(xts)  # , rotation='horizontal', fontsize=pointSize)
         if pointSize is not None:
             xtxt = ax.get_xticklabels()
-            ax.set_xticklabels(xtxt, {"fontsize": pointSize, "rotation": "horizontal"})
+            # ax.set_xticklabels(xtxt, fontsize = pointSize, rotation ="horizontal")
 
 
 
@@ -757,17 +757,18 @@ def update_font(axl: object, size: float = 8.0, font: str = "Arial"):
     for ax in axl:
         if ax is None:
             continue
-        for tick in ax.xaxis.get_major_ticks():
-            # tick.label1.set_family('sans-serif')
-            #  tick.label1.set_fontname(stdFont)
-            tick.label1.set_size(size)
-
-        for tick in ax.yaxis.get_major_ticks():
-            # tick.label1.set_family('sans-serif')
-            #  tick.label1.set_fontname(stdFont)
-            tick.label1.set_size(size)
-        ax.set_xticklabels(ax.get_xticks(), fontdict=fontProperties)
-        ax.set_yticklabels(ax.get_yticks(), fontdict=fontProperties)
+        # ax.tick_params(axis="x", labelsize=size)
+        # for tick in ax.xaxis.get_major_ticks():
+        #     # tick.label1.set_family('sans-serif')
+        #     #  tick.label1.set_fontname(stdFont)
+        #     tick.label1.set_size(size)
+        #
+        # for tick in ax.yaxis.get_major_ticks():
+        #     # tick.label1.set_family('sans-serif')
+        #     #  tick.label1.set_fontname(stdFont)
+        #     tick.label1.set_size(size)
+        # # ax.set_xticklabels(ax.get_xticks(), fontdict=fontProperties)
+        # # ax.set_yticklabels(ax.get_yticks(), fontdict=fontProperties)
 
         ax.tick_params(axis="both", labelsize=size)
 
@@ -2422,7 +2423,7 @@ class Plotter:
                 noaxes(ax)
 
 
-def main():
+def main(sf="P5"):
     #    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
     #    test_sizergrid()
     #    exit(1)
@@ -2442,40 +2443,51 @@ def main():
     # P.figure_handle.suptitle("random")
 
     # make a more complex plot
-    P1 = Plotter((3, 2), units="page", figsize=(8.0, 10.0))  # a default
-    show_figure_grid(P1)
-    P1.figure_handle.suptitle("Defaults, units=page")
-    P2 = Plotter((3,2), units="in",
+    if sf == 'P1':
+        P1 = Plotter((3, 2), units="page", figsize=(8.0, 10.0))  # a default
+        show_figure_grid(P1)
+        P1.figure_handle.suptitle("Defaults, units=page")
+        mpl.show()
+    elif sf == 'P2':
+        P2 = Plotter((3,2), units="in",
             margins = {"leftmargin": 1.0, "rightmargin": 1.0, "topmargin": 1.5, "bottommargin": 1.0},
             figsize=(8.0, 10.0))
-    show_figure_grid(P2)
-    P2.figure_handle.suptitle("defaults, units=inches")
-    P3 = Plotter((3,2), units="cm",
+        show_figure_grid(P2)
+        P2.figure_handle.suptitle("defaults, units=inches")
+        mpl.show()
+        return
+    elif sf == 'P3':
+        P3 = Plotter((3,2), units="cm",
             margins = {"leftmargin": 1.0, "rightmargin": 1.0, "topmargin": 1.5, "bottommargin": 1.0},
             figsize=(8.0, 10.0))
-    P3.figure_handle.suptitle("Defaults, units=cm")
-
-    P4 = regular_grid(rows=3, cols=2, units="cm",
+        P3.figure_handle.suptitle("Defaults, units=cm")
+        mpl.show()
+        return
+    elif sf == 'P4':
+        P4 = regular_grid(rows=3, cols=2, units="cm",
             margins = {"leftmargin": 1.0, "rightmargin": 1.0,
             "topmargin": 2.0, "bottommargin": 1.0},
             figsize=(12.0, 16.0))
-    P4.figure_handle.suptitle("regulargrid, units=cm")
-    show_figure_grid(P4)
+        P4.figure_handle.suptitle("regulargrid, units=cm")
+        show_figure_grid(P4)
+        mpl.show()
+        return
+    
+    elif sf == 'P5':
+        x=-0.05
+        y=1.05
+        sizer = {'A': {'pos': [0.5, 1.4, 4, 1.5], 'labelpos': (x,y)},
+        'B': {'pos': [2.2, 1.4, 4, 1.53], 'labelpos': (x,y)},
+        'C': {'pos': [0.5, 3, 2, 1.5], 'labelpos': (x,y)},
+        'D': {'pos': [0.5, 2.5, 0.5, 1.25], 'labelpos': (x,y)},
+        'E': {'pos': [3.25, 0.5, 0.5, 1.00], 'labelpos': (x,y)},
+        }
+        P5 = arbitrary_grid(sizer, units="in", figsize=(4, 6))
+        P5.figure_handle.suptitle("arbitrary grid, units=in")
+        show_figure_grid(P5, int(P5.figsize[0]), int(P5.figsize[1]))
 
-    x=-0.05
-    y=1.05
-    sizer = {'A': {'pos': [0.5, 1.4, 4, 1.5], 'labelpos': (x,y)},
-    'B': {'pos': [2.2, 1.4, 4, 1.53], 'labelpos': (x,y)},
-    'C': {'pos': [0.5, 3, 2, 1.5], 'labelpos': (x,y)},
-    'D': {'pos': [0.5, 2.5, 0.5, 1.25], 'labelpos': (x,y)},
-    'E': {'pos': [3.25, 0.5, 0.5, 1.00], 'labelpos': (x,y)},
-    }
-    P5 = arbitrary_grid(sizer, units="in", figsize=(4, 6))
-    P5.figure_handle.suptitle("arbitrary grid, units=in")
-    show_figure_grid(P5, int(P5.figsize[0]), int(P5.figsize[1]))
-
-    mpl.show()
-
+        mpl.show()
+    return
 
 if __name__ == "__main__":
-    main()
+    main(sf = 'P5')
