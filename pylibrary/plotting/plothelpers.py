@@ -363,6 +363,7 @@ def do_talbotTicks(
     tickPlacesAdd={"x": 0, "y": 0},
     floatAdd={"x": 0, "y": 0},
     axrange={"x": None, "y": None},
+    colorbar=None, 
 ):
     """
     Change the axis ticks to use the talbot algorithm for ONE axis
@@ -389,6 +390,8 @@ def do_talbotTicks(
         override the standard axis limits for the labeling
         values can be list or tuple (0, 1), or can be (0, None) to use lower bound
         as 0.
+    colorbar: a colorbar instance or None
+        set to true if this axis is a colorbar axis, so we use the right call.
     Returns
     -------
     Nothing
@@ -422,32 +425,36 @@ def do_talbotTicks(
             floatAdd=floatAdd["y"],
         )
         #        ytickl = [[(y, yts[i]) for i, y in enumerate(yt)] , []]  # no minor ticks here
-        ax.set_yticks(yt)
-        ax.set_yticklabels(yts)  # , rotation='horizontal', fontsize=pointSize)
+        if colorbar is not None:
+            colorbar.set_ticks(yt)
+            colorbar.set_ticklabels(yts)
+        else:
+            ax.set_yticks(yt)
+            ax.set_yticklabels(yts)  # , rotation='horizontal', fontsize=pointSize)
     #        print ('yt, yts: ', yt, yts)
 
     # ytxt = ax.get_yticklabels()
-        ytxt = ax.get_yticks().tolist()
-        ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ytxt))
-        # ax.set_yticklabels([label_format.format(x) for x in ytxt], fontsize=pointSIze,
-        #         rotation='horizontal')
-        xRange = list(ax.get_xlim())
-        if axrange["x"] is not None:  # any overrides
-            for ra in range(0, 2):
-                if axrange["x"][ra] is not None:
-                    xRange[ra] = axrange["x"][ra]
-        # now create substitue tick marks and labels, using Talbot et al algorithm
-        xr = np.diff(xRange)[0]
-        xmin, xmax = (
-            np.min(xRange) - xr * insideMargin,
-            np.max(xRange) + xr * insideMargin,
-        )
-        xtick = ticks.Extended(
-            density=density[0], figure=None, range=(xmin, xmax), axis="x"
-        )
-        if pointSize is not None:
-            ytxt = ax.get_yticklabels()
-            ax.set_yticklabels(ytxt, fontsize = pointSize, rotation ="horizontal")
+            ytxt = ax.get_yticks().tolist()
+            ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ytxt))
+            # ax.set_yticklabels([label_format.format(x) for x in ytxt], fontsize=pointSIze,
+            #         rotation='horizontal')
+            xRange = list(ax.get_xlim())
+            if axrange["x"] is not None:  # any overrides
+                for ra in range(0, 2):
+                    if axrange["x"][ra] is not None:
+                        xRange[ra] = axrange["x"][ra]
+            # now create substitue tick marks and labels, using Talbot et al algorithm
+            xr = np.diff(xRange)[0]
+            xmin, xmax = (
+                np.min(xRange) - xr * insideMargin,
+                np.max(xRange) + xr * insideMargin,
+            )
+            xtick = ticks.Extended(
+                density=density[0], figure=None, range=(xmin, xmax), axis="x"
+            )
+            if pointSize is not None:
+                ytxt = ax.get_yticklabels()
+                ax.set_yticklabels(ytxt, fontsize = pointSize, rotation ="horizontal")
 
     if "x" in axes:
         xRange = list(ax.get_xlim())
