@@ -1884,7 +1884,7 @@ def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds)
         }
         # dict pos elements are [left, width, bottom, height] for the axes in the plot.
     A minimum dict would just have the panel labels as keys, and the position information
-    Sets up figure panels, returing the plotter instance
+    Sets up figure panels, returning the plotter instance
     All keywords are passed to plotter
     """
     nplots = len(sizer)
