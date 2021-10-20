@@ -7,6 +7,11 @@ pylibrary/*.orig
 pylibrary/doc/build
 pylibrary/docs/build
 pylibrary/*.bak
+
+
+.DS_Store
+pylibrary/.DS_Store
+
 # pycharm
 .idea
 # R (not sure why it is even in there)
