@@ -7,6 +7,7 @@ from typing import Union
 
 import matplotlib
 import matplotlib.gridspec as gridspec
+import mpl_toolkits.axes_grid1.inset_locator as INSET
 import matplotlib.pyplot as mpl
 import matplotlib.scale as mscale
 import matplotlib.ticker as ticker
@@ -21,6 +22,7 @@ from matplotlib.patches import Circle, Rectangle
 
 # import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
+import seaborn as sns
 from scipy.stats import gaussian_kde
 from six import iteritems
 
@@ -1297,6 +1299,35 @@ def violin_plot(ax, data, pos, bp=False, median=False):
         mpl.setp(bpf["whiskers"], color="black", linestyle="-")
 
 
+def make_colorbar(ax, pos:Union[list, tuple] = [0.0, 0.0, 1.0, 1.0],
+     vmin=0, vmax=1.0, nticks=4, bbox=[0.1, 0.80, 0.8, 0.15], palette:str="hls"):
+    """
+    Make a floating colorbar with its own axes that can be placed "anywhere"
+    relative to an existing axis (ax).
+    pos feeds the rectangles in the colorbar (the defaults should be ok)
+    bbox is x0, y0, xl, yh (relative to the parent axis)
+    vmin, vmax refer to the values assigned along the colorbar scale from 0 to 1
+    nticks is the number of tick marks between vmin and vmax.
+     
+    """
+    # build color patches
+    cmx = sns.color_palette(palette, as_cmap=True)
+    xpos = pos[0] + np.linspace(0, 1, cmx.N)
+    pc = [matplotlib.patches.Rectangle((xpos[i], pos[1]), width=pos[2], height=pos[3], facecolor=c, color=c, edgecolor=c) 
+            for i,c in enumerate(cmx.colors)]
+    p = matplotlib.collections.PatchCollection(pc, match_original=True)
+
+    axins = INSET.inset_axes(ax,  width="100%", height="20%",
+                   bbox_to_anchor=bbox,
+                   bbox_transform=ax.transAxes, loc=3)
+    axins.set_yticks([])
+    ticklabel_f = np.linspace(vmin, vmax, nticks)
+    ticklabels = [f"{int(x):d}" for x in ticklabel_f]
+    axins.set_xticks(ticks=np.linspace(0, 1.0, nticks), labels=ticklabels)
+    axins.add_collection(p)
+    # ax.set_clip_on(False)
+    return axins
+        
 """
 Pulled from a stack overflow answer:
 https://stackoverflow.com/questions/42277989/square-root-scale-using-matplotlib-python
