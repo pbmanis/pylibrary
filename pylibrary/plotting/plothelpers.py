@@ -1,9 +1,7 @@
-from __future__ import print_function
-
 import string
 from collections import OrderedDict
 from decimal import Decimal
-from typing import Union
+from typing import Union, List, Tuple
 
 import matplotlib
 import matplotlib.gridspec as gridspec
@@ -24,7 +22,6 @@ from matplotlib.patches import Circle, Rectangle
 from matplotlib.ticker import FormatStrFormatter
 import seaborn as sns
 from scipy.stats import gaussian_kde
-from six import iteritems
 
 from pylibrary.plotting import talbotetalticks as ticks  # logical tick formatting...
 
@@ -126,7 +123,7 @@ def nice_plot(
     for ax in axl:
         if ax is None:
             continue
-        for loc, spine in iteritems(ax.spines):  # .iteritems():
+        for loc, spine in ax.spines.items():
             if loc in spines:
                 spine.set_color("k")
                 if isinstance(position, int) or isinstance(position, float):
@@ -168,7 +165,7 @@ def nice_plot(
         # or call adjust_spines?
 
 
-def noaxes(axl: [object, list], whichaxes: str = "xy"):
+def noaxes(axl: Union[object, List], whichaxes: str = "xy"):
     """
     Take away all the axis ticks and the lines.
 
@@ -198,8 +195,37 @@ def noaxes(axl: [object, list], whichaxes: str = "xy"):
             ax.spines["left"].set_visible(False)
             ax.tick_params(left=False, labelleft=False)
 
+def showaxes(axl: Union[object, List], whichaxes: str = "xy"):
+    """
+    Show all the axis ticks and the lines.
 
-def noaxeslabels(axl: [object, list], whichaxes: str = "xy"):
+    Parameters
+    ----------
+
+    axl : list of axes objects
+        If a single axis object is present, it will be converted to a list here.
+
+    whichaxes : string (default : 'xy')
+        Sets which axes are turned on. The presence of an 'x' in
+        the string turns on x, the presence of 'y' turns on y.
+
+    Returns
+    -------
+        Nothing
+    """
+
+    axl = _ax_tolist(axl)
+    for ax in axl:
+        if ax is None:
+            continue
+        if "x" in whichaxes:
+            ax.spines["bottom"].set_visible(True)
+            ax.tick_params(bottom=True, labelbottom=True)
+        if "y" in whichaxes:
+            ax.spines["left"].set_visible(True)
+            ax.tick_params(left=True, labelleft=True)
+
+def noaxeslabels(axl: Union[object, List], whichaxes: str = "xy"):
     """
     Remove the axes labels without removing the tick marks
 
@@ -222,7 +248,7 @@ def noaxeslabels(axl: [object, list], whichaxes: str = "xy"):
             # ax.set_yticklabels([])
 
 
-def setY(ax1: [object, list], ax2: [object, list]):
+def setY(ax1: Union[object, List], ax2: Union[object, List]):
     """
     Set the Y limits for an axes from a source axes to
     the target axes.
@@ -252,7 +278,7 @@ def setY(ax1: [object, list], ax2: [object, list]):
         ax.set_ylim(refy)
 
 
-def setX(ax1: [object, list], ax2: [object, list]):
+def setX(ax1: Union[object, List], ax2: Union[object, List]):
     """
     Set the X limits for an axes from a source axes to
     the target axes.
@@ -283,9 +309,9 @@ def setX(ax1: [object, list], ax2: [object, list]):
 
 
 def tickStrings(
-    values: [list, np.ndarray],
+    values: Union[list, np.ndarray],
     scale: float = 1,
-    spacing: [float, None] = None,
+    spacing: Union[float, None] = None,
     tickPlacesAdd: int = 1,
     floatAdd: int = None,
 ) -> list:
@@ -336,7 +362,7 @@ def tickStrings(
     return strings
 
 
-def talbotTicks(axl: [object, list], **kwds):
+def talbotTicks(axl: Union[object, List], **kwds):
     r"""
     Adjust the tick marks using the talbot et al algorithm, on an existing plot.
 
@@ -656,7 +682,7 @@ def cleanAxes(axl):
     for ax in axl:
         if ax is None:
             continue
-        for loc, spine in iteritems(ax.spines):  # .iteritems():
+        for loc, spine in ax.spines.items():
             if loc in ["left", "bottom"]:
                 spine.set_visible(True)
             elif loc in ["right", "top"]:
@@ -995,6 +1021,7 @@ def calbar(
     axl,
     calbar=None,
     scale=[1.0, 1.0],
+    xyoffset=[0.05, 0.1], 
     axesoff=True,
     orient="left",
     unitNames=None,
@@ -1014,6 +1041,10 @@ def calbar(
 
     scale : (default [1.0, 1.0])
         scale factor to apply to the calibration bar in x and y axes
+
+    xyoffset: (default[0.05, 0.1])
+        cal bar offset, x, y. Make larger to space text further from the bar
+        (for example, [0.08, 0.15])
 
     axesoff : boolean (default: True)
         If true, turns of the standard axes so we just sidplay the calibration bar
@@ -1047,7 +1078,7 @@ def calbar(
     for ax in axl:
         if ax is None:
             continue
-        if axesoff is True:
+        if axesoff:
             noaxes(ax)
         Hfmt = r"{:.0f}"
         if calbar[2] * scale[0] < 1.0:
@@ -1077,7 +1108,7 @@ def calbar(
                 )
                 if calbar[3] != 0.0:
                     ax.text(
-                        calbar[0] + 0.05 * calbar[2] * scale[0],
+                        calbar[0] + xyoffset[0] * calbar[2] * scale[0],
                         calbar[1] + 0.5 * calbar[3],
                         Vfmt.format(calbar[3] * scale[1]),
                         horizontalalignment="left",
@@ -1099,8 +1130,8 @@ def calbar(
                 )
                 if calbar[3] != 0.0:
                     ax.text(
-                        calbar[0] + calbar[2] - 0.05 * calbar[2],
-                        calbar[1] + 0.5 * calbar[3],
+                        calbar[0] + calbar[2] - xyoffset[0] * calbar[2],
+                        calbar[1] + 0.5 * calbar[3], # center
                         Vfmt.format(calbar[3] * scale[1]),
                         horizontalalignment="right",
                         verticalalignment="center",
@@ -1122,8 +1153,8 @@ def calbar(
                     clip_on=False,
                 )
                 ax.text(
-                    calbar[0] + 0.05 * calbar[2] * scale[0],
-                    calbar[1] + 0.5 * calbar[3] * scale[1],
+                    calbar[0] + xyoffset[0] * calbar[2] * scale[0],
+                    calbar[1] + 0.5 * calbar[3] * scale[1], # center
                     Vfmt.format(calbar[3] * scale[1]),
                     horizontalalignment="left",
                     verticalalignment="center",
@@ -1136,7 +1167,7 @@ def calbar(
             if calbar[2] != 0.0:
                 ax.text(
                     calbar[0] + calbar[2] * 0.5,
-                    calbar[1] - 0.1 * calbar[3],
+                    calbar[1] - xyoffset[1] * calbar[3],
                     Hfmt.format(calbar[2] * scale[0]),
                     horizontalalignment="center",
                     verticalalignment="top",
@@ -1212,7 +1243,7 @@ def referenceline(
     return rl
 
 
-def crossAxes(axl, xyzero=[0.0, 0.0], limits=[None, None, None, None]):
+def crossAxes(axl, xyzero=[0.0, 0.0], limits=[None, None, None, None], labels:Union[str, None]=['nA', 'mV']):
     """
     Make plot(s) with crossed axes at the data points set by xyzero, and optionally
     set axes limits
@@ -1254,6 +1285,7 @@ def crossAxes(axl, xyzero=[0.0, 0.0], limits=[None, None, None, None]):
             ax.set_xlim(left=limits[0], right=limits[2])
             ax.set_ylim(bottom=limits[1], top=limits[3])
 
+            
 
 def violin_plot(ax, data, pos, bp=False, median=False):
     """
@@ -1554,14 +1586,14 @@ def circles(x, y, s, c="b", ax=None, vmin=None, vmax=None, **kwargs):
 
 
 def rectangles(
-    x: [float, list, np.ndarray],
-    y: [float, list, np.ndarray],
-    sw: [None, list, tuple] = None,
-    sh: [None, list, tuple] = None,
+    x: Union[float, List, np.ndarray],
+    y: Union[float, List, np.ndarray],
+    sw: Union[None, List, Tuple] = None,
+    sh: Union[None, List, Tuple] = None,
     c: str = "b",
-    ax: [object, None] = None,
-    vmin: [float, None] = None,
-    vmax: [float, None] = None,
+    ax: Union[object, List] = None,
+    vmin: Union[float, None] = None,
+    vmax: Union[float, None] = None,
     **kwargs
 ) -> object:
     """
@@ -1739,8 +1771,8 @@ def regular_grid(
         "bottommargin": 0.1,
     },
     labelposition: tuple = (0.0, 0.0),
-    parent_figure: [object] = None,
-    panel_labels: [list, None] = None,
+    parent_figure: object = None,
+    panel_labels: Union[object, List] = None,
     **kwds
 ) -> object:
     """
