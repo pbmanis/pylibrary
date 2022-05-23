@@ -1816,6 +1816,7 @@ def regular_grid(
         inciudes:
         parent_figure
         prior_label : last label of previous grid, so start labeling with next label in list
+        num : number (or string name) to attach to the figure.
     """
 
     figsize, margins, verticalspacing, horizontalspacing = figure_scaling(
@@ -2001,6 +2002,7 @@ class Plotter:
         labelposition=[0.0, 0.0],
         labelsize=None,
         parent_figure=None,
+        num=None,
     ):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
@@ -2094,6 +2096,8 @@ class Plotter:
 
         parent_figure: instance of an existing plotter figure to add plots to
 
+        num : number or string name for figure
+
         Returns
         -------
         Nothing
@@ -2115,7 +2119,7 @@ class Plotter:
         if self.parent is None:  # just create a new figure
             if figsize is None:
                 figsize = (11.5, 8)  # landscape
-            self.figure_handle = mpl.figure(figsize=figsize)  # create the figure
+            self.figure_handle = mpl.figure(figsize=figsize, num=num)  # create the figure
             self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
             self.figsize = figsize
             if title is not None:
