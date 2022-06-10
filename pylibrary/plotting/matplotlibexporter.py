@@ -11,8 +11,8 @@ Distributed under MIT/X11 license. See license.txt for more infofmation.
 """
 
 import re
-from PyQt5 import QtGui, QtCore
 import pyqtgraph as pg
+
 import numpy as np
 
 try:
@@ -195,10 +195,10 @@ def export_curve(fn, ax, item):
     opts = item.opts
     pen = fn.mkPen(opts['pen'])
     dashPattern = None
-    linestyles={QtCore.Qt.NoPen: '',         QtCore.Qt.SolidLine: '-', 
-                QtCore.Qt.DashLine: '--',    QtCore.Qt.DotLine: ':', 
-                QtCore.Qt.DashDotLine: '-.', QtCore.Qt.DashDotDotLine: '_.',
-                QtCore.Qt.CustomDashLine: '--'}
+    linestyles={pg.QtCore.Qt.PenStyle.NoPen: '',         pg.QtCore.Qt.PenStyle.SolidLine: '-', 
+                pg.QtCore.Qt.PenStyle.DashLine: '--',    pg.QtCore.Qt.PenStyle.DotLine: ':', 
+                pg.QtCore.Qt.PenStyle.DashDotLine: '-.', pg.QtCore.Qt.PenStyle.DashDotDotLine: '_.',
+                pg.QtCore.Qt.PenStyle.CustomDashLine: '--'}
     if pen.style() in linestyles.keys():
         linestyle = linestyles[pen.style()]
     else:

@@ -26,7 +26,6 @@ stdFont = 'Arial'
 import scipy.stats
 import numpy as np
 import pyqtgraph as pg
-from PyQt5 import QtGui
 from . import talbotetalticks as ticks # logical tick formatting... 
 
 """
