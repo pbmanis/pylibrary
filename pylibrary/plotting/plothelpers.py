@@ -170,12 +170,14 @@ def set_axes_ticks(
     xticks_str:Union[List, None]=None,
     xticks_pad:Union[List, None]=None,
     x_minor:Union[List, None] = None,
+    x_rotation:float=0., 
     major_length: float=3.0,
     minor_length: float=1.5,
     yticks:Union[List, None]=None,
     yticks_str:Union[List, None]=None, 
     yticks_pad:Union[List, None]=None,
     y_minor:Union[List, None] = None,
+    y_rotation:float=0., 
     fontsize:int=8,
 ):
     """Manually set axes ticks on a plot. This works on both
@@ -216,8 +218,7 @@ def set_axes_ticks(
                 if tick.get_pad() < 0:
                     tick.apply_tickdir("out")
                 tick.label1 = ylabels[i]
-                print(dir(tick))
-        ax.tick_params(axis='y', which='major', direction='out', length=major_length)
+        ax.tick_params(axis='y', which='major', direction='out', length=major_length, labelrotation=y_rotation)
     if y_minor is not None:
         ax.set_yticks(y_minor, minor=True)
         ax.tick_params(axis='y', which='minor', direction='out', length=minor_length)
@@ -228,7 +229,7 @@ def set_axes_ticks(
             for i, tick in enumerate(ax.get_xaxis().get_major_ticks()):
                 tick.set_pad(xticks_pad[i])
                 tick.label1 = xlabels[i]
-        ax.tick_params(axis='x', which='major', direction='out', length=major_length)
+        ax.tick_params(axis='x', which='major', direction='out', length=major_length, labelrotation=x_rotation)
     if x_minor is not None:
         ax.set_xticks(x_minor, minor=True)
         ax.tick_params(axis='x', which='minor', direction='out', length=minor_length)
@@ -2466,6 +2467,34 @@ class Plotter:
             currentaxis = self.getRC(group)
 
         return currentaxis
+
+    def adjust_panel_labels(self, fontsize:Union[None, str, float]=None,
+                                  fontweight:Union[None, str, int]=None,
+                                  fontstyle:Union[None, str] = None,
+                                  fontname:Union[None, str] = None,
+                            ):
+        """Change the label size for all of the panel labels
+
+        Parameters
+        ----------
+        fontsize : float, optional
+            font size, points, by default None (no change)
+        fontweight : str, optional
+            font weight, by default None (no change)
+        fontstyle : str, optional
+            font style, by default None (no change)
+        fontname : str, optional
+            font name, by default None (no change)
+        """
+        for ax_text in self.axlabels: # text objects
+            if fontsize is not None:
+                ax_text.set_fontsize(fontsize)
+            if fontweight is not None:
+                ax_text.set_fontweight(fontweight)
+            if fontstyle is not None:
+                ax_text.set_fontstyle(fontstyle)
+            if fontname is not None:
+                ax_text.set_fontname(fontname)
 
     def getaxis_fromlabel(self, label):
         """
