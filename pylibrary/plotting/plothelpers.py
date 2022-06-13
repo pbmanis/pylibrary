@@ -278,8 +278,76 @@ def setX(ax1: [object, list], ax2: [object, list]):
     refx = ax1.get_xlim()
     for ax in ax2:
         ax.set_xlim(refx)
+def set_axes_ticks(
+    ax: object,
+    xticks:Union[List, None]=None,
+    xticks_str:Union[List, None]=None,
+    xticks_pad:Union[List, None]=None,
+    x_minor:Union[List, None] = None,
+    x_rotation:float=0., 
+    major_length: float=3.0,
+    minor_length: float=1.5,
+    yticks:Union[List, None]=None,
+    yticks_str:Union[List, None]=None, 
+    yticks_pad:Union[List, None]=None,
+    y_minor:Union[List, None] = None,
+    y_rotation:float=0., 
+    fontsize:int=8,
+):
+    """Manually set axes ticks on a plot. This works on both
+    x and y axes. 
 
+    Parameters
+    ----------
+    ax: Axis object to work on
+    xticks : Union[List, None], optional
+        xtick positions, by default None
+    xticks_pad: Union[List, None], Optional
+    xticks_str : Union[List, None], optional
+        xtick labels, by default None
+    x_minor : Union[List, None], optional
+        minor tick positions, by default None
+    yticks : Union[List, None], optional
+        ytick positions, by default None
+    yticks_pad : Union[List, None], optional
+    yticks_str : Union[List, None], optional
+        ytick labels, by default None
+    y_minor : Union[List, None], optional
+        minor tick positions, by default None
+    major_length: float = 3,
+        major tick length 
+    minor_length: float = 1.5
+        minor tick length
+    fontsize : int, optional
+        tick label font size, default 8 pt
+    """        
 
+ 
+    if yticks is not None:
+        ax.set_yticks(yticks, yticks_str, fontsize=fontsize)
+        if yticks_pad is not None:
+            ylabels = ax.get_yticklabels()
+            for i, tick in enumerate(ax.get_yaxis().get_major_ticks()):
+                tick.set_pad(yticks_pad[i])
+                if tick.get_pad() < 0:
+                    tick.apply_tickdir("out")
+                tick.label1 = ylabels[i]
+        ax.tick_params(axis='y', which='major', direction='out', length=major_length, labelrotation=y_rotation)
+    if y_minor is not None:
+        ax.set_yticks(y_minor, minor=True)
+        ax.tick_params(axis='y', which='minor', direction='out', length=minor_length)
+    if xticks is not None:
+        ax.set_xticks(xticks, xticks_str, fontsize=8)
+        if xticks_pad is not None:
+            xlabels = ax.get_xticklabels()
+            for i, tick in enumerate(ax.get_xaxis().get_major_ticks()):
+                tick.set_pad(xticks_pad[i])
+                tick.label1 = xlabels[i]
+        ax.tick_params(axis='x', which='major', direction='out', length=major_length, labelrotation=x_rotation)
+    if x_minor is not None:
+        ax.set_xticks(x_minor, minor=True)
+        ax.tick_params(axis='x', which='minor', direction='out', length=minor_length)
+        
 def tickStrings(
     values: [list, np.ndarray],
     scale: float = 1,
