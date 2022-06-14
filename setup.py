@@ -38,9 +38,10 @@ setup(name='pylibrary',
       zip_safe=False,
       entry_points={
           'console_scripts': [
-               # no scripts for this library
-               ],
+              'listing=pylibrary.tools.listing:main',
+              ],
           'gui_scripts': [
+               # no scripts for this library
           ],
       },
       classifiers = [

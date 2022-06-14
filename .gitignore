@@ -5,12 +5,13 @@ _pycache__/
 pylibrary/*.py[cod]
 pylibrary/*.orig
 
-# documentation files
+# documentation (generated)
 docs/html
+olddocfiles/
 pylibrary/doc/build
 pylibrary/docs/build
 pylibrary/*.bak
-olddocfiles
+
 # pycharm
 .idea
 # R (not sure why it is even in there)
