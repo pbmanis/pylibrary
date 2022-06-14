@@ -3,7 +3,7 @@ from __future__ import print_function
 import string
 from collections import OrderedDict
 from decimal import Decimal
-from typing import Union
+from typing import Union, List
 
 import matplotlib
 import matplotlib.gridspec as gridspec
@@ -166,7 +166,7 @@ def nice_plot(
         # or call adjust_spines?
 
 
-def noaxes(axl: [object, list], whichaxes: str = "xy"):
+def noaxes(axl: Union[object, list], whichaxes: str = "xy"):
     """
     Take away all the axis ticks and the lines.
 
@@ -197,7 +197,7 @@ def noaxes(axl: [object, list], whichaxes: str = "xy"):
             ax.tick_params(left=False, labelleft=False)
 
 
-def noaxeslabels(axl: [object, list], whichaxes: str = "xy"):
+def noaxeslabels(axl: Union[object, list], whichaxes: str = "xy"):
     """
     Remove the axes labels without removing the tick marks
 
@@ -220,7 +220,7 @@ def noaxeslabels(axl: [object, list], whichaxes: str = "xy"):
             # ax.set_yticklabels([])
 
 
-def setY(ax1: [object, list], ax2: [object, list]):
+def setY(ax1: Union[object, list], ax2: Union[object, list]):
     """
     Set the Y limits for an axes from a source axes to
     the target axes.
@@ -250,7 +250,7 @@ def setY(ax1: [object, list], ax2: [object, list]):
         ax.set_ylim(refy)
 
 
-def setX(ax1: [object, list], ax2: [object, list]):
+def setX(ax1: Union[object, list], ax2: Union[object, list]):
     """
     Set the X limits for an axes from a source axes to
     the target axes.
@@ -349,9 +349,9 @@ def set_axes_ticks(
         ax.tick_params(axis='x', which='minor', direction='out', length=minor_length)
         
 def tickStrings(
-    values: [list, np.ndarray],
+    values: Union[list, np.ndarray],
     scale: float = 1,
-    spacing: [float, None] = None,
+    spacing: Union[float, None] = None,
     tickPlacesAdd: int = 1,
     floatAdd: int = None,
 ) -> list:
@@ -402,7 +402,7 @@ def tickStrings(
     return strings
 
 
-def talbotTicks(axl: [object, list], **kwds):
+def talbotTicks(axl: Union[object, list], **kwds):
     r"""
     Adjust the tick marks using the talbot et al algorithm, on an existing plot.
 
@@ -1591,14 +1591,14 @@ def circles(x, y, s, c="b", ax=None, vmin=None, vmax=None, **kwargs):
 
 
 def rectangles(
-    x: [float, list, np.ndarray],
-    y: [float, list, np.ndarray],
-    sw: [None, list, tuple] = None,
-    sh: [None, list, tuple] = None,
+    x: Union[float, list, np.ndarray],
+    y: Union[float, list, np.ndarray],
+    sw: Union[None, list, tuple] = None,
+    sh: Union[None, list, tuple] = None,
     c: str = "b",
-    ax: [object, None] = None,
-    vmin: [float, None] = None,
-    vmax: [float, None] = None,
+    ax: Union[object, None] = None,
+    vmin: Union[float, None] = None,
+    vmax: Union[float, None] = None,
     **kwargs
 ) -> object:
     """
@@ -1776,8 +1776,8 @@ def regular_grid(
         "bottommargin": 0.1,
     },
     labelposition: tuple = (0.0, 0.0),
-    parent_figure: [object] = None,
-    panel_labels: [list, None] = None,
+    parent_figure: Union[object, None] = None,
+    panel_labels: Union[list, None] = None,
     **kwds
 ) -> object:
     """

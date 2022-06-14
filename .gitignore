@@ -10,7 +10,15 @@ docs/html
 pylibrary/doc/build
 pylibrary/docs/build
 pylibrary/*.bak
+<<<<<<< HEAD
 olddocfiles
+=======
+
+
+.DS_Store
+pylibrary/.DS_Store
+
+>>>>>>> ab4672ff525da3b4cd964ee0623f93a8d955236a
 # pycharm
 .idea
 # R (not sure why it is even in there)

@@ -9,7 +9,7 @@ import sys
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtGui, QtCore
 
-class FileSelector(QtGui.QMainWindow):
+class FileSelector(pg.QtWidgets.QMainWindow):
 
     def __init__(self, title='', dialogtype='dir', extensions=None, startingdir='.', useNative=True, standalone=False):
         """
