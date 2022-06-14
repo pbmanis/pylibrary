@@ -4,9 +4,13 @@ _pycache__/
 *$py.class
 pylibrary/*.py[cod]
 pylibrary/*.orig
+
+# documentation files
+docs/html
 pylibrary/doc/build
 pylibrary/docs/build
 pylibrary/*.bak
+olddocfiles
 # pycharm
 .idea
 # R (not sure why it is even in there)
