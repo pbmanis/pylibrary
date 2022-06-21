@@ -57,7 +57,7 @@ class FileSelector(pg.QtWidgets.QMainWindow):
         if self.standalone:
             self.app = QtGui.QApplication(sys.argv)
         self.win = QtGui.QDialog() # top level
-        self.win.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        # self.win.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.win.setWindowTitle(self.title)
         self.win.setGeometry(self.left, self.top, self.width, self.height)
         self.active_dialog = self.dialogs[self.dialogtype]()
@@ -66,37 +66,41 @@ class FileSelector(pg.QtWidgets.QMainWindow):
             self.active_dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
 
     def openFileNameDialog(self):
-        options = QtGui.QFileDialog.Options()
+        self.dialog = pg.QtWidgets.QFileDialog()
+        windows_options = self.dialog.windowFlags()
         if not self.useNative:
             options |= QtGui.QFileDialog.DontUseNativeDialog
-        fileName = QtGui.QFileDialog.getOpenFileName(self.win, self.title, self.startingdir,
-                "All Files (*);;", options=options)
+        fileName = self.dialog.getOpenFileName(self.win, self.title, self.startingdir,
+                "All Files (*);;", options=QtGui.QFileDialog.Option.DontResolveSymlinks)
         self.savefilename(fileName)
 
     def openDirNameDialog(self):
-        options = QtGui.QFileDialog.Options()
+        self.dialog = pg.QtWidgets.QFileDialog()
+        windows_options = self.dialog.windowFlags()
         if not self.useNative:
             options |= QtGui.QFileDialog.DontUseNativeDialog
-        options |= QtGui.QFileDialog.DirectoryOnly
-        #options |= QFileDialog.ShowDirsOnly
-        dirName = QtGui.QFileDialog.getExistingDirectory(self.win, self.title,
-                self.startingdir, options=options)
+        dirName = self.dialog.getExistingDirectory(self.win, self.title,
+                self.startingdir, QtGui.QFileDialog.Option.ShowDirsOnly
+                                                | QtGui.QFileDialog.Option.DontResolveSymlinks)
         self.savefilename(dirName)
 
     def openFileNamesDialog(self):
-        options = QtGui.QFileDialog.Options()
+        self.dialog = pg.QtWidgets.QFileDialog()
+        windows_options = self.dialog.windowFlags()
         if not self.useNative:
             options |= QtGui.QFileDialog.DontUseNativeDialog
-        files = QtGui.QFileDialog.getOpenFileNames(self.win, self.title,
-                self.startingdir,"All Files (*);;Python Files (*.py)", options=options)
-        self.savefilename(files)
+        fileNames = self.dialog.getOpenFileName(self.win, self.title, self.startingdir,
+                self.startingdir,"All Files (*);;Python Files (*.py)",
+                options=QtGui.QFileDialog.Option.DontResolveSymlinks)
+        self.savefilename(fileNames)
 
     def saveFileDialog(self):
-        options = QFileDialog.Options()
+        self.dialog = pg.QtWidgets.QFileDialog()
+        windows_options = QFileDialog.windowFlags()
         if not self.useNative:
             ptions |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self.win, self.title, self.startingdir,
-            "All Files (*);;Text Files (*.txt)", options=options)
+        fileName, _ = self.dialog.getSaveFileName(self.win, self.title, self.startingdir,
+            "All Files (*);;Text Files (*.txt)", options=QtGui.QFileDialog.Option.DontResolveSymlinks)
         self.savefilename(fileName)
 
     def savefilename(self, fileName):
