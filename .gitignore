@@ -28,7 +28,7 @@ pylibrary/.Rhistory
 # Distribution / packaging
 .Python
 docs/html
-docs/source/api
+docs/source/api/**
 build/
 develop-eggs/
 dist/
