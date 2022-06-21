@@ -22,6 +22,7 @@ pylibrary/.Rhistory
 
 # Distribution / packaging
 .Python
+docs/html
 build/
 develop-eggs/
 dist/
@@ -116,3 +117,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+docs/source/api/pylibrary.plotting.plothelpers.arbitrary_grid.rst
+docs/source/api/pylibrary.plotting.plothelpers.figure_scaling.rst
+docs/source/api/pylibrary.plotting.plothelpers.make_colorbar.rst
+docs/source/api/pylibrary.plotting.plothelpers.set_axes_ticks.rst
+docs/source/api/pylibrary.plotting.plothelpers.showaxes.rst
+docs/source/api/pylibrary.tools.digital_filters.NotchFilterZP.rst
