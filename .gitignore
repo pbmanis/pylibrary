@@ -9,6 +9,7 @@ pylibrary/docs/build
 pylibrary/*.bak
 
 
+
 .DS_Store
 pylibrary/.DS_Store
 
@@ -23,6 +24,7 @@ pylibrary/.Rhistory
 # Distribution / packaging
 .Python
 docs/html
+docs/source/api
 build/
 develop-eggs/
 dist/
