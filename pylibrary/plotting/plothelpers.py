@@ -1,12 +1,11 @@
-from __future__ import print_function
-
 import string
 from collections import OrderedDict
 from decimal import Decimal
-from typing import Union
+from typing import Union, List, Tuple
 
 import matplotlib
 import matplotlib.gridspec as gridspec
+import mpl_toolkits.axes_grid1.inset_locator as INSET
 import matplotlib.pyplot as mpl
 import matplotlib.scale as mscale
 import matplotlib.ticker as ticker
@@ -21,8 +20,8 @@ from matplotlib.patches import Circle, Rectangle
 
 # import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
+import seaborn as sns
 from scipy.stats import gaussian_kde
-from six import iteritems
 
 from pylibrary.plotting import talbotetalticks as ticks  # logical tick formatting...
 
@@ -124,7 +123,7 @@ def nice_plot(
     for ax in axl:
         if ax is None:
             continue
-        for loc, spine in iteritems(ax.spines):  # .iteritems():
+        for loc, spine in ax.spines.items():
             if loc in spines:
                 spine.set_color("k")
                 if isinstance(position, int) or isinstance(position, float):
@@ -165,8 +164,77 @@ def nice_plot(
             pass
         # or call adjust_spines?
 
+def set_axes_ticks(
+    ax: object,
+    xticks:Union[List, None]=None,
+    xticks_str:Union[List, None]=None,
+    xticks_pad:Union[List, None]=None,
+    x_minor:Union[List, None] = None,
+    x_rotation:float=0., 
+    major_length: float=3.0,
+    minor_length: float=1.5,
+    yticks:Union[List, None]=None,
+    yticks_str:Union[List, None]=None, 
+    yticks_pad:Union[List, None]=None,
+    y_minor:Union[List, None] = None,
+    y_rotation:float=0., 
+    fontsize:int=8,
+):
+    """Manually set axes ticks on a plot. This works on both
+    x and y axes. 
 
-def noaxes(axl: [object, list], whichaxes: str = "xy"):
+    Parameters
+    ----------
+    ax: Axis object to work on
+    xticks : Union[List, None], optional
+        xtick positions, by default None
+    xticks_pad: Union[List, None], Optional
+    xticks_str : Union[List, None], optional
+        xtick labels, by default None
+    x_minor : Union[List, None], optional
+        minor tick positions, by default None
+    yticks : Union[List, None], optional
+        ytick positions, by default None
+    yticks_pad : Union[List, None], optional
+    yticks_str : Union[List, None], optional
+        ytick labels, by default None
+    y_minor : Union[List, None], optional
+        minor tick positions, by default None
+    major_length: float = 3,
+        major tick length 
+    minor_length: float = 1.5
+        minor tick length
+    fontsize : int, optional
+        tick label font size, default 8 pt
+    """        
+
+ 
+    if yticks is not None:
+        ax.set_yticks(yticks, yticks_str, fontsize=fontsize)
+        if yticks_pad is not None:
+            ylabels = ax.get_yticklabels()
+            for i, tick in enumerate(ax.get_yaxis().get_major_ticks()):
+                tick.set_pad(yticks_pad[i])
+                if tick.get_pad() < 0:
+                    tick.apply_tickdir("out")
+                tick.label1 = ylabels[i]
+        ax.tick_params(axis='y', which='major', direction='out', length=major_length, labelrotation=y_rotation)
+    if y_minor is not None:
+        ax.set_yticks(y_minor, minor=True)
+        ax.tick_params(axis='y', which='minor', direction='out', length=minor_length)
+    if xticks is not None:
+        ax.set_xticks(xticks, xticks_str, fontsize=8)
+        if xticks_pad is not None:
+            xlabels = ax.get_xticklabels()
+            for i, tick in enumerate(ax.get_xaxis().get_major_ticks()):
+                tick.set_pad(xticks_pad[i])
+                tick.label1 = xlabels[i]
+        ax.tick_params(axis='x', which='major', direction='out', length=major_length, labelrotation=x_rotation)
+    if x_minor is not None:
+        ax.set_xticks(x_minor, minor=True)
+        ax.tick_params(axis='x', which='minor', direction='out', length=minor_length)
+
+def noaxes(axl: Union[object, List], whichaxes: str = "xy"):
     """
     Take away all the axis ticks and the lines.
 
@@ -196,8 +264,37 @@ def noaxes(axl: [object, list], whichaxes: str = "xy"):
             ax.spines["left"].set_visible(False)
             ax.tick_params(left=False, labelleft=False)
 
+def showaxes(axl: Union[object, List], whichaxes: str = "xy"):
+    """
+    Show all the axis ticks and the lines.
 
-def noaxeslabels(axl: [object, list], whichaxes: str = "xy"):
+    Parameters
+    ----------
+
+    axl : list of axes objects
+        If a single axis object is present, it will be converted to a list here.
+
+    whichaxes : string (default : 'xy')
+        Sets which axes are turned on. The presence of an 'x' in
+        the string turns on x, the presence of 'y' turns on y.
+
+    Returns
+    -------
+        Nothing
+    """
+
+    axl = _ax_tolist(axl)
+    for ax in axl:
+        if ax is None:
+            continue
+        if "x" in whichaxes:
+            ax.spines["bottom"].set_visible(True)
+            ax.tick_params(bottom=True, labelbottom=True)
+        if "y" in whichaxes:
+            ax.spines["left"].set_visible(True)
+            ax.tick_params(left=True, labelleft=True)
+
+def noaxeslabels(axl: Union[object, List], whichaxes: str = "xy"):
     """
     Remove the axes labels without removing the tick marks
 
@@ -220,7 +317,7 @@ def noaxeslabels(axl: [object, list], whichaxes: str = "xy"):
             # ax.set_yticklabels([])
 
 
-def setY(ax1: [object, list], ax2: [object, list]):
+def setY(ax1: Union[object, List], ax2: Union[object, List]):
     """
     Set the Y limits for an axes from a source axes to
     the target axes.
@@ -250,7 +347,7 @@ def setY(ax1: [object, list], ax2: [object, list]):
         ax.set_ylim(refy)
 
 
-def setX(ax1: [object, list], ax2: [object, list]):
+def setX(ax1: Union[object, List], ax2: Union[object, List]):
     """
     Set the X limits for an axes from a source axes to
     the target axes.
@@ -279,11 +376,81 @@ def setX(ax1: [object, list], ax2: [object, list]):
     for ax in ax2:
         ax.set_xlim(refx)
 
+        
+def set_axes_ticks(
+    ax: object,
+    xticks:Union[List, None]=None,
+    xticks_str:Union[List, None]=None,
+    xticks_pad:Union[List, None]=None,
+    x_minor:Union[List, None] = None,
+    x_rotation:float=0., 
+    major_length: float=3.0,
+    minor_length: float=1.5,
+    yticks:Union[List, None]=None,
+    yticks_str:Union[List, None]=None, 
+    yticks_pad:Union[List, None]=None,
+    y_minor:Union[List, None] = None,
+    y_rotation:float=0., 
+    fontsize:int=8,
+):
+    """Manually set axes ticks on a plot. This works on both
+    x and y axes. 
 
+    Parameters
+    ----------
+    ax: Axis object to work on
+    xticks : Union[List, None], optional
+        xtick positions, by default None
+    xticks_pad: Union[List, None], Optional
+    xticks_str : Union[List, None], optional
+        xtick labels, by default None
+    x_minor : Union[List, None], optional
+        minor tick positions, by default None
+    yticks : Union[List, None], optional
+        ytick positions, by default None
+    yticks_pad : Union[List, None], optional
+    yticks_str : Union[List, None], optional
+        ytick labels, by default None
+    y_minor : Union[List, None], optional
+        minor tick positions, by default None
+    major_length: float = 3,
+        major tick length 
+    minor_length: float = 1.5
+        minor tick length
+    fontsize : int, optional
+        tick label font size, default 8 pt
+    """        
+
+ 
+    if yticks is not None:
+        ax.set_yticks(yticks, yticks_str, fontsize=fontsize)
+        if yticks_pad is not None:
+            ylabels = ax.get_yticklabels()
+            for i, tick in enumerate(ax.get_yaxis().get_major_ticks()):
+                tick.set_pad(yticks_pad[i])
+                if tick.get_pad() < 0:
+                    tick.apply_tickdir("out")
+                tick.label1 = ylabels[i]
+        ax.tick_params(axis='y', which='major', direction='out', length=major_length, labelrotation=y_rotation)
+    if y_minor is not None:
+        ax.set_yticks(y_minor, minor=True)
+        ax.tick_params(axis='y', which='minor', direction='out', length=minor_length)
+    if xticks is not None:
+        ax.set_xticks(xticks, xticks_str, fontsize=8)
+        if xticks_pad is not None:
+            xlabels = ax.get_xticklabels()
+            for i, tick in enumerate(ax.get_xaxis().get_major_ticks()):
+                tick.set_pad(xticks_pad[i])
+                tick.label1 = xlabels[i]
+        ax.tick_params(axis='x', which='major', direction='out', length=major_length, labelrotation=x_rotation)
+    if x_minor is not None:
+        ax.set_xticks(x_minor, minor=True)
+        ax.tick_params(axis='x', which='minor', direction='out', length=minor_length)
+        
 def tickStrings(
-    values: [list, np.ndarray],
+    values: Union[list, np.ndarray],
     scale: float = 1,
-    spacing: [float, None] = None,
+    spacing: Union[float, None] = None,
     tickPlacesAdd: int = 1,
     floatAdd: int = None,
 ) -> list:
@@ -334,7 +501,7 @@ def tickStrings(
     return strings
 
 
-def talbotTicks(axl: [object, list], **kwds):
+def talbotTicks(axl: Union[object, List], **kwds):
     r"""
     Adjust the tick marks using the talbot et al algorithm, on an existing plot.
 
@@ -654,7 +821,7 @@ def cleanAxes(axl):
     for ax in axl:
         if ax is None:
             continue
-        for loc, spine in iteritems(ax.spines):  # .iteritems():
+        for loc, spine in ax.spines.items():
             if loc in ["left", "bottom"]:
                 spine.set_visible(True)
             elif loc in ["right", "top"]:
@@ -993,6 +1160,7 @@ def calbar(
     axl,
     calbar=None,
     scale=[1.0, 1.0],
+    xyoffset=[0.05, 0.1], 
     axesoff=True,
     orient="left",
     unitNames=None,
@@ -1012,6 +1180,10 @@ def calbar(
 
     scale : (default [1.0, 1.0])
         scale factor to apply to the calibration bar in x and y axes
+
+    xyoffset: (default[0.05, 0.1])
+        cal bar offset, x, y. Make larger to space text further from the bar
+        (for example, [0.08, 0.15])
 
     axesoff : boolean (default: True)
         If true, turns of the standard axes so we just sidplay the calibration bar
@@ -1045,7 +1217,7 @@ def calbar(
     for ax in axl:
         if ax is None:
             continue
-        if axesoff is True:
+        if axesoff:
             noaxes(ax)
         Hfmt = r"{:.0f}"
         if calbar[2] * scale[0] < 1.0:
@@ -1075,7 +1247,7 @@ def calbar(
                 )
                 if calbar[3] != 0.0:
                     ax.text(
-                        calbar[0] + 0.05 * calbar[2] * scale[0],
+                        calbar[0] + xyoffset[0] * calbar[2] * scale[0],
                         calbar[1] + 0.5 * calbar[3],
                         Vfmt.format(calbar[3] * scale[1]),
                         horizontalalignment="left",
@@ -1097,8 +1269,8 @@ def calbar(
                 )
                 if calbar[3] != 0.0:
                     ax.text(
-                        calbar[0] + calbar[2] - 0.05 * calbar[2],
-                        calbar[1] + 0.5 * calbar[3],
+                        calbar[0] + calbar[2] - xyoffset[0] * calbar[2],
+                        calbar[1] + 0.5 * calbar[3], # center
                         Vfmt.format(calbar[3] * scale[1]),
                         horizontalalignment="right",
                         verticalalignment="center",
@@ -1120,8 +1292,8 @@ def calbar(
                     clip_on=False,
                 )
                 ax.text(
-                    calbar[0] + 0.05 * calbar[2] * scale[0],
-                    calbar[1] + 0.5 * calbar[3] * scale[1],
+                    calbar[0] + xyoffset[0] * calbar[2] * scale[0],
+                    calbar[1] + 0.5 * calbar[3] * scale[1], # center
                     Vfmt.format(calbar[3] * scale[1]),
                     horizontalalignment="left",
                     verticalalignment="center",
@@ -1134,7 +1306,7 @@ def calbar(
             if calbar[2] != 0.0:
                 ax.text(
                     calbar[0] + calbar[2] * 0.5,
-                    calbar[1] - 0.1 * calbar[3],
+                    calbar[1] - xyoffset[1] * calbar[3],
                     Hfmt.format(calbar[2] * scale[0]),
                     horizontalalignment="center",
                     verticalalignment="top",
@@ -1210,7 +1382,7 @@ def referenceline(
     return rl
 
 
-def crossAxes(axl, xyzero=[0.0, 0.0], limits=[None, None, None, None]):
+def crossAxes(axl, xyzero=[0.0, 0.0], limits=[None, None, None, None], labels:Union[str, None]=['nA', 'mV']):
     """
     Make plot(s) with crossed axes at the data points set by xyzero, and optionally
     set axes limits
@@ -1252,6 +1424,7 @@ def crossAxes(axl, xyzero=[0.0, 0.0], limits=[None, None, None, None]):
             ax.set_xlim(left=limits[0], right=limits[2])
             ax.set_ylim(bottom=limits[1], top=limits[3])
 
+            
 
 def violin_plot(ax, data, pos, bp=False, median=False):
     """
@@ -1297,11 +1470,39 @@ def violin_plot(ax, data, pos, bp=False, median=False):
         mpl.setp(bpf["whiskers"], color="black", linestyle="-")
 
 
+def make_colorbar(ax, pos:Union[list, tuple] = [0.0, 0.0, 1.0, 1.0],
+     vmin=0, vmax=1.0, nticks=4, bbox=[0.1, 0.80, 0.8, 0.15], palette:str="hls"):
+    """
+    Make a floating colorbar with its own axes that can be placed "anywhere"
+    relative to an existing axis (ax).
+    pos feeds the rectangles in the colorbar (the defaults should be ok)
+    bbox is x0, y0, xl, yh (relative to the parent axis)
+    vmin, vmax refer to the values assigned along the colorbar scale from 0 to 1
+    nticks is the number of tick marks between vmin and vmax.
+     
+    """
+    # build color patches
+    cmx = sns.color_palette(palette, as_cmap=True)
+    xpos = pos[0] + np.linspace(0, 1, cmx.N)
+    pc = [matplotlib.patches.Rectangle((xpos[i], pos[1]), width=pos[2], height=pos[3], facecolor=c, color=c, edgecolor=c) 
+            for i,c in enumerate(cmx.colors)]
+    p = matplotlib.collections.PatchCollection(pc, match_original=True)
+
+    axins = INSET.inset_axes(ax,  width="100%", height="20%",
+                   bbox_to_anchor=bbox,
+                   bbox_transform=ax.transAxes, loc=3)
+    axins.set_yticks([])
+    ticklabel_f = np.linspace(vmin, vmax, nticks)
+    ticklabels = [f"{int(x):d}" for x in ticklabel_f]
+    axins.set_xticks(ticks=np.linspace(0, 1.0, nticks), labels=ticklabels)
+    axins.add_collection(p)
+    # ax.set_clip_on(False)
+    return axins
+        
 """
 Pulled from a stack overflow answer:
 https://stackoverflow.com/questions/42277989/square-root-scale-using-matplotlib-python
 
-Probably should live in pylibrary/PlotHelpers.py
 """
 
 
@@ -1523,14 +1724,14 @@ def circles(x, y, s, c="b", ax=None, vmin=None, vmax=None, **kwargs):
 
 
 def rectangles(
-    x: [float, list, np.ndarray],
-    y: [float, list, np.ndarray],
-    sw: [None, list, tuple] = None,
-    sh: [None, list, tuple] = None,
+    x: Union[float, List, np.ndarray],
+    y: Union[float, List, np.ndarray],
+    sw: Union[None, List, Tuple] = None,
+    sh: Union[None, List, Tuple] = None,
     c: str = "b",
-    ax: [object, None] = None,
-    vmin: [float, None] = None,
-    vmax: [float, None] = None,
+    ax: Union[object, List] = None,
+    vmin: Union[float, None] = None,
+    vmax: Union[float, None] = None,
     **kwargs
 ) -> object:
     """
@@ -1708,8 +1909,8 @@ def regular_grid(
         "bottommargin": 0.1,
     },
     labelposition: tuple = (0.0, 0.0),
-    parent_figure: [object] = None,
-    panel_labels: [list, None] = None,
+    parent_figure: object = None,
+    panel_labels: Union[object, List] = None,
     **kwds
 ) -> object:
     """
@@ -1753,6 +1954,7 @@ def regular_grid(
         inciudes:
         parent_figure
         prior_label : last label of previous grid, so start labeling with next label in list
+        num : number (or string name) to attach to the figure.
     """
 
     figsize, margins, verticalspacing, horizontalspacing = figure_scaling(
@@ -1884,7 +2086,7 @@ def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds)
         }
         # dict pos elements are [left, width, bottom, height] for the axes in the plot.
     A minimum dict would just have the panel labels as keys, and the position information
-    Sets up figure panels, returing the plotter instance
+    Sets up figure panels, returning the plotter instance
     All keywords are passed to plotter
     """
     nplots = len(sizer)
@@ -1938,6 +2140,7 @@ class Plotter:
         labelposition=[0.0, 0.0],
         labelsize=None,
         parent_figure=None,
+        num=None,
     ):
         """
         Create an instance of the plotter. Generates a new matplotlib figure,
@@ -2031,6 +2234,8 @@ class Plotter:
 
         parent_figure: instance of an existing plotter figure to add plots to
 
+        num : number or string name for figure
+
         Returns
         -------
         Nothing
@@ -2052,7 +2257,7 @@ class Plotter:
         if self.parent is None:  # just create a new figure
             if figsize is None:
                 figsize = (11.5, 8)  # landscape
-            self.figure_handle = mpl.figure(figsize=figsize)  # create the figure
+            self.figure_handle = mpl.figure(figsize=figsize, num=num)  # create the figure
             self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
             self.figsize = figsize
             if title is not None:
@@ -2331,6 +2536,34 @@ class Plotter:
             currentaxis = self.getRC(group)
 
         return currentaxis
+
+    def adjust_panel_labels(self, fontsize:Union[None, str, float]=None,
+                                  fontweight:Union[None, str, int]=None,
+                                  fontstyle:Union[None, str] = None,
+                                  fontname:Union[None, str] = None,
+                            ):
+        """Change the label size for all of the panel labels
+
+        Parameters
+        ----------
+        fontsize : float, optional
+            font size, points, by default None (no change)
+        fontweight : str, optional
+            font weight, by default None (no change)
+        fontstyle : str, optional
+            font style, by default None (no change)
+        fontname : str, optional
+            font name, by default None (no change)
+        """
+        for ax_text in self.axlabels: # text objects
+            if fontsize is not None:
+                ax_text.set_fontsize(fontsize)
+            if fontweight is not None:
+                ax_text.set_fontweight(fontweight)
+            if fontstyle is not None:
+                ax_text.set_fontstyle(fontstyle)
+            if fontname is not None:
+                ax_text.set_fontname(fontname)
 
     def getaxis_fromlabel(self, label):
         """

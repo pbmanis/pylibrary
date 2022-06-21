@@ -4,6 +4,10 @@ _pycache__/
 *$py.class
 pylibrary/*.py[cod]
 pylibrary/*.orig
+
+# documentation (generated)
+docs/html
+olddocfiles/
 pylibrary/doc/build
 pylibrary/docs/build
 pylibrary/*.bak
