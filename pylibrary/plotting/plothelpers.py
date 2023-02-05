@@ -1,7 +1,7 @@
 import string
 from collections import OrderedDict
 from decimal import Decimal
-from typing import Union, List, Tuple
+from typing import Union, Tuple, List, Literal
 
 import matplotlib
 import matplotlib.gridspec as gridspec
@@ -656,8 +656,9 @@ def do_talbotTicks(
 
 
 def labelPanels(
-    axl,
+    axl:Union[list, dict],
     axlist=None,
+    rcshape=None,
     order="rowsfirst",
     font="Arial",
     fontsize=18,
@@ -672,14 +673,17 @@ def labelPanels(
 
     Parameters
     ----------
-    axl : list of axes objects
+    axl : list  or dict of axes objects
         If a single axis object is present, it will be converted to a list here.
         if the array is a multidimensional numpy array (ndim = 2),
-        the
+        then the grid method id sued
+        if axl is a dictionary, then the dict is parsed by keys and possibly
+        the labelpos
 
     axlist : list of string labels (default : None)
         Contains a list of the string labels. If the default value  of None is provided,
-        the axes will be lettered in alphabetical sequence.
+        the axes will be lettered in alphabetical sequence, 
+        or taken from the keys of axl
 
     order : str (default "rowfirst")
         A string describing the labeling order when axlist is None.
@@ -704,9 +708,11 @@ def labelPanels(
 
     """
     if isinstance(axl, dict):
-        axlist = list(axl.keys())
+        axlist = list(axl.keys()) # replace the list with the dictionary keys
+        print("is dict: ", axl)
     if isinstance(axl, np.ndarray):
         rc = axl.shape  # get row and column sizes before converting to list
+    
     axl = _ax_tolist(axl)
 
     if axlist is None:
@@ -731,25 +737,32 @@ def labelPanels(
     # font.set_style('normal')
     labels = []
     for i, ax in enumerate(axl):
+        
         if i >= len(axlist):
             continue
         if ax is None:
             continue
         if isinstance(ax, list):
             ax = ax[0]
-        # print('xy: ', xy, axlist[i], weight)
-        # ann = ax.annotate(axlist[i], xytext=xy, textcoords='axes fraction',
-        #         annotation_clip=False,
-        #         color="k", verticalalignment=verticalalignment, weight=weight, horizontalalignment=horizontalalignment,
-        #         fontsize=fontsize, family='sans-serif', rotation=rotation
-        #         )
+        xy_label = xy
+        fsize = fontsize
+        # possibly replace the xy position from the rcshape dictionary
+        if rcshape is not None:
+            if axlist[i] in rcshape.keys():
+                if 'labelpos' in rcshape[axlist[i]].keys():
+                    xy_label = rcshape[axlist[i]]['labelpos']
+                if 'fontsize' in rcshape[axlist[i]].keys():
+                    fsize = rcshape[axlist[i]]['fontsize']
+
+        
+
         ann = ax.text(
-            xy[0],
-            xy[1],
+            xy_label[0],
+            xy_label[1],
             axlist[i],
             transform=ax.transAxes,
             fontdict={
-                "fontsize": fontsize,
+                "fontsize": fsize,
                 "weight": weight,
                 "family": "sans-serif",
                 "verticalalignment": verticalalignment,
@@ -758,6 +771,7 @@ def labelPanels(
             },
         )
         labels.append(ann)
+
     return labels
 
 
@@ -1158,16 +1172,16 @@ def nextup(x, steps=[1, 2, 5, 10]):
 
 def calbar(
     axl,
-    calbar=None,
-    scale=[1.0, 1.0],
-    xyoffset=[0.05, 0.1], 
-    axesoff=True,
-    orient="left",
-    unitNames=None,
-    fontsize=None,
-    weight="normal",
-    color="k",
-    font="Arial",
+    calbar:list=None,
+    scale:list=[1.0, 1.0],
+    xyoffset:list=[0.05, 0.1], 
+    axesoff:bool=True,
+    orient:Literal["left", "right"] = "left",
+    unitNames:dict=None,
+    fontsize:float=None,
+    weight:Literal["normal", "bold"]="normal",
+    color:"str"="k",
+    font:str="Arial",
 ):
     """
     draw a calibration bar and label it. T
@@ -1180,6 +1194,8 @@ def calbar(
 
     scale : (default [1.0, 1.0])
         scale factor to apply to the calibration bar in x and y axes
+        The scale is applied to the printed value, not the actual calbar
+        xylh values
 
     xyoffset: (default[0.05, 0.1])
         cal bar offset, x, y. Make larger to space text further from the bar
@@ -1235,6 +1251,7 @@ def calbar(
         font.set_weight = weight
         font.set_size = fontsize
         font.set_style("normal")
+
         if calbar is not None:
             if orient == "left":  # vertical part is on the left
                 ax.plot(
@@ -1247,7 +1264,7 @@ def calbar(
                 )
                 if calbar[3] != 0.0:
                     ax.text(
-                        calbar[0] + xyoffset[0] * calbar[2] * scale[0],
+                        calbar[0] + xyoffset[0] * calbar[2],
                         calbar[1] + 0.5 * calbar[3],
                         Vfmt.format(calbar[3] * scale[1]),
                         horizontalalignment="left",
@@ -1268,6 +1285,7 @@ def calbar(
                     clip_on=False,
                 )
                 if calbar[3] != 0.0:
+                    print("cal2")
                     ax.text(
                         calbar[0] + calbar[2] - xyoffset[0] * calbar[2],
                         calbar[1] + 0.5 * calbar[3], # center
@@ -1291,9 +1309,11 @@ def calbar(
                     linewidth=1.5,
                     clip_on=False,
                 )
+
                 ax.text(
-                    calbar[0] + xyoffset[0] * calbar[2] * scale[0],
+                    calbar[0] + xyoffset[0] * calbar[2],
                     calbar[1] + 0.5 * calbar[3] * scale[1], # center
+
                     Vfmt.format(calbar[3] * scale[1]),
                     horizontalalignment="left",
                     verticalalignment="center",
@@ -2126,19 +2146,19 @@ class Plotter:
         rcshape=None,
         axmap=None,
         arrangement=None,
-        title=None,
+        title:str=None,
         label=False,
-        order="rowsfirst",
-        units="page",
+        order:str="rowsfirst",
+        units:str="page",
         refline=None,
-        figsize=None,
-        margins=None,
-        labelalignment="left",
-        fontsize=None,
-        fontweight="normal",
+        figsize:Union[List, Tuple]=None,
+        margins:dict=None,
+        labelalignment:str="left",
+        labelposition:Union[List, Tuple]=[0.0, 0.0],  # global settings
+        labelsize:float=None,
+        fontsize:float=None,
+        fontweight:str="normal",
         position=0,
-        labelposition=[0.0, 0.0],
-        labelsize=None,
         parent_figure=None,
         num=None,
     ):
@@ -2201,7 +2221,7 @@ class Plotter:
             Provide a title for the entire plot
 
         label : Boolean (default: False)
-            If True, sets labels on panels
+            If True, sets default labels on panels
 
         labelalignment : string (default: 'left')
             Horizontaalignment of label ('center', 'left', 'right')
@@ -2270,6 +2290,7 @@ class Plotter:
             self.figsize = self.parent.figsize
             
         self.labelalignment = labelalignment
+        self.label_flag = label
         self.axlabels = []
         self.axdict = (
             OrderedDict()
@@ -2294,17 +2315,17 @@ class Plotter:
             raise ValueError("Plotter: Font size must be int or dict")
         # otherwise we assume it is a dict and the sizes are set in the dict.
         gridbuilt = False
-        # compute label offsets
-        p = [0.0, 0.0]
-        if label:
-            if type(labelposition) is int:
-                p = [labelposition, labelposition]
-            elif type(labelposition) is dict:
-                p = [position["left"], position["bottom"]]
-            elif type(labelposition) in [list, tuple]:
-                p = labelposition
+        # compute label offsets - global
+        label_position = [0.0, 0.0]
+        if self.label_flag:
+            if isinstance(labelposition, int):
+                label_position = [labelposition, labelposition]
+            elif isinstance(labelposition, dict):
+                label_position = [position["left"], position["bottom"]]
+            elif isinstance(labelposition, [list, tuple]):
+                label_position = labelposition
             else:
-                p = [0.0, 0.0]
+               raise ValueError("Label flag requests position of unknown type: ", labelposition)
 
         # build axes arrays
         # 1. nxm grid
@@ -2360,12 +2381,16 @@ class Plotter:
             gridbuilt = True
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k, 0]
-            plo = labelposition
+            
+            
+            # Label the plots
+
             self.axlabels = labelPanels(
                 self.axarr.tolist(),
                 axlist=rcshape.keys(),
+                rcshape=rcshape,
                 order=self.order,
-                xy=(-0.095 + plo[0], 0.95 + plo[1]),
+                xy=(-0.095 + labelposition[0], 0.95 + labelposition[1]),
                 fontsize=self.fontsize["panel"],
                 weight="bold",
                 horizontalalignment=self.labelalignment,
