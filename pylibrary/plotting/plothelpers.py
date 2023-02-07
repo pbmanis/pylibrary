@@ -234,7 +234,7 @@ def set_axes_ticks(
         ax.set_xticks(x_minor, minor=True)
         ax.tick_params(axis='x', which='minor', direction='out', length=minor_length)
 
-def noaxes(axl: Union[object, List], whichaxes: str = "xy"):
+def noaxes(axl: Union[object, List], whichaxes: str = "xytr"):
     """
     Take away all the axis ticks and the lines.
 
@@ -260,9 +260,15 @@ def noaxes(axl: Union[object, List], whichaxes: str = "xy"):
         if "x" in whichaxes:
             ax.spines["bottom"].set_visible(False)
             ax.tick_params(bottom=False, labelbottom=False)
+        if "t" in whichaxes:
+            ax.spines["top"].set_visible(False)
+            ax.tick_params(top=False, labeltop=False)
         if "y" in whichaxes:
             ax.spines["left"].set_visible(False)
             ax.tick_params(left=False, labelleft=False)
+        if "r" in whichaxes:
+            ax.spines["right"].set_visible(False)
+            ax.tick_params(right=False, labelright=False)
 
 def showaxes(axl: Union[object, List], whichaxes: str = "xy"):
     """
@@ -1179,6 +1185,7 @@ def calbar(
     orient:Literal["left", "right"] = "left",
     unitNames:dict=None,
     fontsize:float=None,
+    linewidth:float=1.5,
     weight:Literal["normal", "bold"]="normal",
     color:"str"="k",
     font:str="Arial",
@@ -1259,7 +1266,7 @@ def calbar(
                     [calbar[1] + calbar[3], calbar[1], calbar[1]],
                     color=color,
                     linestyle="-",
-                    linewidth=1.5,
+                    linewidth=linewidth,
                     clip_on=False,
                 )
                 if calbar[3] != 0.0:
@@ -1281,7 +1288,7 @@ def calbar(
                     [calbar[1] + calbar[3], calbar[1], calbar[1]],
                     color=color,
                     linestyle="-",
-                    linewidth=1.5,
+                    linewidth=linewidth,
                     clip_on=False,
                 )
                 if calbar[3] != 0.0:
@@ -1306,7 +1313,7 @@ def calbar(
                     [calbar[1] + calbar[3], calbar[1], calbar[1]],
                     color=color,
                     linestyle="-",
-                    linewidth=1.5,
+                    linewidth=linewidth,
                     clip_on=False,
                 )
 
@@ -2322,7 +2329,7 @@ class Plotter:
                 label_position = [labelposition, labelposition]
             elif isinstance(labelposition, dict):
                 label_position = [position["left"], position["bottom"]]
-            elif isinstance(labelposition, [list, tuple]):
+            elif isinstance(labelposition, (list, tuple)):
                 label_position = labelposition
             else:
                raise ValueError("Label flag requests position of unknown type: ", labelposition)
@@ -2462,7 +2469,7 @@ class Plotter:
                     self.axarr.ravel().tolist(),
                     order=self.order,
                     axlist=axmap.keys(),
-                    xy=(-0.095 + p[0], 0.95 + p[1]),
+                    xy=(-0.095 + label_position[0], 0.95 + label_position[1]),
                     horizontalalignment=self.labelalignment,
                     fontsize=self.fontsize["panel"],
                     weight=self.fontweight["panel"],
@@ -2491,7 +2498,7 @@ class Plotter:
                     self.axlist,
                     axlist=axl,
                     order=self.order,
-                    xy=(-0.35 + p[0], 0.75),
+                    xy=(-0.35 + label_position[0], 0.75),
                     fontsize=self.fontsize["panel"],
                     weight=self.fontweight["panel"],
                     horizontalalignment=self.labelalignment,
@@ -2501,7 +2508,7 @@ class Plotter:
                 self.axlabels = labelPanels(
                     self.axlist,
                     order=self.order,
-                    xy=(-0.095 + p[0], 0.95 + p[1]),
+                    xy=(-0.095 + label_position[0], 0.95 + label_position[1]),
                     fontsize=self.fontsize["panel"],
                     weight=self.fontweight["panel"],
                     horizontalalignment=self.labelalignment,
