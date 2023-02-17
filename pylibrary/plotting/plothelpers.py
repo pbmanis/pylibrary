@@ -216,7 +216,7 @@ def set_axes_ticks(
             for i, tick in enumerate(ax.get_yaxis().get_major_ticks()):
                 tick.set_pad(yticks_pad[i])
                 if tick.get_pad() < 0:
-                    tick.apply_tickdir("out")
+                    tick.set_tick_params(direction="out")
                 tick.label1 = ylabels[i]
         ax.tick_params(axis='y', which='major', direction='out', length=major_length, labelrotation=y_rotation)
     if y_minor is not None:
@@ -435,7 +435,7 @@ def set_axes_ticks(
             for i, tick in enumerate(ax.get_yaxis().get_major_ticks()):
                 tick.set_pad(yticks_pad[i])
                 if tick.get_pad() < 0:
-                    tick.apply_tickdir("out")
+                    tick.set_tick_params(direction="out")
                 tick.label1 = ylabels[i]
         ax.tick_params(axis='y', which='major', direction='out', length=major_length, labelrotation=y_rotation)
     if y_minor is not None:
