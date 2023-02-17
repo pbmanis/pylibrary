@@ -1875,8 +1875,8 @@ def show_figure_grid(fig: object, figx: int=10, figy: int=10) -> object:
     backGrid.set_xticks(np.arange(0.0, figx + 0.01, 0.1), minor=True)
     #   backGrid.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
     #   backGrid.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-    backGrid.grid(b=True, which="major", color="g", alpha=0.5, linewidth=0.8)
-    backGrid.grid(b=True, which="minor", color="g", alpha=0.3, linewidth=0.2)
+    backGrid.grid(visible=True, which="major", color="g", alpha=0.5, linewidth=0.8)
+    backGrid.grid(visible=True, which="minor", color="g", alpha=0.3, linewidth=0.2)
     return backGrid
 
 
