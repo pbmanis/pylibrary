@@ -736,11 +736,6 @@ def labelPanels(
             % (len(axl), len(axlist)),
             axlist,
         )
-    # font = FontProperties()
-    # font.set_family('sans-serif')
-    # font.set_weight=weight
-    # font.set_size=fontsize
-    # font.set_style('normal')
     labels = []
     for i, ax in enumerate(axl):
         
@@ -951,18 +946,6 @@ def update_font(axl: object, size: float = 8.0, font: str = "Arial"):
     for ax in axl:
         if ax is None:
             continue
-        # ax.tick_params(axis="x", labelsize=size)
-        # for tick in ax.xaxis.get_major_ticks():
-        #     # tick.label1.set_family('sans-serif')
-        #     #  tick.label1.set_fontname(stdFont)
-        #     tick.label1.set_size(size)
-        #
-        # for tick in ax.yaxis.get_major_ticks():
-        #     # tick.label1.set_family('sans-serif')
-        #     #  tick.label1.set_fontname(stdFont)
-        #     tick.label1.set_size(size)
-        # # ax.set_xticklabels(ax.get_xticks(), fontdict=fontProperties)
-        # # ax.set_yticklabels(ax.get_yticks(), fontdict=fontProperties)
 
         ax.tick_params(axis="both", labelsize=size)
 

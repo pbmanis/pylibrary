@@ -249,25 +249,7 @@ def setFormatter(ax, x0, x1, axis='x'):
 
 def update_font(axl, size=6, font=stdFont):
     pass
-    # if type(axl) is not list:
-    #     axl = [axl]
-    # fontProperties = {'family':'sans-serif','sans-serif':[font],
-    #         'weight' : 'normal', 'size' : size}
-    # for ax in axl:
-    #     for tick in ax.xaxis.get_major_ticks():
-    #           tick.label1.set_family('sans-serif')
-    #           tick.label1.set_fontname(stdFont)
-    #           tick.label1.set_size(size)
-    #
-    #     for tick in ax.yaxis.get_major_ticks():
-    #           tick.label1.set_family('sans-serif')
-    #           tick.label1.set_fontname(stdFont)
-    #           tick.label1.set_size(size)
-    #     ax.set_xticklabels(ax.get_xticks(), fontProperties)
-    #     ax.set_yticklabels(ax.get_yticks(), fontProperties)
-    #     ax.xaxis.set_smart_bounds(True)
-    #     ax.yaxis.set_smart_bounds(True)
-    #     ax.tick_params(axis = 'both', labelsize = 9)
+
 
 
 def lockPlot(axl, lims, ticks=None):

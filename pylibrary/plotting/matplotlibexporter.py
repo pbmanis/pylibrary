@@ -366,11 +366,15 @@ def update_font(axl, size=6, font=stdFont):
                       'weight': 'normal', 'font-size': size}
     for ax in axl:
         for tick in ax.xaxis.get_major_ticks():
+            if tick is None:
+                continue
             tick.label1.set_family('sans-serif')
             tick.label1.set_fontname(stdFont)
             tick.label1.set_size(size)
 
         for tick in ax.yaxis.get_major_ticks():
+            if tick is None:
+                continue
             tick.label1.set_family('sans-serif')
             tick.label1.set_fontname(stdFont)
             tick.label1.set_size(size)
