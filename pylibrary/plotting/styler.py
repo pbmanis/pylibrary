@@ -58,7 +58,7 @@ class styler():
     '''
 
     def __init__(self, journal=None, figuresize='small', height_factor=1.0, font='Arial'):
-        if not journal in ['Plos', 'JNeurophys', 'JNeurosci', 'CerebralCortex']:
+        if not journal in ['PLoS', 'JNeurophys', 'JNeurosci', 'CerebralCortex', 'Generic']:
             raise ValueError ('got journal: %s' % journal)
         self.journal = journal
         self.golden_ratio = (1. + np.sqrt(5.)) / 2.
@@ -164,11 +164,12 @@ class styler():
         compute figure size from a dict (table) of sizes
         Also set the main font size to correspond
         """
-        self.fig_widths = {'Plos': {'small': 3.1, 'medium': 3.1*1.5, 'large': 3.1*2, 'special': width},
+        self.fig_widths = { 'PLoS': {'small': 3.1, 'medium': 3.1*1.5, 'large': 3.1*2, 'special': width},
                             'CerebralCortex': {'single': 3.38582, 'double': 7.0866, 'special': width},
                             'JNeurophys': {'single': 3.5, 'double': 4.5, 'full': 7.5, 'special': width},
                             'JNeurosci': {'single': 3.346, 'double': 4.57, 'full': 6.929, 'special': width},
                             'JPhysiol': {'single': 3.3, 'double': 4.33, 'full': 6.69, 'special': width},
+                            'Generic': {'single': 3.25, 'double': 5.0, 'full': 7.0, 'special': width},
                             }
 
         if not self.figuresize in self.fig_widths[self.journal]:
