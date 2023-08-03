@@ -1275,7 +1275,6 @@ def calbar(
                     clip_on=False,
                 )
                 if calbar[3] != 0.0:
-                    print("cal2")
                     ax.text(
                         calbar[0] + calbar[2] - xyoffset[0] * calbar[2],
                         calbar[1] + 0.5 * calbar[3], # center
