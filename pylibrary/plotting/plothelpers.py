@@ -1,16 +1,17 @@
 import string
 from collections import OrderedDict
 from decimal import Decimal
-from typing import Union, Tuple, List, Literal
+from typing import List, Literal, Tuple, Union
 
 import matplotlib
 import matplotlib.gridspec as gridspec
-import mpl_toolkits.axes_grid1.inset_locator as INSET
 import matplotlib.pyplot as mpl
 import matplotlib.scale as mscale
 import matplotlib.ticker as ticker
 import matplotlib.transforms as mtransforms
+import mpl_toolkits.axes_grid1.inset_locator as INSET
 import numpy as np
+import seaborn as sns
 from matplotlib.collections import PatchCollection
 from matplotlib.font_manager import FontProperties
 
@@ -20,7 +21,6 @@ from matplotlib.patches import Circle, Rectangle
 
 # import seaborn  # a bit dangerous because it changes defaults, but it has wider capabiities also
 from matplotlib.ticker import FormatStrFormatter
-import seaborn as sns
 from scipy.stats import gaussian_kde
 
 from pylibrary.plotting import talbotetalticks as ticks  # logical tick formatting...
@@ -164,24 +164,25 @@ def nice_plot(
             pass
         # or call adjust_spines?
 
+
 def set_axes_ticks(
-    ax: object,
-    xticks:Union[List, None]=None,
-    xticks_str:Union[List, None]=None,
-    xticks_pad:Union[List, None]=None,
-    x_minor:Union[List, None] = None,
-    x_rotation:float=0., 
-    major_length: float=3.0,
-    minor_length: float=1.5,
-    yticks:Union[List, None]=None,
-    yticks_str:Union[List, None]=None, 
-    yticks_pad:Union[List, None]=None,
-    y_minor:Union[List, None] = None,
-    y_rotation:float=0., 
-    fontsize:int=8,
+    ax: mpl.Axes,
+    xticks: Union[List, None] = None,
+    xticks_str: Union[List, None] = None,
+    xticks_pad: Union[List, None] = None,
+    x_minor: Union[List, None] = None,
+    x_rotation: float = 0.0,
+    major_length: float = 3.0,
+    minor_length: float = 1.5,
+    yticks: Union[List, None] = None,
+    yticks_str: Union[List, None] = None,
+    yticks_pad: Union[List, None] = None,
+    y_minor: Union[List, None] = None,
+    y_rotation: float = 0.0,
+    fontsize: int = 8,
 ):
     """Manually set axes ticks on a plot. This works on both
-    x and y axes. 
+    x and y axes.
 
     Parameters
     ----------
@@ -201,14 +202,13 @@ def set_axes_ticks(
     y_minor : Union[List, None], optional
         minor tick positions, by default None
     major_length: float = 3,
-        major tick length 
+        major tick length
     minor_length: float = 1.5
         minor tick length
     fontsize : int, optional
         tick label font size, default 8 pt
-    """        
+    """
 
- 
     if yticks is not None:
         ax.set_yticks(yticks, yticks_str, fontsize=fontsize)
         if yticks_pad is not None:
@@ -218,10 +218,16 @@ def set_axes_ticks(
                 if tick.get_pad() < 0:
                     ax.get_yaxis().set_tick_params(direction="out")
                 tick.label1 = ylabels[i]
-        ax.tick_params(axis='y', which='major', direction='out', length=major_length, labelrotation=y_rotation)
+        ax.tick_params(
+            axis="y",
+            which="major",
+            direction="out",
+            length=major_length,
+            labelrotation=y_rotation,
+        )
     if y_minor is not None:
         ax.set_yticks(y_minor, minor=True)
-        ax.tick_params(axis='y', which='minor', direction='out', length=minor_length)
+        ax.tick_params(axis="y", which="minor", direction="out", length=minor_length)
     if xticks is not None:
         ax.set_xticks(xticks, xticks_str, fontsize=8)
         if xticks_pad is not None:
@@ -229,10 +235,17 @@ def set_axes_ticks(
             for i, tick in enumerate(ax.get_xaxis().get_major_ticks()):
                 tick.set_pad(xticks_pad[i])
                 tick.label1 = xlabels[i]
-        ax.tick_params(axis='x', which='major', direction='out', length=major_length, labelrotation=x_rotation)
+        ax.tick_params(
+            axis="x",
+            which="major",
+            direction="out",
+            length=major_length,
+            labelrotation=x_rotation,
+        )
     if x_minor is not None:
         ax.set_xticks(x_minor, minor=True)
-        ax.tick_params(axis='x', which='minor', direction='out', length=minor_length)
+        ax.tick_params(axis="x", which="minor", direction="out", length=minor_length)
+
 
 def noaxes(axl: Union[object, List], whichaxes: str = "xytr"):
     """
@@ -270,6 +283,7 @@ def noaxes(axl: Union[object, List], whichaxes: str = "xytr"):
             ax.spines["right"].set_visible(False)
             ax.tick_params(right=False, labelright=False)
 
+
 def showaxes(axl: Union[object, List], whichaxes: str = "xy"):
     """
     Show all the axis ticks and the lines.
@@ -300,6 +314,7 @@ def showaxes(axl: Union[object, List], whichaxes: str = "xy"):
             ax.spines["left"].set_visible(True)
             ax.tick_params(left=True, labelleft=True)
 
+
 def noaxeslabels(axl: Union[object, List], whichaxes: str = "xy"):
     """
     Remove the axes labels without removing the tick marks
@@ -323,7 +338,7 @@ def noaxeslabels(axl: Union[object, List], whichaxes: str = "xy"):
             # ax.set_yticklabels([])
 
 
-def setY(ax1: Union[object, List], ax2: Union[object, List]):
+def setY(ax1: mpl.axes, ax2: Union[mpl.axes, List]):
     """
     Set the Y limits for an axes from a source axes to
     the target axes.
@@ -353,7 +368,7 @@ def setY(ax1: Union[object, List], ax2: Union[object, List]):
         ax.set_ylim(refy)
 
 
-def setX(ax1: Union[object, List], ax2: Union[object, List]):
+def setX(ax1: mpl.axes, ax2: Union[mpl.axes, List]):
     """
     Set the X limits for an axes from a source axes to
     the target axes.
@@ -382,83 +397,13 @@ def setX(ax1: Union[object, List], ax2: Union[object, List]):
     for ax in ax2:
         ax.set_xlim(refx)
 
-        
-def set_axes_ticks(
-    ax: object,
-    xticks:Union[List, None]=None,
-    xticks_str:Union[List, None]=None,
-    xticks_pad:Union[List, None]=None,
-    x_minor:Union[List, None] = None,
-    x_rotation:float=0., 
-    major_length: float=3.0,
-    minor_length: float=1.5,
-    yticks:Union[List, None]=None,
-    yticks_str:Union[List, None]=None, 
-    yticks_pad:Union[List, None]=None,
-    y_minor:Union[List, None] = None,
-    y_rotation:float=0., 
-    fontsize:int=8,
-):
-    """Manually set axes ticks on a plot. This works on both
-    x and y axes. 
 
-    Parameters
-    ----------
-    ax: Axis object to work on
-    xticks : Union[List, None], optional
-        xtick positions, by default None
-    xticks_pad: Union[List, None], Optional
-    xticks_str : Union[List, None], optional
-        xtick labels, by default None
-    x_minor : Union[List, None], optional
-        minor tick positions, by default None
-    yticks : Union[List, None], optional
-        ytick positions, by default None
-    yticks_pad : Union[List, None], optional
-    yticks_str : Union[List, None], optional
-        ytick labels, by default None
-    y_minor : Union[List, None], optional
-        minor tick positions, by default None
-    major_length: float = 3,
-        major tick length 
-    minor_length: float = 1.5
-        minor tick length
-    fontsize : int, optional
-        tick label font size, default 8 pt
-    """        
-
- 
-    if yticks is not None:
-        ax.set_yticks(yticks, yticks_str, fontsize=fontsize)
-        if yticks_pad is not None:
-            ylabels = ax.get_yticklabels()
-            for i, tick in enumerate(ax.get_yaxis().get_major_ticks()):
-                tick.set_pad(yticks_pad[i])
-                if tick.get_pad() < 0:
-                    ax.tick_params(direction="out")  # reset direction
-                tick.label1 = ylabels[i]
-        ax.tick_params(axis='y', which='major', direction='out', length=major_length, labelrotation=y_rotation)
-    if y_minor is not None:
-        ax.set_yticks(y_minor, minor=True)
-        ax.tick_params(axis='y', which='minor', direction='out', length=minor_length)
-    if xticks is not None:
-        ax.set_xticks(xticks, xticks_str, fontsize=8)
-        if xticks_pad is not None:
-            xlabels = ax.get_xticklabels()
-            for i, tick in enumerate(ax.get_xaxis().get_major_ticks()):
-                tick.set_pad(xticks_pad[i])
-                tick.label1 = xlabels[i]
-        ax.tick_params(axis='x', which='major', direction='out', length=major_length, labelrotation=x_rotation)
-    if x_minor is not None:
-        ax.set_xticks(x_minor, minor=True)
-        ax.tick_params(axis='x', which='minor', direction='out', length=minor_length)
-        
 def tickStrings(
     values: Union[list, np.ndarray],
     scale: float = 1,
     spacing: Union[float, None] = None,
     tickPlacesAdd: int = 1,
-    floatAdd: int = None,
+    floatAdd: Union[int, None] = None,
 ) -> list:
     """Return the strings that should be placed next to ticks. This method is called
     when redrawing the axis and is a good method to override in subclasses.
@@ -536,7 +481,7 @@ def do_talbotTicks(
     tickPlacesAdd={"x": 0, "y": 0},
     floatAdd={"x": 0, "y": 0},
     axrange={"x": None, "y": None},
-    colorbar=None, 
+    colorbar=None,
 ):
     """
     Change the axis ticks to use the talbot algorithm for ONE axis
@@ -604,9 +549,9 @@ def do_talbotTicks(
         else:
             ax.set_yticks(yt)
             ax.set_yticklabels(yts)  # , rotation='horizontal', fontsize=pointSize)
-    #        print ('yt, yts: ', yt, yts)
+            #        print ('yt, yts: ', yt, yts)
 
-    # ytxt = ax.get_yticklabels()
+            # ytxt = ax.get_yticklabels()
             ytxt = ax.get_yticks().tolist()
             ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ytxt))
             # ax.set_yticklabels([label_format.format(x) for x in ytxt], fontsize=pointSIze,
@@ -627,7 +572,7 @@ def do_talbotTicks(
             )
             if pointSize is not None:
                 ytxt = ax.get_yticklabels()
-                ax.set_yticklabels(ytxt, fontsize = pointSize, rotation ="horizontal")
+                ax.set_yticklabels(ytxt, fontsize=pointSize, rotation="horizontal")
 
     if "x" in axes:
         xRange = list(ax.get_xlim())
@@ -660,9 +605,8 @@ def do_talbotTicks(
             # ax.set_xticklabels(xtxt, fontsize = pointSize, rotation ="horizontal")
 
 
-
 def labelPanels(
-    axl:Union[list, dict],
+    axl: Union[list, dict],
     axlist=None,
     rcshape=None,
     order="rowsfirst",
@@ -688,7 +632,7 @@ def labelPanels(
 
     axlist : list of string labels (default : None)
         Contains a list of the string labels. If the default value  of None is provided,
-        the axes will be lettered in alphabetical sequence, 
+        the axes will be lettered in alphabetical sequence,
         or taken from the keys of axl
 
     order : str (default "rowfirst")
@@ -714,11 +658,11 @@ def labelPanels(
 
     """
     if isinstance(axl, dict):
-        axlist = list(axl.keys()) # replace the list with the dictionary keys
+        axlist = list(axl.keys())  # replace the list with the dictionary keys
         print("is dict: ", axl)
     if isinstance(axl, np.ndarray):
         rc = axl.shape  # get row and column sizes before converting to list
-    
+
     axl = _ax_tolist(axl)
 
     if axlist is None:
@@ -738,7 +682,6 @@ def labelPanels(
         )
     labels = []
     for i, ax in enumerate(axl):
-        
         if i >= len(axlist):
             continue
         if ax is None:
@@ -750,12 +693,10 @@ def labelPanels(
         # possibly replace the xy position from the rcshape dictionary
         if rcshape is not None:
             if axlist[i] in rcshape.keys():
-                if 'labelpos' in rcshape[axlist[i]].keys():
-                    xy_label = rcshape[axlist[i]]['labelpos']
-                if 'fontsize' in rcshape[axlist[i]].keys():
-                    fsize = rcshape[axlist[i]]['fontsize']
-
-        
+                if "labelpos" in rcshape[axlist[i]].keys():
+                    xy_label = rcshape[axlist[i]]["labelpos"]
+                if "fontsize" in rcshape[axlist[i]].keys():
+                    fsize = rcshape[axlist[i]]["fontsize"]
 
         ann = ax.text(
             xy_label[0],
@@ -1058,7 +999,7 @@ class SquareRootScale(mscale.ScaleBase):
 
     name = "squareroot"
 
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
         mscale.ScaleBase.__init__(self)
 
     def set_default_locators_and_formatters(self, axis):
@@ -1161,17 +1102,17 @@ def nextup(x, steps=[1, 2, 5, 10]):
 
 def calbar(
     axl,
-    calbar:list=None,
-    scale:list=[1.0, 1.0],
-    xyoffset:list=[0.05, 0.1], 
-    axesoff:bool=True,
-    orient:Literal["left", "right"] = "left",
-    unitNames:dict=None,
-    fontsize:float=None,
-    linewidth:float=1.5,
-    weight:Literal["normal", "bold"]="normal",
-    color:"str"="k",
-    font:str="Arial",
+    calbar: Union[list, None] = None,
+    scale: list = [1.0, 1.0],
+    xyoffset: list = [0.05, 0.1],
+    axesoff: bool = True,
+    orient: Literal["left", "right"] = "left",
+    unitNames: Union[dict, None] = None,
+    fontsize: Union[float, None] = None,
+    linewidth: float = 1.5,
+    weight: Literal["normal", "bold"] = "normal",
+    color: "str" = "k",
+    font: str = "Arial",
 ):
     """
     draw a calibration bar and label it. T
@@ -1277,7 +1218,7 @@ def calbar(
                 if calbar[3] != 0.0:
                     ax.text(
                         calbar[0] + calbar[2] - xyoffset[0] * calbar[2],
-                        calbar[1] + 0.5 * calbar[3], # center
+                        calbar[1] + 0.5 * calbar[3],  # center
                         Vfmt.format(calbar[3] * scale[1]),
                         horizontalalignment="right",
                         verticalalignment="center",
@@ -1301,8 +1242,7 @@ def calbar(
 
                 ax.text(
                     calbar[0] + xyoffset[0] * calbar[2],
-                    calbar[1] + 0.5 * calbar[3] * scale[1], # center
-
+                    calbar[1] + 0.5 * calbar[3] * scale[1],  # center
                     Vfmt.format(calbar[3] * scale[1]),
                     horizontalalignment="left",
                     verticalalignment="center",
@@ -1329,12 +1269,12 @@ def calbar(
 
 def referenceline(
     axl: object,
-    reference: Union[float, None]=None,
-    limits: Union[float, None]=None,
-    color: float="0.33",
-    linestyle: str="--",
-    linewidth: float=0.5,
-    dashes: Union[str, None]=None,
+    reference: Union[float, None] = None,
+    limits: Union[list, tuple, None] = None,
+    color: float = 0.33,
+    linestyle: str = "--",
+    linewidth: float = 0.5,
+    dashes: Union[str, None] = None,
 ):
     """
     draw a reference line at a particular level of the data on the y axis
@@ -1391,7 +1331,12 @@ def referenceline(
     return rl
 
 
-def crossAxes(axl, xyzero=[0.0, 0.0], limits=[None, None, None, None], labels:Union[str, None]=['nA', 'mV']):
+def crossAxes(
+    axl,
+    xyzero=[0.0, 0.0],
+    limits=[None, None, None, None],
+    labels: Union[list, None] = ["nA", "mV"],
+):
     """
     Make plot(s) with crossed axes at the data points set by xyzero, and optionally
     set axes limits
@@ -1433,7 +1378,6 @@ def crossAxes(axl, xyzero=[0.0, 0.0], limits=[None, None, None, None], labels:Un
             ax.set_xlim(left=limits[0], right=limits[2])
             ax.set_ylim(bottom=limits[1], top=limits[3])
 
-            
 
 def violin_plot(ax, data, pos, bp=False, median=False):
     """
@@ -1479,8 +1423,15 @@ def violin_plot(ax, data, pos, bp=False, median=False):
         mpl.setp(bpf["whiskers"], color="black", linestyle="-")
 
 
-def make_colorbar(ax, pos:Union[list, tuple] = [0.0, 0.0, 1.0, 1.0],
-     vmin=0, vmax=1.0, nticks=4, bbox=[0.1, 0.80, 0.8, 0.15], palette:str="hls"):
+def make_colorbar(
+    ax,
+    pos: Union[list, tuple] = [0.0, 0.0, 1.0, 1.0],
+    vmin=0,
+    vmax=1.0,
+    nticks=4,
+    bbox=[0.1, 0.80, 0.8, 0.15],
+    palette: str = "hls",
+):
     """
     Make a floating colorbar with its own axes that can be placed "anywhere"
     relative to an existing axis (ax).
@@ -1488,18 +1439,32 @@ def make_colorbar(ax, pos:Union[list, tuple] = [0.0, 0.0, 1.0, 1.0],
     bbox is x0, y0, xl, yh (relative to the parent axis)
     vmin, vmax refer to the values assigned along the colorbar scale from 0 to 1
     nticks is the number of tick marks between vmin and vmax.
-     
+
     """
     # build color patches
     cmx = sns.color_palette(palette, as_cmap=True)
     xpos = pos[0] + np.linspace(0, 1, cmx.N)
-    pc = [matplotlib.patches.Rectangle((xpos[i], pos[1]), width=pos[2], height=pos[3], facecolor=c, color=c, edgecolor=c) 
-            for i,c in enumerate(cmx.colors)]
+    pc = [
+        matplotlib.patches.Rectangle(
+            (xpos[i], pos[1]),
+            width=pos[2],
+            height=pos[3],
+            facecolor=c,
+            color=c,
+            edgecolor=c,
+        )
+        for i, c in enumerate(cmx.colors)
+    ]
     p = matplotlib.collections.PatchCollection(pc, match_original=True)
 
-    axins = INSET.inset_axes(ax,  width="100%", height="20%",
-                   bbox_to_anchor=bbox,
-                   bbox_transform=ax.transAxes, loc=3)
+    axins = INSET.inset_axes(
+        ax,
+        width="100%",
+        height="20%",
+        bbox_to_anchor=bbox,
+        bbox_transform=ax.transAxes,
+        loc=3,
+    )
     axins.set_yticks([])
     ticklabel_f = np.linspace(vmin, vmax, nticks)
     ticklabels = [f"{int(x):d}" for x in ticklabel_f]
@@ -1507,57 +1472,6 @@ def make_colorbar(ax, pos:Union[list, tuple] = [0.0, 0.0, 1.0, 1.0],
     axins.add_collection(p)
     # ax.set_clip_on(False)
     return axins
-        
-"""
-Pulled from a stack overflow answer:
-https://stackoverflow.com/questions/42277989/square-root-scale-using-matplotlib-python
-
-"""
-
-
-class SquareRootScale(mscale.ScaleBase):
-    """
-    ScaleBase class for generating square root scale.
-    """
-
-    name = "squareroot"
-
-    def __init__(self, axis, **kwargs):
-        mscale.ScaleBase.__init__(self)
-
-    def set_default_locators_and_formatters(self, axis):
-        axis.set_major_locator(ticker.AutoLocator())
-        axis.set_major_formatter(ticker.ScalarFormatter())
-        axis.set_minor_locator(ticker.NullLocator())
-        axis.set_minor_formatter(ticker.NullFormatter())
-
-    def limit_range_for_scale(self, vmin, vmax, minpos):
-        return max(0.0, vmin), vmax
-
-    class SquareRootTransform(mtransforms.Transform):
-        input_dims = 1
-        output_dims = 1
-        is_separable = True
-
-        def transform_non_affine(self, a):
-            return np.array(a) ** 0.5
-
-        def inverted(self):
-            return SquareRootScale.InvertedSquareRootTransform()
-
-    class InvertedSquareRootTransform(mtransforms.Transform):
-        input_dims = 1
-        output_dims = 1
-        is_separable = True
-
-        def transform(self, a):
-            return np.array(a) ** 2
-
-        def inverted(self):
-            return SquareRootScale.SquareRootTransform()
-
-    def get_transform(self):
-        return self.SquareRootTransform()
 
 
 mscale.register_scale(SquareRootScale)
@@ -1733,15 +1647,15 @@ def circles(x, y, s, c="b", ax=None, vmin=None, vmax=None, **kwargs):
 
 
 def rectangles(
-    x: Union[float, List, np.ndarray],
-    y: Union[float, List, np.ndarray],
+    x: Union[List, np.ndarray],
+    y: Union[List, np.ndarray],
     sw: Union[None, List, Tuple] = None,
     sh: Union[None, List, Tuple] = None,
     c: str = "b",
-    ax: Union[object, List] = None,
+    ax: Union[mpl.axes, List] = None,
     vmin: Union[float, None] = None,
     vmax: Union[float, None] = None,
-    **kwargs
+    **kwargs,
 ) -> object:
     """
     Make a scatter of squares plot of x vs y, where x and y are sequence
@@ -1797,8 +1711,12 @@ def rectangles(
     kwargs.update(color=color)
     if sh is None:
         sh = sw
-    x = x - sw / 2.0  # offset as position specified is "lower left corner"
-    y = y - sh / 2.0
+    if not isinstance(x, (List, np.ndarray)):
+        x = [x]
+    if not isinstance(y, (List, np.ndarray)):
+        y = [y]
+    x = [p - sw / 2.0 for p in x]  # offset as position specified is "lower left corner"
+    y = [p - sh / 2.0 for p in y]
     if np.isscalar(x):
         patches = [
             Rectangle((x, y), sw, sh),
@@ -1821,7 +1739,7 @@ def rectangles(
     return collection
 
 
-def show_figure_grid(fig: object, figx: int=10, figy: int=10) -> object:
+def show_figure_grid(fig: mpl.figure, figx: int = 10, figy: int = 10) -> object:
     """
     Create a background grid with major and minor lines like graph paper
     if using default figx and figy, the grid will be in units of the
@@ -1845,7 +1763,7 @@ def show_figure_grid(fig: object, figx: int=10, figy: int=10) -> object:
         # of major lines along the Y dimension
 
     """
-    
+
     backGrid = fig.figure_handle.add_axes([0, 0, 1, 1], frameon=False)
     backGrid.set_ylim(0.0, figy)
     backGrid.set_xlim(0.0, figx)
@@ -1862,14 +1780,14 @@ def show_figure_grid(fig: object, figx: int=10, figy: int=10) -> object:
     return backGrid
 
 
-def hide_figure_grid(fig: object, grid: object) -> None:
+def hide_figure_grid(fig: mpl.figure, grid: mpl.grid) -> None:
     """
     Hide the figure grid in the figure
     """
     grid.grid(False)
 
 
-def delete_figure_grid(fig: object, grid: object) -> None:
+def delete_figure_grid(fig: mpl.figure, grid: mpl.grid) -> None:
     """
     Remove the figure grid from the figure
     """
@@ -1918,9 +1836,9 @@ def regular_grid(
         "bottommargin": 0.1,
     },
     labelposition: tuple = (0.0, 0.0),
-    parent_figure: object = None,
-    panel_labels: Union[object, List] = None,
-    **kwds
+    parent_figure: Union[mpl.figure, None] = None,
+    panel_labels: Union[str, List, None] = None,
+    **kwds,
 ) -> object:
     """
     make a regular layout grid for plotters
@@ -1967,10 +1885,11 @@ def regular_grid(
     """
 
     figsize, margins, verticalspacing, horizontalspacing = figure_scaling(
-        units=units, figsize=figsize,
-        margins=margins, 
+        units=units,
+        figsize=figsize,
+        margins=margins,
         verticalspacing=verticalspacing,
-        horizontalspacing=horizontalspacing
+        horizontalspacing=horizontalspacing,
     )
     original_units = units
     units = "page"  # we have already converted, so no further action
@@ -1995,7 +1914,7 @@ def regular_grid(
     else:
         assert (tmar + bmar) < figsize[1]
         assert (lmar + rmar) < figsize[0]
-        
+
     hs = horizontalspacing
     # tmar = margins["topmargin"]
     # bmar = margins["bottommargin"]
@@ -2065,7 +1984,7 @@ def regular_grid(
         labelposition=labelposition,
         parent_figure=parent_figure,
         order=order,
-        **kwds
+        **kwds,
     )
     if showgrid:
         show_figure_grid(P)
@@ -2103,17 +2022,17 @@ def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds)
         (a, a + 1, 0, 1) for a in range(0, nplots)
     ]  # just generate subplots - shape does not matter
     cm_scale = 1.0
-    if units == 'cm':
-        cm_scale=2.54
-        figsize[0] = figsize[0]/cm_scale
-        figsize[1] = figsize[1]/cm_scale
-    if units != 'page':  # use figsize to convert positions to page
+    if units == "cm":
+        cm_scale = 2.54
+        figsize[0] = figsize[0] / cm_scale
+        figsize[1] = figsize[1] / cm_scale
+    if units != "page":  # use figsize to convert positions to page
         for ax in sizer:
-            p = sizer[ax]['pos']
-            p[0] = p[0]/figsize[0]
-            p[1] = p[1]/figsize[0]
-            p[2] = p[2]/figsize[1]
-            p[3] = p[3]/figsize[1]
+            p = sizer[ax]["pos"]
+            p[0] = p[0] / figsize[0]
+            p[1] = p[1] / figsize[0]
+            p[2] = p[2] / figsize[1]
+            p[3] = p[3] / figsize[1]
 
     axmap = OrderedDict(zip(sizer.keys(), gr))
     P = Plotter((nplots, 1), axmap=axmap, figsize=figsize, units="page", **kwds)
@@ -2135,18 +2054,18 @@ class Plotter:
         rcshape=None,
         axmap=None,
         arrangement=None,
-        title:str=None,
+        title: Union[str, None] = None,
         label=False,
-        order:str="rowsfirst",
-        units:str="page",
+        order: str = "rowsfirst",
+        units: str = "page",
         refline=None,
-        figsize:Union[List, Tuple]=None,
-        margins:dict=None,
-        labelalignment:str="left",
-        labelposition:Union[List, Tuple]=[0.0, 0.0],  # global settings
-        labelsize:float=None,
-        fontsize:float=None,
-        fontweight:str="normal",
+        figsize: Union[List, Tuple, None] = None,
+        margins: Union[dict, None] = None,
+        labelalignment: str = "left",
+        labelposition: Union[List, Tuple] = [0.0, 0.0],  # global settings
+        labelsize: Union[float, None] = None,
+        fontsize: Union[float, None] = None,
+        fontweight: str = "normal",
         position=0,
         parent_figure=None,
         num=None,
@@ -2252,21 +2171,26 @@ class Plotter:
         """
         self.arrangement = arrangement
         self.referenceLines = {}
+        self.fontsize = {}
         self.parent = parent_figure
         self.panel_labels = label
+        self.sizer = None
         assert order in ["rowsfirst", "columnsfirst"]
         self.order = order
         figsize, margins, verticalspacing, horizontalspacing = figure_scaling(
-            units=units, figsize=figsize,
-            margins=margins, 
+            units=units,
+            figsize=figsize,
+            margins=margins,
             verticalspacing=None,
-            horizontalspacing=None
+            horizontalspacing=None,
         )
 
         if self.parent is None:  # just create a new figure
             if figsize is None:
                 figsize = (11.5, 8)  # landscape
-            self.figure_handle = mpl.figure(figsize=figsize, num=num)  # create the figure
+            self.figure_handle = mpl.figure(
+                figsize=figsize, num=num
+            )  # create the figure
             self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
             self.figsize = figsize
             if title is not None:
@@ -2277,13 +2201,11 @@ class Plotter:
             self.figure_handle = self.parent.figure_handle
             self.figure_handle.get_size_inches()  # get original figure size
             self.figsize = self.parent.figsize
-            
+
         self.labelalignment = labelalignment
         self.label_flag = label
         self.axlabels = []
-        self.axdict = (
-            OrderedDict()
-        )
+        self.axdict = OrderedDict()
 
         # the following overrides fonts
         if isinstance(fontsize, int):
@@ -2314,7 +2236,9 @@ class Plotter:
             elif isinstance(labelposition, (list, tuple)):
                 label_position = labelposition
             else:
-               raise ValueError("Label flag requests position of unknown type: ", labelposition)
+                raise ValueError(
+                    "Label flag requests position of unknown type: ", labelposition
+                )
 
         # build axes arrays
         # 1. nxm grid
@@ -2370,8 +2294,7 @@ class Plotter:
             gridbuilt = True
             for k, pk in enumerate(rcshape.keys()):
                 self.axdict[pk] = self.axarr[k, 0]
-            
-            
+
             # Label the plots
 
             self.axlabels = labelPanels(
@@ -2393,9 +2316,7 @@ class Plotter:
             if isinstance(axmap, list) and not gridbuilt:
                 self.axarr = np.empty(shape=(len(axmap), 1), dtype=object)
                 for k, g in enumerate(axmap):
-                    self.axarr[
-                        k,
-                    ] = mpl.subplot(self.GS[g[0] : g[1], g[2] : g[3]])
+                    self.axarr[k,] = mpl.subplot(self.GS[g[0] : g[1], g[2] : g[3]])
             elif isinstance(axmap, dict) or isinstance(
                 axmap, OrderedDict
             ):  # keys are panel labels
@@ -2404,9 +2325,7 @@ class Plotter:
                 for k, pk in enumerate(axmap.keys()):
                     g = axmap[pk]  # get the gridspec info
                     if not gridbuilt:
-                        self.axarr[
-                            k,
-                        ] = mpl.subplot(self.GS[g[0] : g[1], g[2] : g[3]])
+                        self.axarr[k,] = mpl.subplot(self.GS[g[0] : g[1], g[2] : g[3]])
                     self.axdict[pk] = self.axarr.ravel()[k]
             else:
                 raise TypeError("Plotter in PlotHelpers: axmap must be a list or dict")
@@ -2551,11 +2470,13 @@ class Plotter:
 
         return currentaxis
 
-    def adjust_panel_labels(self, fontsize:Union[None, str, float]=None,
-                                  fontweight:Union[None, str, int]=None,
-                                  fontstyle:Union[None, str] = None,
-                                  fontname:Union[None, str] = None,
-                            ):
+    def adjust_panel_labels(
+        self,
+        fontsize: Union[None, str, float] = None,
+        fontweight: Union[None, str, int] = None,
+        fontstyle: Union[None, str] = None,
+        fontname: Union[None, str] = None,
+    ):
         """Change the label size for all of the panel labels
 
         Parameters
@@ -2569,7 +2490,7 @@ class Plotter:
         fontname : str, optional
             font name, by default None (no change)
         """
-        for ax_text in self.axlabels: # text objects
+        for ax_text in self.axlabels:  # text objects
             if fontsize is not None:
                 ax_text.set_fontsize(fontsize)
             if fontweight is not None:
@@ -2697,44 +2618,69 @@ def main(sf="P5"):
     # P.figure_handle.suptitle("random")
 
     # make a more complex plot
-    if sf == 'P1':
+    if sf == "P1":
         P1 = Plotter((3, 2), units="page", figsize=(8.0, 10.0))  # a default
         show_figure_grid(P1)
         P1.figure_handle.suptitle("Defaults, units=page")
         mpl.show()
-    elif sf == 'P2':
-        P2 = Plotter((3,2), units="in",
-            margins = {"leftmargin": 1.0, "rightmargin": 1.0, "topmargin": 1.5, "bottommargin": 1.0},
-            figsize=(8.0, 10.0))
+    elif sf == "P2":
+        P2 = Plotter(
+            (3, 2),
+            units="in",
+            margins={
+                "leftmargin": 1.0,
+                "rightmargin": 1.0,
+                "topmargin": 1.5,
+                "bottommargin": 1.0,
+            },
+            figsize=(8.0, 10.0),
+        )
         show_figure_grid(P2)
         P2.figure_handle.suptitle("defaults, units=inches")
         mpl.show()
         return
-    elif sf == 'P3':
-        P3 = Plotter((3,2), units="cm",
-            margins = {"leftmargin": 1.0, "rightmargin": 1.0, "topmargin": 1.5, "bottommargin": 1.0},
-            figsize=(8.0, 10.0))
+    elif sf == "P3":
+        P3 = Plotter(
+            (3, 2),
+            units="cm",
+            margins={
+                "leftmargin": 1.0,
+                "rightmargin": 1.0,
+                "topmargin": 1.5,
+                "bottommargin": 1.0,
+            },
+            figsize=(8.0, 10.0),
+        )
         P3.figure_handle.suptitle("Defaults, units=cm")
         mpl.show()
         return
-    elif sf == 'P4':
-        P4 = regular_grid(rows=3, cols=2, units="cm",
-            margins = {"leftmargin": 1.0, "rightmargin": 1.0,
-            "topmargin": 2.0, "bottommargin": 1.0},
-            figsize=(12.0, 16.0))
+    elif sf == "P4":
+        P4 = regular_grid(
+            rows=3,
+            cols=2,
+            units="cm",
+            margins={
+                "leftmargin": 1.0,
+                "rightmargin": 1.0,
+                "topmargin": 2.0,
+                "bottommargin": 1.0,
+            },
+            figsize=(12.0, 16.0),
+        )
         P4.figure_handle.suptitle("regulargrid, units=cm")
         show_figure_grid(P4)
         mpl.show()
         return
-    
-    elif sf == 'P5':
-        x=-0.05
-        y=1.05
-        sizer = {'A': {'pos': [0.5, 1.4, 4, 1.5], 'labelpos': (x,y)},
-        'B': {'pos': [2.2, 1.4, 4, 1.53], 'labelpos': (x,y)},
-        'C': {'pos': [0.5, 3, 2, 1.5], 'labelpos': (x,y)},
-        'D': {'pos': [0.5, 2.5, 0.5, 1.25], 'labelpos': (x,y)},
-        'E': {'pos': [3.25, 0.5, 0.5, 1.00], 'labelpos': (x,y)},
+
+    elif sf == "P5":
+        x = -0.05
+        y = 1.05
+        sizer = {
+            "A": {"pos": [0.5, 1.4, 4, 1.5], "labelpos": (x, y)},
+            "B": {"pos": [2.2, 1.4, 4, 1.53], "labelpos": (x, y)},
+            "C": {"pos": [0.5, 3, 2, 1.5], "labelpos": (x, y)},
+            "D": {"pos": [0.5, 2.5, 0.5, 1.25], "labelpos": (x, y)},
+            "E": {"pos": [3.25, 0.5, 0.5, 1.00], "labelpos": (x, y)},
         }
         P5 = arbitrary_grid(sizer, units="in", figsize=(4, 6))
         P5.figure_handle.suptitle("arbitrary grid, units=in")
@@ -2743,5 +2689,6 @@ def main(sf="P5"):
         mpl.show()
     return
 
+
 if __name__ == "__main__":
-    main(sf = 'P5')
+    main(sf="P5")

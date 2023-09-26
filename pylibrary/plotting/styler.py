@@ -359,7 +359,7 @@ def geometry_adjust(axes, style, fig_width, label_order=[]):
 
     # reconstruct the figure object
 
-    fig = axes[0]['ax'].get_figure()
+    figure = axes[0]['ax'].get_figure()
 
     # reconstruct dimensions related to texts
 
@@ -392,8 +392,8 @@ def geometry_adjust(axes, style, fig_width, label_order=[]):
     # dy = dx / x_to_y_ratio    # size of single subplot in y direction
     # fig_height = dy * ny      # figure y size in inches
 
-    fig.set_figwidth(Figure['figsize'][0])
-    fig.set_figheight(Figure['figsize'][1])
+    figure.set_figwidth(figure['figsize'][0])
+    figure.set_figheight(figure['figsize'][1])
 
     # for each subplot adjust dimensions
     for ax in axes:
