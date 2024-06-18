@@ -229,7 +229,7 @@ def set_axes_ticks(
         ax.set_yticks(y_minor, minor=True)
         ax.tick_params(axis="y", which="minor", direction="out", length=minor_length)
     if xticks is not None:
-        ax.set_xticks(xticks, xticks_str, fontsize=8)
+        ax.set_xticks(xticks, xticks_str)
         if xticks_pad is not None:
             xlabels = ax.get_xticklabels()
             for i, tick in enumerate(ax.get_xaxis().get_major_ticks()):
@@ -1271,7 +1271,7 @@ def referenceline(
     axl: object,
     reference: Union[float, None] = None,
     limits: Union[list, tuple, None] = None,
-    color: float = 0.33,
+    color: list = [0.33, 0.33, 0.33, 1],
     linestyle: str = "--",
     linewidth: float = 0.5,
     dashes: Union[str, None] = None,
