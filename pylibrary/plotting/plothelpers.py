@@ -229,7 +229,7 @@ def set_axes_ticks(
         ax.set_yticks(y_minor, minor=True)
         ax.tick_params(axis="y", which="minor", direction="out", length=minor_length)
     if xticks is not None:
-        ax.set_xticks(xticks, xticks_str, fontsize=8)
+        ax.set_xticks(xticks, xticks_str)
         if xticks_pad is not None:
             xlabels = ax.get_xticklabels()
             for i, tick in enumerate(ax.get_xaxis().get_major_ticks()):
@@ -1271,7 +1271,7 @@ def referenceline(
     axl: object,
     reference: Union[float, None] = None,
     limits: Union[list, tuple, None] = None,
-    color: float = 0.33,
+    color: float = [0.33, 0.33, 0.33, 1],
     linestyle: str = "--",
     linewidth: float = 0.5,
     dashes: Union[str, None] = None,
@@ -1838,6 +1838,7 @@ def regular_grid(
     labelposition: tuple = (0.0, 0.0),
     parent_figure: Union[mpl.figure, None] = None,
     panel_labels: Union[str, List, None] = None,
+    font: str="Arial",
     **kwds,
 ) -> object:
     """
@@ -1982,6 +1983,7 @@ def regular_grid(
         figsize=figsize,
         margins=margins,
         labelposition=labelposition,
+        font = font,
         parent_figure=parent_figure,
         order=order,
         **kwds,
@@ -2063,6 +2065,7 @@ class Plotter:
         margins: Union[dict, None] = None,
         labelalignment: str = "left",
         labelposition: Union[List, Tuple] = [0.0, 0.0],  # global settings
+        font: str="Arial",
         labelsize: Union[float, None] = None,
         fontsize: Union[float, None] = None,
         fontweight: str = "normal",
@@ -2151,6 +2154,9 @@ class Plotter:
         figsize : tuple (default : (11, 8.5))
             Figure size in inches. Default is for a landscape figure
 
+        font: str (default : 'Arial')
+            Font to use for all text in the figure
+
         fontsize : points (default : 10) OR dict {'tick', 'label', 'panel'}
             Defines the size of the font to use for panel labels
 
@@ -2174,6 +2180,8 @@ class Plotter:
         self.fontsize = {}
         self.parent = parent_figure
         self.panel_labels = label
+        self.font = font
+        matplotlib.rcParams["font.family"] = self.font
         self.sizer = None
         assert order in ["rowsfirst", "columnsfirst"]
         self.order = order
