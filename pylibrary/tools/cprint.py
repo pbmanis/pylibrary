@@ -23,6 +23,9 @@ def cprint(c, txt, default='white', textonly:bool=False, **kwds):
         color, one of [red, yellow, green, magenta, blue, cyan, white, backgray]
     txt : string
         text string to print out
+    textonly : bool (default: False)
+        if True, return the text string with the color codes,
+        but do not print the output.
     default: str (default: white)
         default color to return to after printing
     \**kwds:
