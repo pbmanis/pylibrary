@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 __author__ = "Paul B. Manis"
-__version__ = "0.4.2"
+__version__ = '0.4.3'
 
 import pylibrary.fitting
 import pylibrary.plotting
