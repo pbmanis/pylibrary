@@ -13,7 +13,7 @@ colors = {'red': '\x1b[31m', 'r': '\x1b[31m',
           'white': '\x1b[0m', 'w': '\x1b[0m',
           'backgray': '\x1b[100m'}
 
-def cprint(c, txt, default='white', **kwds):
+def cprint(c, txt, default='white', textonly:bool=False, **kwds):
     r"""
     color print: one line
     
@@ -33,4 +33,21 @@ def cprint(c, txt, default='white', **kwds):
         raise ValueError(f'cprint: color {c:s} is not in valid list of colors')
     if not isinstance(txt, str):
         txt = str(txt)
-    print(f"{colors[c]:s}{txt:s}{colors[default]:s}", **kwds)
+    text = f"{colors[c]:s}{txt:s}{colors[default]:s}"
+    if not textonly:
+        print(text, **kwds)
+        return None
+    else:
+        return text
+    
+if __name__ == "__main__":
+    # do some tests
+    print('testing cprint')
+    for c in colors.keys():
+        cprint(c, c)
+    
+    print('testing cprint with textonly')
+    txt = " "
+    for c in colors.keys():
+        txt= "\n".join([txt, cprint(c, c, textonly=True, end="")])
+    print(txt)
