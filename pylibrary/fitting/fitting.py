@@ -18,7 +18,7 @@ MIT License (See LICENSE.txt for details)
 import numpy
 import scipy
 import scipy.optimize
-from scipy.stats import norm
+
 
 # openoptFound = False
 # try:
