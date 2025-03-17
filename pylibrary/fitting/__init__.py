@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 __author__ = "Paul B. Manis"
-__version__ = "0.4"
+__version__ = "0.43"
 
 import pylibrary.fitting.fitting
 import pylibrary.fitting.simplex
