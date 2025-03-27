@@ -86,7 +86,16 @@ setup(name='pylibrary',
           'pyparsing>=2.4', 'python-dateutil>=2.8', 'kiwisolver>=1.1',
           'lmfit>=0.9.3',
           ],
-      packages=find_packages(include=['pylibrary']),
+      packages=(find_packages(include=['pylibrary']) +
+                find_packages(include=['pylibrary.*']) +
+                find_packages(include=['pylibrary.tools']) +
+                find_packages(include=['pylibrary.tools.*']) +
+                find_packages(include=['pylibrary.plotting']) +
+                find_packages(include=['pylibrary.plotting.*']) + 
+                find_packages(include=['pylibrary.fitting']) +
+                find_packages(include=['pylibrary.fitting.*']) +
+                )
+
       zip_safe=False,
       entry_points={
           'console_scripts': [
