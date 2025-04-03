@@ -1739,7 +1739,7 @@ def rectangles(
     return collection
 
 
-def show_figure_grid(fig: mpl.figure, figx: int = 10, figy: int = 10) -> object:
+def show_figure_grid(fig: mpl.figure, figx: int = 10, figy: int = 10, alpha=1.0) -> object:
     """
     Create a background grid with major and minor lines like graph paper
     if using default figx and figy, the grid will be in units of the
@@ -1775,8 +1775,8 @@ def show_figure_grid(fig: mpl.figure, figx: int = 10, figy: int = 10) -> object:
     backGrid.set_xticks(np.arange(0.0, figx + 0.01, 0.1), minor=True)
     #   backGrid.get_xaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
     #   backGrid.get_yaxis().set_minor_locator(matplotlib.ticker.AutoMinorLocator())
-    backGrid.grid(visible=True, which="major", color="g", alpha=0.5, linewidth=0.8)
-    backGrid.grid(visible=True, which="minor", color="g", alpha=0.3, linewidth=0.2)
+    backGrid.grid(visible=True, which="major", color="g", alpha=alpha, linewidth=0.8)
+    backGrid.grid(visible=True, which="minor", color="g", alpha=alpha*0.6, linewidth=0.2)
     return backGrid
 
 

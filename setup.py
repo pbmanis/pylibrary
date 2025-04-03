@@ -93,7 +93,9 @@ setup(name='pylibrary',
                 find_packages(where='./pylibrary.plotting') +
                 find_packages(where='./pylibrary.plotting.*') + 
                 find_packages(where='./pylibrary.fitting') +
-                find_packages(where='./pylibrary.fitting.*')
+                find_packages(where='./pylibrary.fitting.*') +
+                find_packages(where='./pylibrary.stats') +
+                find_packages(where='./pylibrary.stats.*') +
                 ),
 
       zip_safe=False,
