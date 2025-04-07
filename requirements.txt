@@ -1,0 +1,38 @@
+# ephys for Python 3 with basic working environment
+# Used by make_env.sh
+
+# development utilities
+black>=24.10.0
+flake8==7.0.0
+isort>=5.13.2
+mypy==1.13.0
+sphinx==8.1.3
+sphinx-automodapi
+sphinx-rtd-theme
+
+pytest==7.3.1
+gitpython
+Cython==3.0.11
+
+
+colorcet
+colormaps==0.4.1
+
+lmfit>=1.2
+
+matplotlib>=3.9.0
+matplotlib-scalebar>=0.8.1
+MetaArray==2.1.1
+
+numpy>=1.26, <= 2.1.0
+
+scipy>=1.14.0
+seaborn
+pyqt6
+pyqt6-sip
+pyqtgraph==0.13.7
+
+seaborn>=0.13.2
+tifffile==2024.06.18
+
+
