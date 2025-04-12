@@ -1,10 +1,10 @@
-from mpl_toolkits.axes_grid.axislines import SubplotZero
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as mpl
 import numpy as np
+import mpl_toolkits.axisartist.axislines as AL
 
 def test():
-    fig = plt.figure(1)
-    ax = SubplotZero(fig, 111)
+    fig = mpl.figure(1)
+    ax = AL.AxesZero(fig, 111)
     fig.add_subplot(ax)
 
     for direction in ["xzero", "yzero"]:
@@ -17,7 +17,7 @@ def test():
     x = np.linspace(-0.5, 1., 100)
     ax.plot(x, np.sin(x*np.pi))
 
-    plt.show()
+    mpl.show()
 
 if __name__ == "__main__":
     test()
