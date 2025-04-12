@@ -3,33 +3,34 @@
 
 # development utilities
 black>=24.10.0
-flake8==7.0.0
+flake8==7.2.0
 isort>=5.13.2
-mypy==1.13.0
-sphinx==8.1.3
+mypy==1.15.0
+sphinx==8.2.3
 sphinx-automodapi
 sphinx-rtd-theme
 
-pytest==7.3.1
+pytest==8.3.5
 gitpython
-Cython==3.0.11
+Cython==3.0.12
 
 
 colorcet
-colormaps==0.4.1
+colormaps==0.4.2
 
 lmfit>=1.2
 
-matplotlib>=3.9.0
+matplotlib>=3.10.0
 matplotlib-scalebar>=0.8.1
 MetaArray==2.1.1
 
-numpy>=1.26, <= 2.1.0
+numpy==2.2.4
 
 scipy>=1.14.0
 seaborn
-pyqt6
+PyQt6
 pyqt6-sip
+pyqt5
 pyqtgraph==0.13.7
 
 seaborn>=0.13.2
