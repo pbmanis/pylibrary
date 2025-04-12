@@ -28,24 +28,14 @@ import scipy.optimize
 #     pass
 
 import numpy.random
-#from numba import autojit
-usingMPlot=False
+
+# from numba import autojit
+usingMPlot = False
 
 pyqt = False
 
 
-# def debug_trace():
-#     '''Set a tracepoint in the Python debugger that works with Qt'''
-#     if pyqt:
-#         from PyQt4.QtCore import pyqtRemoveInputHook
-#     from pdb import set_trace
-#
-#     if pyqt:
-#         pyqtRemoveInputHook()
-#     set_trace()
-
-
-class Fitting():
+class Fitting:
     # dictionary contains:
     # name of function: function call, initial parameters, iterations, plot color, then x and y for testing
     # target valutes, names of parameters, contant values, and derivative function if needed.
@@ -53,56 +43,252 @@ class Fitting():
 
     def __init__(self):
         self.fitfuncmap = {
-            'exp0': (self.exp0eval, [0.0, 20.0], 2000, 'k', [0, 100, 1.],
-                     [1.0, 5.0], ['A0', 'tau'], None, None),
-            'exp1': (self.expeval, [0.0, 0.0, 20.0], 2000, 'k', [0, 100, 1.],
-                     [0.5, 1.0, 5.0], ['DC', 'A0', 'tau'], None, self.expevalprime),
-            'expsat': (self.expsat, [0.0, 1.0, 20.0], 2000, 'k', [0, 10, 1.],
-                       [0.5, 1.0, 5.0], ['DC', 'A0', 'tau'], None, self.expsatprime),
-            'expsum': (self.expsumeval, [0.0, -0.5, 200.0, -0.25, 450.0], 500000, 'k', [0, 1000, 1.],
-                       [0.0, -1.0, 150.0, -0.25, 350.0], ['DC', 'A0', 'tau0', 'A1', 'tau1'], None, None),
-            'expsum2': (self.expsumeval2, [0., -0.5, -0.250], 50000, 'k', [0, 1000, 1.],
-                        [0., -0.5, -0.25], ['A0', 'A1'], [5., 20.], None),
-            'exp2': (self.exp2eval, [0.0, -0.5, 200.0, -0.25, 450.0], 500000, 'k', [0, 1000, 1.],
-                     [0.0, -1.0, 150.0, -0.25, 350.0], ['DC', 'A0', 'tau0', 'A1', 'tau1'], None, None),
-            'exppow': (self.exppoweval, [0.0, 1.0, 100, ], 2000, 'k', [0, 100, 0.1],
-                       [0.0, 1.0, 100.0], ['DC', 'A0', 'tau'], None, None),
-            'exppulse': (self.expPulse, [3.0, 2.5, 0.2, 2.5, 2.0, 0.5], 2000, 'k', [0, 10, 0.3],
-                         [0.0, 0., 0.75, 4., 1.5, 1.], ['DC', 't0', 'tau1', 'tau2', 'amp', 'width'], None, None),
-            'FIGrowth1': (self.FIGrowth1, [0.0, 100., 1.0, 40., 200.], 2000, 'k', [0, 1000, 50],  # [Fzero, Ibreak, F1amp, F2amp, Irate]
-                          [0.0, 0., 0., 10., 100.], ['Fzero', 'Ibreak', 'F1amp', 'F2amp', 'Irate'], None, None),
-            'boltz': (self.boltzeval, [0.0, 1.0, -50.0, -5.0], 5000, 'r', [-130., -30., 1.],
-                      [0.00, 0.010, -100.0, 7.0], ['DC', 'A0', 'x0', 'k'], None, None),
-            'normalizedgauss': (self.normalized_gausseval, [1.0, 0.0, 0.5], 2000, 'y', [-10., 10., 0.2],
-                                [1.0, 1.0, 2.0], ['A', 'mu', 'sigma'], None, None),
-            'gauss': (self.gausseval, [1.0, 0.0, 0.5], 2000, 'y', [-10., 10., 0.2],
-                      [1.0, 1.0, 2.0], ['A', 'mu', 'sigma'], None, None),
-            'ngauss': (self.ngausseval, [1.0, 0.0, 0.5, 2., 1., 0.25], 2000, 'y', [-10., 10., 0.2],
-                       [1.0, 1.0, 2.0, 0.5, 0.5, 0.1], ['A1', 'mu1', 'sigma1', 'A2', 'mu2', 'sigma2'], 2, None),
-            'flattopgauss': (self.flattop_gausseval, [1.0, 0.0, 0.5, 0.5], 50000, 'y', [-10., 10., 0.01],
-                             [1.0, 1.0, 2.0, 0.2], ['A', 'mu', 'sigma', 'ftwidth'], None, None),
-            'flattopngauss': (self.flattop_ngausseval, [1.0, -1.0, 0.2, 0.25, 0.5, 1.0, 0.25, 0.5], 50000, 'y', [-10., 10., 0.01],
-                              [1.0, 1.0, 2.0, 0.2, 0.75, 1.0, 2.0, 0.2], [
-                                  'A', 'mu', 'sigma', 'ftwidth', 'A2', 'mu2', 'sigma2', 'ftwidth2'],
-                              2, None),
-            'line': (self.lineeval, [1.0, 0.0], 500, 'r', [-10., 10., 0.5],
-                     [0.0, 2.0], ['m', 'b'], None, None),
-            'poly2': (self.poly2eval, [1.0, 1.0, 0.0], 500, 'r', [0, 100, 1.],
-                      [0.5, 1.0, 5.0], ['a', 'b', 'c'], None, None),
-            'poly3': (self.poly3eval, [1.0, 1.0, 1.0, 0.0], 1000, 'r', [0., 100., 1.],
-                      [0.5, 1.0, 5.0, 2.0], ['a', 'b', 'c', 'd'], None, None),
-            'poly4': (self.poly4eval, [1.0, 1.0, 1.0, 1.0, 0.0], 1000, 'r', [0., 100., 1.],
-                      [0.1, 0.5, 1.0, 5.0, 2.0], ['a', 'b', 'c', 'd', 'e'], None, None),
-            'sin': (self.sineeval, [-1., 1.0, 4.0, 0.0], 1000, 'r', [0., 100., 0.2],
-                    [0.0, 1.0, 9.0, 0.0], ['DC', 'A', 'f', 'phi'], None, None),
-            'boltz2': (self.boltzeval2, [0.0, 0.5, -50.0, 5.0, 0.5, -20.0, 3.0], 1200, 'r',
-                       [-100., 50., 1.], [0.0, 0.3, -45.0,
-                                          4.0, 0.7, 10.0, 12.0],
-                       ['DC', 'A1', 'x1', 'k1', 'A2', 'x2', 'k2'], None, None),
-            'taucurve': (self.taucurve, [50., 300.0, 60.0, 10.0, 8.0, 65.0, 10.0], 50000, 'r',
-                         [-150., 50., 1.], [0.0, 237.0,
-                                            60.0, 12.0, 17.0, 60.0, 14.0],
-                         ['DC', 'a1', 'v1', 'k1', 'a2', 'v2', 'k2'], None, self.taucurveder),
+            "exp0": (
+                self.exp0eval,
+                [0.0, 20.0],
+                2000,
+                "k",
+                [0, 100, 1.0],
+                [1.0, 5.0],
+                ["A0", "tau"],
+                None,
+                None,
+            ),
+            "exp1": (
+                self.expeval,
+                [0.0, 0.0, 20.0],
+                2000,
+                "k",
+                [0, 100, 1.0],
+                [0.5, 1.0, 5.0],
+                ["DC", "A0", "tau"],
+                None,
+                self.expevalprime,
+            ),
+            "expsat": (
+                self.expsat,
+                [0.0, 1.0, 20.0],
+                2000,
+                "k",
+                [0, 10, 1.0],
+                [0.5, 1.0, 5.0],
+                ["DC", "A0", "tau"],
+                None,
+                self.expsatprime,
+            ),
+            "expsum": (
+                self.expsumeval,
+                [0.0, -0.5, 200.0, -0.25, 450.0],
+                500000,
+                "k",
+                [0, 1000, 1.0],
+                [0.0, -1.0, 150.0, -0.25, 350.0],
+                ["DC", "A0", "tau0", "A1", "tau1"],
+                None,
+                None,
+            ),
+            "expsum2": (
+                self.expsumeval2,
+                [0.0, -0.5, -0.250],
+                50000,
+                "k",
+                [0, 1000, 1.0],
+                [0.0, -0.5, -0.25],
+                ["A0", "A1"],
+                [5.0, 20.0],
+                None,
+            ),
+            "exp2": (
+                self.exp2eval,
+                [0.0, -0.5, 200.0, -0.25, 450.0],
+                500000,
+                "k",
+                [0, 1000, 1.0],
+                [0.0, -1.0, 150.0, -0.25, 350.0],
+                ["DC", "A0", "tau0", "A1", "tau1"],
+                None,
+                None,
+            ),
+            "exppow": (
+                self.exppoweval,
+                [
+                    0.0,
+                    1.0,
+                    100,
+                ],
+                2000,
+                "k",
+                [0, 100, 0.1],
+                [0.0, 1.0, 100.0],
+                ["DC", "A0", "tau"],
+                None,
+                None,
+            ),
+            "exppulse": (
+                self.expPulse,
+                [3.0, 2.5, 0.2, 2.5, 2.0, 0.5],
+                2000,
+                "k",
+                [0, 10, 0.3],
+                [0.0, 0.0, 0.75, 4.0, 1.5, 1.0],
+                ["DC", "t0", "tau1", "tau2", "amp", "width"],
+                None,
+                None,
+            ),
+            "FIGrowth1": (
+                self.FIGrowth1,
+                [0.0, 100.0, 1.0, 40.0, 200.0],
+                2000,
+                "k",
+                [0, 1000, 50],  # [Fzero, Ibreak, F1amp, F2amp, Irate]
+                [0.0, 0.0, 0.0, 10.0, 100.0],
+                ["Fzero", "Ibreak", "F1amp", "F2amp", "Irate"],
+                None,
+                None,
+            ),
+            "boltz": (
+                self.boltzeval,
+                [0.0, 1.0, -50.0, -5.0],
+                5000,
+                "r",
+                [-130.0, -30.0, 1.0],
+                [0.00, 0.010, -100.0, 7.0],
+                ["DC", "A0", "x0", "k"],
+                None,
+                None,
+            ),
+            "normalizedgauss": (
+                self.normalized_gausseval,
+                [1.0, 0.0, 0.5],
+                2000,
+                "y",
+                [-10.0, 10.0, 0.2],
+                [1.0, 1.0, 2.0],
+                ["A", "mu", "sigma"],
+                None,
+                None,
+            ),
+            "gauss": (
+                self.gausseval,
+                [1.0, 0.0, 0.5],
+                2000,
+                "y",
+                [-10.0, 10.0, 0.2],
+                [1.0, 1.0, 2.0],
+                ["A", "mu", "sigma"],
+                None,
+                None,
+            ),
+            "ngauss": (
+                self.ngausseval,
+                [1.0, 0.0, 0.5, 2.0, 1.0, 0.25],
+                2000,
+                "y",
+                [-10.0, 10.0, 0.2],
+                [1.0, 1.0, 2.0, 0.5, 0.5, 0.1],
+                ["A1", "mu1", "sigma1", "A2", "mu2", "sigma2"],
+                2,
+                None,
+            ),
+            "flattopgauss": (
+                self.flattop_gausseval,
+                [1.0, 0.0, 0.5, 0.5],
+                50000,
+                "y",
+                [-10.0, 10.0, 0.01],
+                [1.0, 1.0, 2.0, 0.2],
+                ["A", "mu", "sigma", "ftwidth"],
+                None,
+                None,
+            ),
+            "flattopngauss": (
+                self.flattop_ngausseval,
+                [1.0, -1.0, 0.2, 0.25, 0.5, 1.0, 0.25, 0.5],
+                50000,
+                "y",
+                [-10.0, 10.0, 0.01],
+                [1.0, 1.0, 2.0, 0.2, 0.75, 1.0, 2.0, 0.2],
+                ["A", "mu", "sigma", "ftwidth", "A2", "mu2", "sigma2", "ftwidth2"],
+                2,
+                None,
+            ),
+            "line": (
+                self.lineeval,
+                [1.0, 0.0],
+                500,
+                "r",
+                [-10.0, 10.0, 0.5],
+                [0.0, 2.0],
+                ["m", "b"],
+                None,
+                None,
+            ),
+            "poly2": (
+                self.poly2eval,
+                [1.0, 1.0, 0.0],
+                500,
+                "r",
+                [0, 100, 1.0],
+                [0.5, 1.0, 5.0],
+                ["a", "b", "c"],
+                None,
+                None,
+            ),
+            "poly3": (
+                self.poly3eval,
+                [1.0, 1.0, 1.0, 0.0],
+                1000,
+                "r",
+                [0.0, 100.0, 1.0],
+                [0.5, 1.0, 5.0, 2.0],
+                ["a", "b", "c", "d"],
+                None,
+                None,
+            ),
+            "poly4": (
+                self.poly4eval,
+                [1.0, 1.0, 1.0, 1.0, 0.0],
+                1000,
+                "r",
+                [0.0, 100.0, 1.0],
+                [0.1, 0.5, 1.0, 5.0, 2.0],
+                ["a", "b", "c", "d", "e"],
+                None,
+                None,
+            ),
+            "sin": (
+                self.sineeval,
+                [-1.0, 1.0, 4.0, 0.0],
+                1000,
+                "r",
+                [0.0, 100.0, 0.2],
+                [0.0, 1.0, 9.0, 0.0],
+                ["DC", "A", "f", "phi"],
+                None,
+                None,
+            ),
+            "boltz2": (
+                self.boltzeval2,
+                [0.0, 0.5, -50.0, 5.0, 0.5, -20.0, 3.0],
+                1200,
+                "r",
+                [-100.0, 50.0, 1.0],
+                [0.0, 0.3, -45.0, 4.0, 0.7, 10.0, 12.0],
+                ["DC", "A1", "x1", "k1", "A2", "x2", "k2"],
+                None,
+                None,
+            ),
+            "taucurve": (
+                self.taucurve,
+                [50.0, 300.0, 60.0, 10.0, 8.0, 65.0, 10.0],
+                50000,
+                "r",
+                [-150.0, 50.0, 1.0],
+                [0.0, 237.0, 60.0, 12.0, 17.0, 60.0, 14.0],
+                ["DC", "a1", "v1", "k1", "a2", "v2", "k2"],
+                None,
+                self.taucurveder,
+            ),
         }
         self.fitSum2Err = 0
 
@@ -127,8 +313,7 @@ class Fitting():
         Sum of two exponentials with independent time constants and amplitudes,
         and a DC offset
         """
-        yd = p[0] + (p[1] * numpy.exp(-x / p[2])) + \
-            (p[3] * numpy.exp(-x / p[4]))
+        yd = p[0] + (p[1] * numpy.exp(-x / p[2])) + (p[3] * numpy.exp(-x / p[4]))
         if y is None:
             return yd
         else:
@@ -136,7 +321,7 @@ class Fitting():
             if weights is not None:
                 yerr = yerr * weights
             if sumsq is True:
-                return numpy.sum(yerr ** 2)
+                return numpy.sum(yerr**2)
             else:
                 return yerr
 
@@ -145,8 +330,7 @@ class Fitting():
         Sum of two exponential terms, with predefined time constants, allowing
         only the amplitudes and DC offset to vary
         """
-        yd = p[0] + (p[1] * numpy.exp(-x / C[0])) + \
-            (p[2] * numpy.exp(-x / C[1]))
+        yd = p[0] + (p[1] * numpy.exp(-x / C[0])) + (p[2] * numpy.exp(-x / C[1]))
         if y is None:
             return yd
         else:
@@ -200,7 +384,7 @@ class Fitting():
         """
         derivative for expsat
         """
-#        yd = p[0] + p[1] * (1.0 - numpy.exp(-x * p[2]))
+        #        yd = p[0] + p[1] * (1.0 - numpy.exp(-x * p[2]))
         ydp = p[1] * p[2] * numpy.exp(-x * p[2])
         return ydp
 
@@ -225,8 +409,11 @@ class Fitting():
         """
         For fit to activation currents, 2nd order exp + first order exp
         """
-        yd = p[0] + (p[1] * (1.0 - numpy.exp(-x / p[2])) ** 2.0) + \
-            (p[3] * (1.0 - numpy.exp(-x / p[4])))
+        yd = (
+            p[0]
+            + (p[1] * (1.0 - numpy.exp(-x / p[2])) ** 2.0)
+            + (p[3] * (1.0 - numpy.exp(-x / p[4])))
+        )
         if y is None:
             return yd
         else:
@@ -250,7 +437,7 @@ class Fitting():
         yd = numpy.empty(x.shape)
         yd[x < t0] = yOffset
         m1 = (x >= t0) & (x < (t0 + width))
-        m2 = (x >= (t0 + width))
+        m2 = x >= (t0 + width)
         x1 = x[m1]
         x2 = x[m2]
         yd[m1] = amp * (1 - numpy.exp(-(x1 - t0) / tau1)) + yOffset
@@ -278,18 +465,18 @@ class Fitting():
         """
         Fzero, Ibreak, F1amp, F2amp, Irate = p
         yd = numpy.zeros(x.shape)
-        m1 = (x < Ibreak)
-        m2 = (x >= Ibreak)
+        m1 = x < Ibreak
+        m2 = x >= Ibreak
         yd[m1] = Fzero + x[m1] * F1amp / Ibreak
         maxyd = numpy.max(yd)
-        yd[m2] = F2amp * (1.0 - numpy.exp(- (x[m2] - Ibreak) * Irate)) + maxyd
+        yd[m2] = F2amp * (1.0 - numpy.exp(-(x[m2] - Ibreak) * Irate)) + maxyd
         if y is None:
             return yd
         else:
             dy = y - yd
             w = numpy.ones(len(x))
-#            xp = numpy.argwhere(x>0)
-#            w[xp] = w[xp] + 3.*x[xp]/numpy.max(x)
+            #            xp = numpy.argwhere(x>0)
+            #            w[xp] = w[xp] + 3.*x[xp]/numpy.max(x)
             if sumsq is True:
                 ss = numpy.sqrt(numpy.sum((w * dy) ** 2.0))
                 return ss
@@ -307,8 +494,11 @@ class Fitting():
                 return y - yd
 
     def boltzeval2(self, p, x, y=None, C=None, sumsq=False, weights=None):
-        yd = p[0] + p[1] / (1 + numpy.exp((x - p[2]) / p[3])
-                            ) + p[4] / (1 + numpy.exp((x - p[5]) / p[6]))
+        yd = (
+            p[0]
+            + p[1] / (1 + numpy.exp((x - p[2]) / p[3]))
+            + p[4] / (1 + numpy.exp((x - p[5]) / p[6]))
+        )
         if y is None:
             return yd
         else:
@@ -321,8 +511,9 @@ class Fitting():
         """
         Normalized version (area = 1)
         """
-        yd = (p[0] / (p[2] * numpy.sqrt(2.0 * numpy.pi))) * \
-            numpy.exp(-((x - p[1]) ** 2.0) / (2.0 * (p[2] ** 2.0)))
+        yd = (p[0] / (p[2] * numpy.sqrt(2.0 * numpy.pi))) * numpy.exp(
+            -((x - p[1]) ** 2.0) / (2.0 * (p[2] ** 2.0))
+        )
         if y is None:
             return yd
         else:
@@ -357,23 +548,23 @@ class Fitting():
 
         pl = p[1] - p[3]
         pr = p[1] + p[3]
-        u = 1. / (2.0 * (p[2] * p[2]))
-#        eu = numpy.exp(u)
+        u = 1.0 / (2.0 * (p[2] * p[2]))
+        #        eu = numpy.exp(u)
         xl = numpy.argwhere(x <= pl).flatten()  # all to the left of the ft
         # pts to the right of the flattop
         xr = numpy.argwhere(x >= pr).flatten()
-#        A = p[0] # / (numpy.sqrt(p[2] * 2.0 * numpy.pi))  # no need to scale...
+        #        A = p[0] # / (numpy.sqrt(p[2] * 2.0 * numpy.pi))  # no need to scale...
         yd = p[0] * numpy.ones(x.shape)
         al = x[xl] - pl
         ar = x[xr] - pr
-        #yd[xl] = A * norm.pdf(al, 0., p[2])
+        # yd[xl] = A * norm.pdf(al, 0., p[2])
         yd[xl] = p[0] * numpy.exp(-numpy.square(al) * u)
-        #yd[xr] = A * norm.pdf(ar, 0., p[2])
+        # yd[xr] = A * norm.pdf(ar, 0., p[2])
         yd[xr] = p[0] * numpy.exp(-numpy.square(ar) * u)
-# flatpts = numpy.argwhere((x > pl) & (x < pr)).flatten() # if inside the flatop interval
-#        if len(flatpts) > 0:
-#            yd[flatpts[0]:flatpts[-1]+1] = p[0]*numpy.ones(len(flatpts))
-#            yd[flatpts] = p[0]*numpy.ones(len(flatpts))
+        # flatpts = numpy.argwhere((x > pl) & (x < pr)).flatten() # if inside the flatop interval
+        #        if len(flatpts) > 0:
+        #            yd[flatpts[0]:flatpts[-1]+1] = p[0]*numpy.ones(len(flatpts))
+        #            yd[flatpts] = p[0]*numpy.ones(len(flatpts))
         if y is None:
             return yd
         else:
@@ -389,7 +580,7 @@ class Fitting():
         # etc.
         #
         for i in range(int(C)):
-            pn = p[(i * 3):(i * 3) + 3]
+            pn = p[(i * 3) : (i * 3) + 3]
             if i == 0:
                 yd = self.gausseval(pn, x, y=None)
             else:
@@ -410,7 +601,7 @@ class Fitting():
         # etc.
         #
         for i in range(int(C)):
-            pn = p[(i * 4):(i * 4) + 4]
+            pn = p[(i * 4) : (i * 4) + 4]
             if i == 0:
                 yd = self.flattop_gausseval(pn, x, y=None, sumsq=sumsq)
             else:
@@ -434,7 +625,7 @@ class Fitting():
                 return y - yd
 
     def poly2eval(self, p, x, y=None, C=None, sumsq=False, weights=None):
-        yd = p[0] * x ** 2.0 + p[1] * x + p[2]
+        yd = p[0] * x**2.0 + p[1] * x + p[2]
         if y is None:
             return yd
         else:
@@ -444,7 +635,7 @@ class Fitting():
                 return y - yd
 
     def poly3eval(self, p, x, y=None, C=None, sumsq=False, weights=None):
-        yd = p[0] * x ** 3.0 + p[1] * x ** 2.0 + p[2] * x + p[3]
+        yd = p[0] * x**3.0 + p[1] * x**2.0 + p[2] * x + p[3]
         if y is None:
             return yd
         else:
@@ -454,8 +645,7 @@ class Fitting():
                 return y - yd
 
     def poly4eval(self, p, x, y=None, C=None, sumsq=False, weights=None):
-        yd = p[0] * x ** 4.0 + p[1] * x ** 3.0 + \
-            p[2] * x ** 2.0 + p[3] * x + p[4]
+        yd = p[0] * x**4.0 + p[1] * x**3.0 + p[2] * x**2.0 + p[3] * x + p[4]
         if y is None:
             return yd
         else:
@@ -479,8 +669,9 @@ class Fitting():
         HH-like description of activation/inactivation function
         'DC', 'a1', 'v1', 'k1', 'a2', 'v2', 'k2'
         """
-        yd = p[0] + 1.0 / (p[1] * numpy.exp((x + p[2]) /
-                                            p[3]) + p[4] * numpy.exp(-(x + p[5]) / p[6]))
+        yd = p[0] + 1.0 / (
+            p[1] * numpy.exp((x + p[2]) / p[3]) + p[4] * numpy.exp(-(x + p[5]) / p[6])
+        )
         if y is None:
             return yd
         else:
@@ -494,9 +685,13 @@ class Fitting():
         Derivative for taucurve
         'DC', 'a1', 'v1', 'k1', 'a2', 'v2', 'k2'
         """
-        y = -(p[1] * numpy.exp((p[2] + x) / p[3]) / p[3] - p[4] * numpy.exp(-(p[5] + x) / p[6]) / p[6]) / (
-            p[1] * numpy.exp((p[2] + x) / p[3]) +
-            p[4] * numpy.exp(-(p[5] + x) / p[6])) ** 2.0
+        y = (
+            -(
+                p[1] * numpy.exp((p[2] + x) / p[3]) / p[3]
+                - p[4] * numpy.exp(-(p[5] + x) / p[6]) / p[6]
+            )
+            / (p[1] * numpy.exp((p[2] + x) / p[3]) + p[4] * numpy.exp(-(p[5] + x) / p[6])) ** 2.0
+        )
         #  print 'dy: ', y
         return y
 
@@ -514,10 +709,26 @@ class Fitting():
             it0 = t
         return (x[it0:it1], y[it0:it1])
 
-    def FitRegion(self, whichdata, thisaxis, tdat, ydat, t0=None, t1=None,
-                  fitFunc='exp1', fitFuncDer=None, fitPars=None, fixedPars=None,
-                  fitPlot=None, plotInstance=None, dataType='xy', method=None,
-                  bounds=None, weights=None, constraints=()):
+    def FitRegion(
+        self,
+        whichdata,
+        thisaxis,
+        tdat,
+        ydat,
+        t0=None,
+        t1=None,
+        fitFunc="exp1",
+        fitFuncDer=None,
+        fitPars=None,
+        fixedPars=None,
+        fitPlot=None,
+        plotInstance=None,
+        dataType="xy",
+        method=None,
+        bounds=None,
+        weights=None,
+        constraints=(),
+    ):
         """
         Fit x,y data pair over a region of x
         To call with tdat and ydat as simple arrays:
@@ -549,23 +760,23 @@ class Fitting():
         else:
             fpars = fitPars
         # remap calls if needed for newer versions of scipy (>= 0.11)
-        if method == 'simplex':
-            method = 'Nelder-Mead'
+        if method == "simplex":
+            method = "Nelder-Mead"
         # check if 1-d, then "pretend" its only a 1-element block
-        if ydat.ndim == 1 or dataType == 'xy' or dataType == '2d':
+        if ydat.ndim == 1 or dataType == "xy" or dataType == "2d":
             nblock = 1
         else:
             # otherwise, this is the number of traces in the block
             nblock = ydat.shape[0]
         for block in range(nblock):
             for record in whichdata:
-                if dataType == 'blocks':
+                if dataType == "blocks":
                     (tx, dy) = self.getClipData(
-                        tdat[block], ydat[block][record, thisaxis, :], t0, t1)
+                        tdat[block], ydat[block][record, thisaxis, :], t0, t1
+                    )
                 else:
                     if ydat.ndim > 1:
-                        (tx, dy) = self.getClipData(
-                            tdat, ydat[record, :], t0, t1)
+                        (tx, dy) = self.getClipData(tdat, ydat[record, :], t0, t1)
                     else:
                         (tx, dy) = self.getClipData(tdat, ydat, t0, t1)
 
@@ -579,36 +790,54 @@ class Fitting():
                 # this wrapper.
                 #
                 # use standard leastsq, no bounds
-                if method is None or method == 'leastsq':
-                    plsq, cov, infodict, mesg, ier = scipy.optimize.leastsq(func[0], fpars,
-                                                                            args=(
-                                                                                tx.astype('float64'), dy.astype(
-                                                                                    'float64'),
-                                                                                fixedPars),
-                                                                            full_output=1, maxfev=func[2])
+                if method is None or method == "leastsq":
+                    plsq, cov, infodict, mesg, ier = scipy.optimize.leastsq(
+                        func[0],
+                        fpars,
+                        args=(tx.astype("float64"), dy.astype("float64"), fixedPars),
+                        full_output=1,
+                        maxfev=func[2],
+                    )
                     # print 'none/leastsq'
                     # print 'plsq: ', plsq
                     # print 'cov: ', cov
                     if ier > 4:
                         print("optimize.leastsq error flag is: %d" % (ier))
                         print(mesg)
-                elif method == 'curve_fit':
+                elif method == "curve_fit":
                     # print fpars
                     # print fixedPars
                     plsq, cov = scipy.optimize.curve_fit(
-                        func[0], tx.astype('float64'), dy.astype('float64'), p0=fpars)
+                        func[0], tx.astype("float64"), dy.astype("float64"), p0=fpars
+                    )
                     # print 'curve_fit'
                     # print 'plsq: ', plsq
                     # print 'cov: ', cov
                     ier = 0
-                elif method in ['fmin', 'simplex', 'Nelder-Mead', 'bfgs', 'TNC', 'SLSQP', 'COBYLA',
-                                'L-BFGS-B']:  # use standard wrapper from scipy for those routintes
-                    res = scipy.optimize.minimize(func[0], fpars,
-                                                  args=(
-                                                      tx.astype('float64'), dy.astype('float64'), fixedPars, True),
-                                                  method=method, jac=None, hess=None, hessp=None, bounds=bounds,
-                                                  constraints=constraints, tol=None, callback=None,
-                                                  options={'maxiter': func[2], 'disp': False})
+                elif method in [
+                    "fmin",
+                    "simplex",
+                    "Nelder-Mead",
+                    "bfgs",
+                    "TNC",
+                    "SLSQP",
+                    "COBYLA",
+                    "L-BFGS-B",
+                ]:  # use standard wrapper from scipy for those routintes
+                    res = scipy.optimize.minimize(
+                        func[0],
+                        fpars,
+                        args=(tx.astype("float64"), dy.astype("float64"), fixedPars, True),
+                        method=method,
+                        jac=None,
+                        hess=None,
+                        hessp=None,
+                        bounds=bounds,
+                        constraints=constraints,
+                        tol=None,
+                        callback=None,
+                        options={"maxiter": func[2], "disp": False},
+                    )
                     plsq = res.x
                     # print 'res: ', res
 
@@ -646,7 +875,7 @@ class Fitting():
                 #         plsq = r.xf
                 #         ier = 0
                 else:
-                    print('method %s not recognized, please check Fitting.py' % (method))
+                    print("method %s not recognized, please check Fitting.py" % (method))
                     return
                 # min(tx), max(tx), (max(tx)-min(tx))/100.0)
                 xfit = numpy.linspace(t0, t1, num=100, endpoint=True)
@@ -654,16 +883,30 @@ class Fitting():
                 yy = func[0](plsq, tx, C=fixedPars)  # calculate function
                 self.fitSum2Err = numpy.sum((dy - yy) ** 2)
                 if usingMPlot and fitPlot != None and plotInstance != None:
-                    self.FitPlot(xFit=xfit, yFit=yfit, fitFunc=func[0],
-                                 fitPars=plsq, plot=fitPlot, plotInstance=plotInstance)
+                    self.FitPlot(
+                        xFit=xfit,
+                        yFit=yfit,
+                        fitFunc=func[0],
+                        fitPars=plsq,
+                        plot=fitPlot,
+                        plotInstance=plotInstance,
+                    )
                 xp.append(plsq)  # parameter list
                 xf.append(xfit)  # x plot point list
                 yf.append(yfit)  # y fit point list
         return (xp, xf, yf, yn)  # includes names with yn and range of tx
 
-    def FitPlot(self, xFit=None, yFit=None, fitFunc='exp1',
-                fitPars=None, fixedPars=None, fitPlot=None, plotInstance=None,
-                color=None):
+    def FitPlot(
+        self,
+        xFit=None,
+        yFit=None,
+        fitFunc="exp1",
+        fitPars=None,
+        fixedPars=None,
+        fitPlot=None,
+        plotInstance=None,
+        color=None,
+    ):
         """
         Plot the fit data onto the fitPlot with the specified "plot Instance".
              if there is no xFit, or some parameters are missing, we just return.
@@ -680,22 +923,22 @@ class Fitting():
             fcolor = color
         if yFit is None:
             yFit = numpy.array(xFit.shape)
-#            print 'xfit shape: ', xFit.shape
+            #            print 'xfit shape: ', xFit.shape
             yFit = func[0](fitPars, xFit, C=fixedPars)
-          #  for k in range(0, len(fitPars)):
-           #     yFit[k] = func[0](fitPars[k], xFit[k], C=fixedPars)
+        #  for k in range(0, len(fitPars)):
+        #     yFit[k] = func[0](fitPars[k], xFit[k], C=fixedPars)
         if plotInstance is None or fitPlot is None:
-            return (yFit)
+            return yFit
         for k in range(0, len(fitPars)):
             plotInstance.PlotLine(fitPlot, xFit[k], yFit[k], color=fcolor)
-        return (yFit)
+        return yFit
 
     def getFitErr(self):
-        """ Return the fit error for the most recent fit"""
-        return (self.fitSum2Err)
+        """Return the fit error for the most recent fit"""
+        return self.fitSum2Err
 
     def expfit(self, x, y):
-        """ find best fit of a single exponential function to x and y
+        """find best fit of a single exponential function to x and y
         using the chebyshev polynomial approximation.
         returns (DC, A, tau) for fit.
 
@@ -738,30 +981,30 @@ class Fitting():
         dg = self.chebftd(a, b, n, x, g)
         # now estimate the amplitude from the ratios of the coeffs.
         a1 = self.estimate(d0, dg, 1)
-        a0 = (d0[0] - a1 * dg[0]) / 2.0         # get the offset here
+        a0 = (d0[0] - a1 * dg[0]) / 2.0  # get the offset here
         return (a0, a1, tau)
 
     def estimate(self, c, d, m):
-        """ compute optimal estimate of parameter from arrays of data """
+        """compute optimal estimate of parameter from arrays of data"""
         n = len(c)
         a = sum(c[m:n] * d[m:n]) / sum(d[m:n] ** 2.0)
-        return (a)
+        return a
 
     # note : the following routine is a bottleneck. It should be coded in C.
 
     def chebftd(self, a, b, n, t, d):
-        """ Chebyshev fit; from Press et al, p 192.
-            matlab code P. Manis 21 Mar 1999
-            "Given a function func, lower and upper limits of the interval [a,b], and
-            a maximum degree, n, this routine computes the n coefficients c[1..n] such that
-            func(x) sum(k=1, n) of ck*Tk(y) - c0/2, where y = (x -0.5*(b+a))/(0.5*(b-a))
-            This routine is to be used with moderately large n (30-50) the array of c's is
-            subsequently truncated at the smaller value m such that cm and subsequent
-            terms are negligible."
-            This routine is modified so that we find close points in x (data array) - i.e., we find
-            the best Chebyshev terms to describe the data as if it is an arbitrary function.
-            t is the x data, d is the y data...
-            """
+        """Chebyshev fit; from Press et al, p 192.
+        matlab code P. Manis 21 Mar 1999
+        "Given a function func, lower and upper limits of the interval [a,b], and
+        a maximum degree, n, this routine computes the n coefficients c[1..n] such that
+        func(x) sum(k=1, n) of ck*Tk(y) - c0/2, where y = (x -0.5*(b+a))/(0.5*(b-a))
+        This routine is to be used with moderately large n (30-50) the array of c's is
+        subsequently truncated at the smaller value m such that cm and subsequent
+        terms are negligible."
+        This routine is modified so that we find close points in x (data array) - i.e., we find
+        the best Chebyshev terms to describe the data as if it is an arbitrary function.
+        t is the x data, d is the y data...
+        """
         bma = 0.5 * (b - a)
         bpa = 0.5 * (b + a)
         inc = t[1] - t[0]
@@ -776,7 +1019,10 @@ class Fitting():
             try:
                 f[k] = d[pos + 1]
             except:
-                print("error in chebftd: k = %d (len f = %d)  pos = %d, len(d) = %d\n" % (k, len(f), pos, len(d)))
+                print(
+                    "error in chebftd: k = %d (len f = %d)  pos = %d, len(d) = %d\n"
+                    % (k, len(f), pos, len(d))
+                )
                 print("you should probably make sure this doesn't happen")
         fac = 2.0 / n
         c = numpy.zeros(n)
@@ -785,10 +1031,10 @@ class Fitting():
             for k in range(0, n):
                 sum = sum + f[k] * numpy.cos(numpy.pi * j * (k + 0.5) / n)
             c[j] = fac * sum
-        return (c)
+        return c
 
     def chebint(self, a, b, c, n):
-        """ Given a, b, and c[1..n] as output from chebft or chebftd, and given n,
+        """Given a, b, and c[1..n] as output from chebft or chebftd, and given n,
         the desired degree of approximation (length of c to be used),
         this routine computes cint, the Chebyshev coefficients of the
         integral of the function whose coeffs are in c. The constant of
@@ -803,11 +1049,11 @@ class Fitting():
         for j in range(1, n - 2):
             cint[j] = con * (c[j - 1] - c[j + 1]) / j
             sum = sum + fac * cint[j]
-            fac = - fac
+            fac = -fac
         cint[n - 1] = con * c[n - 2] / (n - 1)
         sum = sum + fac * cint[n - 1]
         cint[0] = 2.0 * sum  # set constant of integration.
-        return (cint)
+        return cint
 
     def flatten(self, l, ltypes=(list, tuple)):
         """
@@ -821,17 +1067,19 @@ class Fitting():
                     if not len(l):
                         break
                 else:
-                    l[i:i + 1] = list(l[i])
+                    l[i : i + 1] = list(l[i])
             i += 1
         return l
 
 
 # run some tests if we are "main"
 
+
 def main():
     #    import matplotlib.pyplot as pyplot
-    
+
     import matplotlib.pyplot as pylab
+
     #
     # pylab.rcParams['text.usetex'] = True
     # pylab.rcParams['interactive'] = False
@@ -844,7 +1092,7 @@ def main():
     # pylab.rcParams['text.dvipnghack'] = True
     # to here (matplotlib stuff - touchy!
 
-    print('Testing Fitting')
+    print("Testing Fitting")
     Fits = Fitting()
     #    x = numpy.arange(0, 100.0, 0.1)
     #    y = 5.0-2.5*numpy.exp(-x/5.0)+0.5*numpy.random.randn(len(x))
@@ -857,7 +1105,7 @@ def main():
     #  pyplot.show()
     exploreError = False
 
-    func = 'flattopngauss'
+    func = "flattopngauss"
     if exploreError is True:
         # explore the error surface for a function:
 
@@ -868,7 +1116,7 @@ def main():
         err = numpy.zeros((len(p1range), len(p2range)))
         x = numpy.array(numpy.arange(f[4][0], f[4][1], f[4][2]))
         C = None
-        if func in ['expsum2', 'exppulse', 'ngauss']:
+        if func in ["expsum2", "exppulse", "ngauss"]:
             C = f[7]
         # check exchange of tau1 ([1]) and width[4]
         yOffset, t0, tau1, tau2, amp, width = f[1]  # get inital parameters
@@ -887,94 +1135,126 @@ def main():
 
         pylab.figure()
         CS = pylab.contour(p1range * tau1, p2range * width, err, 25)
-        CB = pylab.colorbar(CS, shrink=0.8, extend='both')
+        CB = pylab.colorbar(CS, shrink=0.8, extend="both")
         pylab.figure()
         for i, p1 in enumerate(p1range):
             for j, p2 in enumerate(p2range):
                 pylab.plot(x, yp[i, j])
-        pylab.plot(x, y0, 'r-', linewidth=2.0)
+        pylab.plot(x, y0, "r-", linewidth=2.0)
 
     # run tests for each type of fit, return results to compare parameters
 
     cons = []
     bnds = None
 
-    signal_to_noise = 100000.
+    signal_to_noise = 100000.0
     for func in Fits.fitfuncmap:
-        if func != 'flattopngauss':
+        if func != "flattopngauss":
             continue
-        print("\nFunction: %s\nTarget: " % (func), end=' ')
+        print("\nFunction: %s\nTarget: " % (func), end=" ")
         f = Fits.fitfuncmap[func]
         for k in range(0, len(f[1])):
-            print("%f " % (f[1][k]), end=' ')
-        print("\nStarting:     ", end=' ')
+            print("%f " % (f[1][k]), end=" ")
+        print("\nStarting:     ", end=" ")
         for k in range(0, len(f[5])):
-            print("%f " % (f[5][k]), end=' ')
+            print("%f " % (f[5][k]), end=" ")
 
         #        nstep = 500.0
         #        if func == 'sin':
         #            nstep = 100.0
         x = numpy.array(numpy.arange(f[4][0], f[4][1], f[4][2]))
         C = None
-        if func in ['expsum2', 'exppulse', 'ngauss', 'flattopgauss', 'flattopngauss']:
-            print('\n', f[7])
+        if func in ["expsum2", "exppulse", "ngauss", "flattopgauss", "flattopngauss"]:
+            print("\n", f[7])
             C = f[7]
 
         y = f[0](f[1], x, C=C)
         yd = numpy.array(y)
         noise = numpy.random.normal(0, 0.1, yd.shape)
         my = numpy.amax(yd)
-        #yd = yd + sigmax*0.05*my*(numpy.random.random_sample(shape(yd))-0.5)
+        # yd = yd + sigmax*0.05*my*(numpy.random.random_sample(shape(yd))-0.5)
         yd += noise * my / signal_to_noise
-        testMethod = 'SLSQP'
-        if func == 'taucurve':
+        testMethod = "SLSQP"
+        if func == "taucurve":
             continue
-            bounds = [(0., 100.), (0., 1000.), (0.0, 500.0), (0.1, 50.0),
-                      (0., 1000), (0.0, 500.0), (0.1, 50.0)]
-            (fpar, xf, yf, names) = Fits.FitRegion(numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds,
-                                                   method=testMethod)
-        elif func == 'FIGrowth1':
-                # Parameter p is [Fzero, Ibreak, F1amp, F2amp, Irate]
-            print('\nFIGrowth1: ')
             bounds = [
-                (0.0, 3.0), (0.0, 1000), (0.0, 5.0), (0.0, 100.0,), (0.0, 100.0)]
+                (0.0, 100.0),
+                (0.0, 1000.0),
+                (0.0, 500.0),
+                (0.1, 50.0),
+                (0.0, 1000),
+                (0.0, 500.0),
+                (0.1, 50.0),
+            ]
+            (fpar, xf, yf, names) = Fits.FitRegion(
+                numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds, method=testMethod
+            )
+        elif func == "FIGrowth1":
+            # Parameter p is [Fzero, Ibreak, F1amp, F2amp, Irate]
+            print("\nFIGrowth1: ")
+            bounds = [
+                (0.0, 3.0),
+                (0.0, 1000),
+                (0.0, 5.0),
+                (
+                    0.0,
+                    100.0,
+                ),
+                (0.0, 100.0),
+            ]
             initialgr = f[0](f[5], x, None)
-            (fpar, xf, yf, names) = Fits.FitRegion(numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds,
-                                                   constraints=[], fixedPars=None, method=testMethod)
+            (fpar, xf, yf, names) = Fits.FitRegion(
+                numpy.array([1]),
+                0,
+                x,
+                yd,
+                fitFunc=func,
+                bounds=bounds,
+                constraints=[],
+                fixedPars=None,
+                method=testMethod,
+            )
             tv = f[5]
 
-        elif func == 'boltz':
-            bounds = [(-0.5, 0.5), (0.0, 20.0), (-120., 0.), (-20., 0.)]
-            (fpar, xf, yf, names) = Fits.FitRegion(numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds,
-                                                   method=testMethod)
+        elif func == "boltz":
+            bounds = [(-0.5, 0.5), (0.0, 20.0), (-120.0, 0.0), (-20.0, 0.0)]
+            (fpar, xf, yf, names) = Fits.FitRegion(
+                numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds, method=testMethod
+            )
 
-        elif func == 'exp2':
-            bounds = [(-0.001, 0.001), (-5.0, 0.), (1.0, 500.0), (-5.0, 0.0),
-                      (1., 10000.)]
-            (fpar, xf, yf, names) = Fits.FitRegion(numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds,
-                                                   method=testMethod)
+        elif func == "exp2":
+            bounds = [(-0.001, 0.001), (-5.0, 0.0), (1.0, 500.0), (-5.0, 0.0), (1.0, 10000.0)]
+            (fpar, xf, yf, names) = Fits.FitRegion(
+                numpy.array([1]), 0, x, yd, fitFunc=func, bounds=bounds, method=testMethod
+            )
 
-        elif func == 'exppulse':
+        elif func == "exppulse":
             # set some constraints to the fitting
             # yOffset, tau1, tau2, amp, width = f[1]  # order of constraings
             dt = numpy.mean(numpy.diff(x))
-            bounds = [
-                (-5, 5), (-15., 15.), (-2, 2.0), (2 - 10, 10.), (-5, 5.), (0., 5.)]
+            bounds = [(-5, 5), (-15.0, 15.0), (-2, 2.0), (2 - 10, 10.0), (-5, 5.0), (0.0, 5.0)]
             # cxample for constraints:
             # cons = ({'type': 'ineq', 'fun': lambda x:   x[4] - 3.0*x[2]},
             #         {'type': 'ineq', 'fun': lambda x:   - x[4] + 12*x[2]},
             #         {'type': 'ineq', 'fun': lambda x:   x[2]},
             #         {'type': 'ineq', 'fun': lambda x:  - x[4] + 2000},
             #         )
-            cons = ({'type': 'ineq', 'fun': lambda x: x[3] - x[2]},  # tau1 < tau2
-                    )
+            cons = ({"type": "ineq", "fun": lambda x: x[3] - x[2]},)  # tau1 < tau2
             C = None
 
             tv = f[5]
             initialgr = f[0](f[5], x, None)
             (fpar, xf, yf, names) = Fits.FitRegion(
-                numpy.array([1]), 0, x, yd, fitFunc=func, fixedPars=C, constraints=cons, bounds=bounds,
-                method=testMethod)
+                numpy.array([1]),
+                0,
+                x,
+                yd,
+                fitFunc=func,
+                fixedPars=C,
+                constraints=cons,
+                bounds=bounds,
+                method=testMethod,
+            )
             # print xf
             # print yf
             # print fpar
@@ -983,8 +1263,18 @@ def main():
         else:
             tv = f[5]
             initialgr = f[0](f[5], x, None)
+            C = [1, 1]
             (fpar, xf, yf, names) = Fits.FitRegion(
-                numpy.array([1]), 0, x, yd, fitFunc=func, fixedPars=C, constraints=cons, bounds=bnds, method=testMethod)
+                numpy.array([1]),
+                0,
+                x,
+                yd,
+                fitFunc=func,
+                fixedPars=C,
+                constraints=cons,
+                bounds=bnds,
+                method=testMethod,
+            )
             # print fpar
         s = numpy.shape(fpar)
         j = 0
@@ -993,21 +1283,22 @@ def main():
         truestr = ""
         for i in range(0, len(names[j])):
             #            print "%f " % fpar[j][i],
-            outstr = outstr + ('%s = %f, ' % (names[j][i], fpar[j][i]))
-            initstr = initstr + '%s = %f, ' % (names[j][i], tv[i])
-            truestr = truestr + '%s = %f, ' % (names[j][i], f[1][i])
+            outstr = outstr + ("%s = %f, " % (names[j][i], fpar[j][i]))
+            initstr = initstr + "%s = %f, " % (names[j][i], tv[i])
+            truestr = truestr + "%s = %f, " % (names[j][i], f[1][i])
         print(("\nTrue(%d) : %s" % (j, truestr)))
         print(("FIT(%d)   : %s" % (j, outstr)))
         print(("init(%d) : %s" % (j, initstr)))
         print(("Error:   : %f" % (Fits.fitSum2Err)))
-        if func in ['exppulse', 'FIGrowth1', 'flattopgauss', 'flattopngauss']:
+        if func in ["exppulse", "FIGrowth1", "flattopgauss", "flattopngauss"]:
             print("red o = data; blue line is fit; black dashed is initial guess")
             pylab.figure()
-            pylab.plot(numpy.array(x), yd, 'ro-')
+            pylab.plot(numpy.array(x), yd, "ro-")
             pylab.hold(True)
-            pylab.plot(numpy.array(x), initialgr, 'k--')
-            pylab.plot(xf[0], yf[0], 'b-')  # fit
+            pylab.plot(numpy.array(x), initialgr, "k--")
+            pylab.plot(xf[0], yf[0], "b-")  # fit
             pylab.show()
+
 
 if __name__ == "__main__":
     main()
