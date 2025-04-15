@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Data Processing :: Neuroscience",
     "Topic :: Software Development :: Tools :: Python Modules",
 ]
-requires-python = "==3.13,*"
+requires-python = "==3.13.*"
 dependencies = [
     "cycler>=0.10.0",
     "kiwisolver>=1.1",
