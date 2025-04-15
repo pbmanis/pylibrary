@@ -25,7 +25,6 @@ matplotlib-scalebar>=0.8.1
 MetaArray==2.1.1
 
 numpy==2.2.4
-
 scipy>=1.14.0
 seaborn
 PyQt6
