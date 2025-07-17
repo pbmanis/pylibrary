@@ -62,6 +62,567 @@ rectangles and circles use the following license:
 
 """
 
+class Plotter:
+    """
+    The Plotter class provides a simple convenience for plotting data in
+    an row x column array.
+    """
+
+    def __init__(
+        self,
+        rcshape=None,
+        axmap=None,
+        arrangement=None,
+        title: Union[str, None] = None,
+        label=False,
+        order: str = "rowsfirst",
+        units: str = "page",
+        refline=None,
+        figsize: Union[List, Tuple, None] = None,
+        margins: Union[dict, None] = None,
+        labelalignment: str = "left",
+        labelposition: Union[List, Tuple] = [0.0, 0.0],  # global settings
+        font: str="Arial",
+        labelsize: Union[float, None] = None,
+        fontsize: Union[float, None] = None,
+        fontweight: str = "normal",
+        position=0,
+        parent_figure=None,
+        num=None,
+    ):
+        """
+        Create an instance of the plotter. Generates a new matplotlib figure,
+        and sets up an array of subplots as defined, initializes the counters
+
+        Examples
+        --------
+        Ex. 1:
+        One way to generate plots on a standard grid, uses gridspec to specify an axis map:
+        labels = ['A', 'B1', 'B2', 'C1', 'C2', 'D', 'E', 'F']
+        gr = [(0, 4, 0, 1), (0, 3, 1, 2), (3, 4, 1, 2), (0, 3, 2, 3), (3, 4, 2, 3), (5, 8, 0, 1), (5, 8, 1, 2), (5, 8, 2, 3)]
+        axmap = OrderedDict(zip(labels, gr))
+        P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
+        PH.show_figure_grid(P.figure_handle)
+
+        Ex. 2:
+        Place plots on defined locations on the page - no messing with gridspec or subplots.
+        For this version, we just generate N subplots with labels (used to tag each plot)
+        The "sizer" array then maps the tags to specific panel locations
+        # define positions for each panel in Figure coordinages (0, 1, 0, 1)
+        # you don't have to use an ordered dict for this, I just prefer it when debugging
+        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
+        'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
+        'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
+        'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)},
+        'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
+        }
+        # dict pos elements are [left, width, bottom, height] for the axes in the plot.
+        gr = [(a, a+1, 0, 1) for a in range(0, 8)]   # just generate subplots - shape does not matter
+        axmap = OrderedDict(zip(sizer.keys(), gr))
+        P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
+        PH.show_figure_grid(P.figure_handle)
+        P.resize(sizer)  # perform positioning magic
+        P.axdict['B1'] access the plot associated with panel B1
+
+        Parameters
+        ----------
+        rcshape : a list or tuple: 2x1 (no default)
+                  rcshape is an array [row, col] telling us how many rows and columns to build.
+                  default defines a rectangular array r x c of plots
+                  a dict :  None: expect axmap to provide the input...
+
+        axmap :
+            list of gridspec slices (default : None)
+            define slices for the axes of a gridspec, allowing for non-rectangular arrangements
+            The list is defined as:
+            [(r1t, r1b, c1l, c1r), slice(r2, c2)]
+            where r1t is the top for row 1 in the grid, r1b is the bottom, etc...
+            When using this mode, the axarr returned is a 1-D list, as if r is all plots indexed,
+            and the number of columns is 1. The results match in order the list entered in axmap
+
+        arrangement: Ordered Dict (default: None)
+            Arrangement allows the data to be plotted according to a logical arrangement
+            The dict keys are the names ("groups") for each column, and the elements are
+            string names for the entities in the groups
+
+        title : string (default: None)
+            Provide a title for the entire plot
+
+        label : Boolean (default: False)
+            If True, sets default labels on panels
+
+        labelalignment : string (default: 'left')
+            Horizontaalignment of label ('center', 'left', 'right')
+
+        order : string (default: "rowsfirst)
+            Define whether labels run in row order first ("rowsfirst")
+             or column order first ("columnsfirst")
+        units : units for margin setup (default: page)
+            if "page", the margins are all expressed as fractions of the page size
+                for width and height. This is the default and "natural" matplotlib
+                unit.
+            if "inches", the margins and spacing are expressed in inches
+            if "cm", the margins and spacings are expresssed in centimeters
+            Note that for cm, the figsize is also interpreted in centimteres.
+
+        refline : float (default: None)
+            Define the position of a reference line to be used in all panels
+
+        figsize : tuple (default : (11, 8.5))
+            Figure size in inches. Default is for a landscape figure
+
+        font: str (default : 'Arial')
+            Font to use for all text in the figure
+
+        fontsize : points (default : 10) OR dict {'tick', 'label', 'panel'}
+            Defines the size of the font to use for panel labels
+
+        fontweight : weights (str) dict {'tick', 'label', 'panel'}
+            Defines the weight of the font to use for labels: 'normal', 'bold', etc.
+
+        position : position of spines (0 means close, 0.05 means break out)
+            x, y spines..
+
+        parent_figure: instance of an existing plotter figure to add plots to
+
+        num : number or string name for figure
+
+        Returns
+        -------
+        Nothing
+
+        """
+        self.arrangement = arrangement
+        self.referenceLines = {}
+        self.fontsize = {}
+        self.parent = parent_figure
+        self.panel_labels = label
+        self.font = font
+        matplotlib.rcParams["font.family"] = self.font
+        self.sizer = None
+        assert order in ["rowsfirst", "columnsfirst"]
+        self.order = order
+        figsize, margins, verticalspacing, horizontalspacing = figure_scaling(
+            units=units,
+            figsize=figsize,
+            margins=margins,
+            verticalspacing=None,
+            horizontalspacing=None,
+        )
+
+        if self.parent is None:  # just create a new figure
+            if figsize is None:
+                figsize = (11.5, 8)  # landscape
+            self.figure_handle = mpl.figure(
+                figsize=figsize, num=num
+            )  # create the figure
+            self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
+            self.figsize = figsize
+            if title is not None:
+                self.figure_handle.canvas.set_window_title(title)
+                self.figure_handle.suptitle(title)
+
+        else:  # place into an existing figure - but it must have the same figsize
+            self.figure_handle = self.parent.figure_handle
+            self.figure_handle.get_size_inches()  # get original figure size
+            self.figsize = self.parent.figsize
+
+        self.labelalignment = labelalignment
+        self.label_flag = label
+        self.axlabels = []
+        self.axdict = OrderedDict()
+
+        # the following overrides fonts
+        if isinstance(fontsize, int):
+            self.fontsize = {"tick": fontsize, "label": fontsize, "panel": fontsize}
+        elif isinstance(fontsize, dict):
+            self.fontsize = fontsize
+        elif fontsize is None:
+            self.fontsize = {"tick": None, "label": fontsize, "panel": fontsize}
+        else:
+            raise ValueError("Plotter: Font size must be int or dict")
+        if isinstance(fontweight, str):
+            self.fontweight = {"tick": fontweight, "label": fontweight, "panel": "bold"}
+        elif isinstance(fontweight, dict):
+            self.fontweight = fontweight
+        elif fontweight is None:
+            self.fontweight = {"tick": None, "label": "normal", "panel": "bold"}
+        else:
+            raise ValueError("Plotter: Font size must be int or dict")
+        # otherwise we assume it is a dict and the sizes are set in the dict.
+        gridbuilt = False
+        # compute label offsets - global
+        label_position = [0.0, 0.0]
+        if self.label_flag:
+            if isinstance(labelposition, int):
+                label_position = [labelposition, labelposition]
+            elif isinstance(labelposition, dict):
+                label_position = [position["left"], position["bottom"]]
+            elif isinstance(labelposition, (list, tuple)):
+                label_position = labelposition
+            else:
+                raise ValueError(
+                    "Label flag requests position of unknown type: ", labelposition
+                )
+
+        # build axes arrays
+        # 1. nxm grid
+        if isinstance(rcshape, list) or isinstance(rcshape, tuple):
+            rc = rcshape
+            self.GS = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
+            if margins is not None:
+                self.GS.update(
+                    top=1.0 - margins["topmargin"],
+                    bottom=margins["bottommargin"],
+                    left=margins["leftmargin"],
+                    right=1.0 - margins["rightmargin"],
+                )
+            # assign to axarr
+            self.axarr = np.empty(
+                shape=(
+                    rc[0],
+                    rc[1],
+                ),
+                dtype=object,
+            )  # use a numpy object array, indexing features
+            ix = 0
+            for r in range(rc[0]):
+                for c in range(rc[1]):
+                    self.axarr[r, c] = mpl.subplot(self.GS[ix])
+                    ix += 1
+            gridbuilt = True
+        # 2. specified values - starts with Nx1 subplots, then reorganizes according to shape boxes
+        elif isinstance(rcshape, dict):  # true for OrderedDict also
+            nplots = len(rcshape.keys())
+            self.GS = gridspec.GridSpec(nplots, 1)
+            if margins is not None:
+                self.GS.update(
+                    top=1.0 - margins["topmargin"],
+                    bottom=margins["bottommargin"],
+                    left=margins["leftmargin"],
+                    right=1.0 - margins["rightmargin"],
+                )
+
+            rc = (nplots, 1)
+            self.axarr = np.empty(
+                shape=(
+                    rc[0],
+                    rc[1],
+                ),
+                dtype=object,
+            )  # use a numpy object array, indexing features
+            ix = 0
+            for r in range(rc[0]):  # rows
+                for c in range(rc[1]):  # columns
+                    self.axarr[r, c] = mpl.subplot(self.GS[ix])
+                    ix += 1
+            gridbuilt = True
+            for k, pk in enumerate(rcshape.keys()):
+                self.axdict[pk] = self.axarr[k, 0]
+
+            # Label the plots
+
+            self.axlabels = labelPanels(
+                self.axarr.tolist(),
+                axlist=rcshape.keys(),
+                rcshape=rcshape,
+                order=self.order,
+                xy=(-0.095 + labelposition[0], 0.95 + labelposition[1]),
+                fontsize=self.fontsize["panel"],
+                weight="bold",
+                horizontalalignment=self.labelalignment,
+            )
+            self.resize(rcshape)
+        else:
+            raise ValueError("Input rcshape must be list/tuple or dict")
+
+        # create sublots
+        if axmap is not None:
+            if isinstance(axmap, list) and not gridbuilt:
+                self.axarr = np.empty(shape=(len(axmap), 1), dtype=object)
+                for k, g in enumerate(axmap):
+                    self.axarr[k,] = mpl.subplot(self.GS[g[0] : g[1], g[2] : g[3]])
+            elif isinstance(axmap, dict) or isinstance(
+                axmap, OrderedDict
+            ):  # keys are panel labels
+                if not gridbuilt:
+                    self.axarr = np.empty(shape=(len(axmap.keys()), 1), dtype=object)
+                for k, pk in enumerate(axmap.keys()):
+                    g = axmap[pk]  # get the gridspec info
+                    if not gridbuilt:
+                        self.axarr[k,] = mpl.subplot(self.GS[g[0] : g[1], g[2] : g[3]])
+                    self.axdict[pk] = self.axarr.ravel()[k]
+            else:
+                raise TypeError("Plotter in PlotHelpers: axmap must be a list or dict")
+
+        if len(self.axdict) == 0:
+            for i, a in enumerate(self.axarr.flatten()):
+                label = string.ascii_uppercase[i]
+                self.axdict[label] = a
+
+        self.nrows = self.axarr.shape[0]
+        if len(self.axarr.shape) > 1:
+            self.ncolumns = self.axarr.shape[1]
+        else:
+            self.ncolumns = 1
+        self.reset_axis_counters()
+        for i in range(self.nrows):
+            for j in range(self.ncolumns):
+                self.axarr[i, j].spines["top"].set_visible(False)
+                self.axarr[i, j].get_xaxis().set_tick_params(
+                    direction="out", width=0.8, length=4.0
+                )
+                self.axarr[i, j].get_yaxis().set_tick_params(
+                    direction="out", width=0.8, length=4.0
+                )
+                if self.fontsize["tick"] is not None:
+                    self.axarr[i, j].tick_params(
+                        axis="both", which="major", labelsize=self.fontsize["tick"]
+                    )
+                #                if i < self.nrows-1:
+                #                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
+                nice_plot(self.axarr[i, j], position=position)
+                if refline is not None:
+                    self.referenceLines[self.axarr[i, j]] = referenceline(
+                        self.axarr[i, j], reference=refline
+                    )
+
+        if label:
+            if isinstance(axmap, dict) or isinstance(
+                axmap, OrderedDict
+            ):  # in case predefined...
+                self.axlabels = labelPanels(
+                    self.axarr.ravel().tolist(),
+                    order=self.order,
+                    axlist=axmap.keys(),
+                    xy=(-0.095 + label_position[0], 0.95 + label_position[1]),
+                    horizontalalignment=self.labelalignment,
+                    fontsize=self.fontsize["panel"],
+                    weight=self.fontweight["panel"],
+                )
+                return
+            self.axlist = []
+            if self.order == "rowsfirst":  # straight down rows in sequence
+                for i in range(self.nrows):
+                    for j in range(self.ncolumns):
+                        self.axlist.append(self.axarr[i, j])
+            else:  # go across in columns (zig zag)
+                for i in range(self.ncolumns):
+                    for j in range(self.nrows):
+                        self.axlist.append(self.axarr[j, i])
+
+            if self.nrows * self.ncolumns > 26:  # handle large plot using "A1..."
+                ctxt = string.ascii_uppercase[0 : self.ncolumns]  # columns are lettered
+                rtxt = [
+                    str(x + 1) for x in range(self.nrows)
+                ]  # rows are numbered, starting at 1
+                axl = []
+                for i in range(self.nrows):
+                    for j in range(self.ncolumns):
+                        axl.append(ctxt[j] + rtxt[i])
+                self.axlabels = labelPanels(
+                    self.axlist,
+                    axlist=axl,
+                    order=self.order,
+                    xy=(-0.35 + label_position[0], 0.75),
+                    fontsize=self.fontsize["panel"],
+                    weight=self.fontweight["panel"],
+                    horizontalalignment=self.labelalignment,
+                )
+
+            else:
+                self.axlabels = labelPanels(
+                    self.axlist,
+                    order=self.order,
+                    xy=(-0.095 + label_position[0], 0.95 + label_position[1]),
+                    fontsize=self.fontsize["panel"],
+                    weight=self.fontweight["panel"],
+                    horizontalalignment=self.labelalignment,
+                )
+
+    def _next(self):
+        """
+        Private function
+        _next gets the axis pointer to the next row, column index that is available
+        Only sets internal variables
+        """
+        # if self.order == 'rowsfirst':
+        self.row_counter += 1
+        if self.row_counter >= self.nrows:
+            self.column_counter += 1
+            self.row_counter = 0
+            if self.column_counter > self.ncolumns:
+                raise ValueError(
+                    "Call to get next axis exceeds the number of columns requested initially: %d"
+                    % self.columns
+                )
+        # else:
+        #     self.column_counter += 1
+        #     if self.column_counter >= self.ncolumns:
+        #         self.row_counter += 1
+        #         self.column_counter = 0
+        #         if self.row_counter >= self.nrows:
+        #             raise ValueError('Call to get next axis exceeds the number of rows requested initially: %d' % self.nrows)
+
+    def reset_axis_counters(self):
+        """
+        Set the column and row counters back to zero
+        """
+
+        self.column_counter = 0
+        self.row_counter = 0
+
+    def getaxis(self, group=None):
+        """
+        getaxis gets the current row, column counter, and calls _next to increment the counter
+        (so that the next getaxis returns the next available axis pointer)
+
+        Parameters
+        ----------
+        group : string (default: None)
+            forces the current axis to be selected from text name of a "group"
+
+        Returns
+        -------
+        the current axis or the axis associated with a group
+        """
+
+        if group is None:
+            currentaxis = self.axarr[self.row_counter, self.column_counter]
+            self._next()  # prepare for next call
+        else:
+            currentaxis = self.getRC(group)
+
+        return currentaxis
+
+    def adjust_panel_labels(
+        self,
+        fontsize: Union[None, str, float] = None,
+        fontweight: Union[None, str, int] = None,
+        fontstyle: Union[None, str] = None,
+        fontname: Union[None, str] = None,
+    ):
+        """Change the label size for all of the panel labels
+
+        Parameters
+        ----------
+        fontsize : float, optional
+            font size, points, by default None (no change)
+        fontweight : str, optional
+            font weight, by default None (no change)
+        fontstyle : str, optional
+            font style, by default None (no change)
+        fontname : str, optional
+            font name, by default None (no change)
+        """
+        for ax_text in self.axlabels:  # text objects
+            if fontsize is not None:
+                ax_text.set_fontsize(fontsize)
+            if fontweight is not None:
+                ax_text.set_fontweight(fontweight)
+            if fontstyle is not None:
+                ax_text.set_fontstyle(fontstyle)
+            if fontname is not None:
+                ax_text.set_fontname(fontname)
+
+    def getaxis_fromlabel(self, label):
+        """
+        Parameters
+        ----------
+        label : str
+            Find the plot instance axis object that has the
+            specified label
+
+        Returns
+        -------
+        axisobject or None if the labe is not found
+        """
+
+        axobj = self.axdict[label]
+        for i in range(self.nrows):
+            for j in range(self.ncolumns):
+                if axobj == self.axarr[i, j]:
+                    return axobj
+        return None  # not found
+
+    def getRC(self, group):
+        """
+        Get the axis associated with a group
+
+        Parameters
+        ----------
+        group : string (default: None)
+            returns the matplotlib axis associated with a text name of a "group"
+
+        Returns
+        -------
+        The matplotlib axis associated with the group name, or None if no group by
+        that name exists in the arrangement
+        """
+
+        if self.arrangement is None:
+            raise ValueError("specifying a group requires an arrangment dictionary")
+        # look for the group label in the arrangement dicts
+        for c, colname in enumerate(self.arrangement.keys()):
+            if group in self.arrangement[colname]:
+                # print ('column name, column: ', colname, self.arrangement[colname])
+                # print ('group: ', group)
+                r = self.arrangement[colname].index(
+                    group
+                )  # get the row position this way
+                return self.axarr[r, c]
+        print("Group {:s} not in the arrangement".format(group))
+        return None
+
+        # sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4]}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3]}, 'B2': {'pos': [0.40, 0.25, 0.5, 0.1]},
+        #         'C1': {'pos': [0.72, 0.25, 0.60, 0.3]}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1]},
+        #         'D': {'pos': [0.08, 0.25, 0.1, 0.3]}, 'E': {'pos': [0.40, 0.25, 0.1, 0.3]}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3]},
+        # }
+
+    def resize(self, sizer):
+        """
+        Resize the graphs in the array.
+
+        Parameters
+        ----------
+        sizer : dict (no default)
+            A dictionary with keys corresponding to the plot labels.
+            The values for each key are a list (or tuple) of [left, width, bottom, height]
+            for each panel in units of the graph [0, 1, 0, 1].
+
+        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
+                 'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
+                'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
+                'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)},
+                'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
+                }
+        Returns
+        -------
+        Nothing
+        """
+
+        for i, s in enumerate(sizer.keys()):
+            ax = self.axdict[s]
+            bbox = ax.get_position()
+            bbox.x0 = sizer[s]["pos"][0]
+            bbox.x1 = sizer[s]["pos"][1] + sizer[s]["pos"][0]
+            bbox.y0 = sizer[s]["pos"][2]
+            bbox.y1 = (
+                sizer[s]["pos"][3] + sizer[s]["pos"][2]
+            )  # offsets are in figure fractions
+            ax.set_position(bbox)
+            if (
+                self.panel_labels
+                and "labelpos" in sizer[s].keys()
+                and len(sizer[s]["labelpos"]) == 2
+            ):
+                x, y = sizer[s]["labelpos"]
+                self.axlabels[i].set_x(x)
+                self.axlabels[i].set_y(y)
+            if "noaxes" in sizer[s] and sizer[s]["noaxes"] is True:
+                noaxes(ax)
+
+
 
 def _ax_tolist(ax: object) -> list:
     """
@@ -2045,565 +2606,6 @@ def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds)
     return P
 
 
-class Plotter:
-    """
-    The Plotter class provides a simple convenience for plotting data in
-    an row x column array.
-    """
-
-    def __init__(
-        self,
-        rcshape=None,
-        axmap=None,
-        arrangement=None,
-        title: Union[str, None] = None,
-        label=False,
-        order: str = "rowsfirst",
-        units: str = "page",
-        refline=None,
-        figsize: Union[List, Tuple, None] = None,
-        margins: Union[dict, None] = None,
-        labelalignment: str = "left",
-        labelposition: Union[List, Tuple] = [0.0, 0.0],  # global settings
-        font: str="Arial",
-        labelsize: Union[float, None] = None,
-        fontsize: Union[float, None] = None,
-        fontweight: str = "normal",
-        position=0,
-        parent_figure=None,
-        num=None,
-    ):
-        """
-        Create an instance of the plotter. Generates a new matplotlib figure,
-        and sets up an array of subplots as defined, initializes the counters
-
-        Examples
-        --------
-        Ex. 1:
-        One way to generate plots on a standard grid, uses gridspec to specify an axis map:
-        labels = ['A', 'B1', 'B2', 'C1', 'C2', 'D', 'E', 'F']
-        gr = [(0, 4, 0, 1), (0, 3, 1, 2), (3, 4, 1, 2), (0, 3, 2, 3), (3, 4, 2, 3), (5, 8, 0, 1), (5, 8, 1, 2), (5, 8, 2, 3)]
-        axmap = OrderedDict(zip(labels, gr))
-        P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
-        PH.show_figure_grid(P.figure_handle)
-
-        Ex. 2:
-        Place plots on defined locations on the page - no messing with gridspec or subplots.
-        For this version, we just generate N subplots with labels (used to tag each plot)
-        The "sizer" array then maps the tags to specific panel locations
-        # define positions for each panel in Figure coordinages (0, 1, 0, 1)
-        # you don't have to use an ordered dict for this, I just prefer it when debugging
-        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
-        'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
-        'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
-        'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)},
-        'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
-        }
-        # dict pos elements are [left, width, bottom, height] for the axes in the plot.
-        gr = [(a, a+1, 0, 1) for a in range(0, 8)]   # just generate subplots - shape does not matter
-        axmap = OrderedDict(zip(sizer.keys(), gr))
-        P = PH.Plotter((8, 1), axmap=axmap, label=True, figsize=(8., 6.))
-        PH.show_figure_grid(P.figure_handle)
-        P.resize(sizer)  # perform positioning magic
-        P.axdict['B1'] access the plot associated with panel B1
-
-        Parameters
-        ----------
-        rcshape : a list or tuple: 2x1 (no default)
-                  rcshape is an array [row, col] telling us how many rows and columns to build.
-                  default defines a rectangular array r x c of plots
-                  a dict :  None: expect axmap to provide the input...
-
-        axmap :
-            list of gridspec slices (default : None)
-            define slices for the axes of a gridspec, allowing for non-rectangular arrangements
-            The list is defined as:
-            [(r1t, r1b, c1l, c1r), slice(r2, c2)]
-            where r1t is the top for row 1 in the grid, r1b is the bottom, etc...
-            When using this mode, the axarr returned is a 1-D list, as if r is all plots indexed,
-            and the number of columns is 1. The results match in order the list entered in axmap
-
-        arrangement: Ordered Dict (default: None)
-            Arrangement allows the data to be plotted according to a logical arrangement
-            The dict keys are the names ("groups") for each column, and the elements are
-            string names for the entities in the groups
-
-        title : string (default: None)
-            Provide a title for the entire plot
-
-        label : Boolean (default: False)
-            If True, sets default labels on panels
-
-        labelalignment : string (default: 'left')
-            Horizontaalignment of label ('center', 'left', 'right')
-
-        order : string (default: "rowsfirst)
-            Define whether labels run in row order first ("rowsfirst")
-             or column order first ("columnsfirst")
-        units : units for margin setup (default: page)
-            if "page", the margins are all expressed as fractions of the page size
-                for width and height. This is the default and "natural" matplotlib
-                unit.
-            if "inches", the margins and spacing are expressed in inches
-            if "cm", the margins and spacings are expresssed in centimeters
-            Note that for cm, the figsize is also interpreted in centimteres.
-
-        refline : float (default: None)
-            Define the position of a reference line to be used in all panels
-
-        figsize : tuple (default : (11, 8.5))
-            Figure size in inches. Default is for a landscape figure
-
-        font: str (default : 'Arial')
-            Font to use for all text in the figure
-
-        fontsize : points (default : 10) OR dict {'tick', 'label', 'panel'}
-            Defines the size of the font to use for panel labels
-
-        fontweight : weights (str) dict {'tick', 'label', 'panel'}
-            Defines the weight of the font to use for labels: 'normal', 'bold', etc.
-
-        position : position of spines (0 means close, 0.05 means break out)
-            x, y spines..
-
-        parent_figure: instance of an existing plotter figure to add plots to
-
-        num : number or string name for figure
-
-        Returns
-        -------
-        Nothing
-
-        """
-        self.arrangement = arrangement
-        self.referenceLines = {}
-        self.fontsize = {}
-        self.parent = parent_figure
-        self.panel_labels = label
-        self.font = font
-        matplotlib.rcParams["font.family"] = self.font
-        self.sizer = None
-        assert order in ["rowsfirst", "columnsfirst"]
-        self.order = order
-        figsize, margins, verticalspacing, horizontalspacing = figure_scaling(
-            units=units,
-            figsize=figsize,
-            margins=margins,
-            verticalspacing=None,
-            horizontalspacing=None,
-        )
-
-        if self.parent is None:  # just create a new figure
-            if figsize is None:
-                figsize = (11.5, 8)  # landscape
-            self.figure_handle = mpl.figure(
-                figsize=figsize, num=num
-            )  # create the figure
-            self.figure_handle.set_size_inches(figsize[0], figsize[1], forward=True)
-            self.figsize = figsize
-            if title is not None:
-                self.figure_handle.canvas.set_window_title(title)
-                self.figure_handle.suptitle(title)
-
-        else:  # place into an existing figure - but it must have the same figsize
-            self.figure_handle = self.parent.figure_handle
-            self.figure_handle.get_size_inches()  # get original figure size
-            self.figsize = self.parent.figsize
-
-        self.labelalignment = labelalignment
-        self.label_flag = label
-        self.axlabels = []
-        self.axdict = OrderedDict()
-
-        # the following overrides fonts
-        if isinstance(fontsize, int):
-            self.fontsize = {"tick": fontsize, "label": fontsize, "panel": fontsize}
-        elif isinstance(fontsize, dict):
-            self.fontsize = fontsize
-        elif fontsize is None:
-            self.fontsize = {"tick": None, "label": fontsize, "panel": fontsize}
-        else:
-            raise ValueError("Plotter: Font size must be int or dict")
-        if isinstance(fontweight, str):
-            self.fontweight = {"tick": fontweight, "label": fontweight, "panel": "bold"}
-        elif isinstance(fontweight, dict):
-            self.fontweight = fontweight
-        elif fontweight is None:
-            self.fontweight = {"tick": None, "label": "normal", "panel": "bold"}
-        else:
-            raise ValueError("Plotter: Font size must be int or dict")
-        # otherwise we assume it is a dict and the sizes are set in the dict.
-        gridbuilt = False
-        # compute label offsets - global
-        label_position = [0.0, 0.0]
-        if self.label_flag:
-            if isinstance(labelposition, int):
-                label_position = [labelposition, labelposition]
-            elif isinstance(labelposition, dict):
-                label_position = [position["left"], position["bottom"]]
-            elif isinstance(labelposition, (list, tuple)):
-                label_position = labelposition
-            else:
-                raise ValueError(
-                    "Label flag requests position of unknown type: ", labelposition
-                )
-
-        # build axes arrays
-        # 1. nxm grid
-        if isinstance(rcshape, list) or isinstance(rcshape, tuple):
-            rc = rcshape
-            self.GS = gridspec.GridSpec(rc[0], rc[1])  # define a grid using gridspec
-            if margins is not None:
-                self.GS.update(
-                    top=1.0 - margins["topmargin"],
-                    bottom=margins["bottommargin"],
-                    left=margins["leftmargin"],
-                    right=1.0 - margins["rightmargin"],
-                )
-            # assign to axarr
-            self.axarr = np.empty(
-                shape=(
-                    rc[0],
-                    rc[1],
-                ),
-                dtype=object,
-            )  # use a numpy object array, indexing features
-            ix = 0
-            for r in range(rc[0]):
-                for c in range(rc[1]):
-                    self.axarr[r, c] = mpl.subplot(self.GS[ix])
-                    ix += 1
-            gridbuilt = True
-        # 2. specified values - starts with Nx1 subplots, then reorganizes according to shape boxes
-        elif isinstance(rcshape, dict):  # true for OrderedDict also
-            nplots = len(rcshape.keys())
-            self.GS = gridspec.GridSpec(nplots, 1)
-            if margins is not None:
-                self.GS.update(
-                    top=1.0 - margins["topmargin"],
-                    bottom=margins["bottommargin"],
-                    left=margins["leftmargin"],
-                    right=1.0 - margins["rightmargin"],
-                )
-
-            rc = (nplots, 1)
-            self.axarr = np.empty(
-                shape=(
-                    rc[0],
-                    rc[1],
-                ),
-                dtype=object,
-            )  # use a numpy object array, indexing features
-            ix = 0
-            for r in range(rc[0]):  # rows
-                for c in range(rc[1]):  # columns
-                    self.axarr[r, c] = mpl.subplot(self.GS[ix])
-                    ix += 1
-            gridbuilt = True
-            for k, pk in enumerate(rcshape.keys()):
-                self.axdict[pk] = self.axarr[k, 0]
-
-            # Label the plots
-
-            self.axlabels = labelPanels(
-                self.axarr.tolist(),
-                axlist=rcshape.keys(),
-                rcshape=rcshape,
-                order=self.order,
-                xy=(-0.095 + labelposition[0], 0.95 + labelposition[1]),
-                fontsize=self.fontsize["panel"],
-                weight="bold",
-                horizontalalignment=self.labelalignment,
-            )
-            self.resize(rcshape)
-        else:
-            raise ValueError("Input rcshape must be list/tuple or dict")
-
-        # create sublots
-        if axmap is not None:
-            if isinstance(axmap, list) and not gridbuilt:
-                self.axarr = np.empty(shape=(len(axmap), 1), dtype=object)
-                for k, g in enumerate(axmap):
-                    self.axarr[k,] = mpl.subplot(self.GS[g[0] : g[1], g[2] : g[3]])
-            elif isinstance(axmap, dict) or isinstance(
-                axmap, OrderedDict
-            ):  # keys are panel labels
-                if not gridbuilt:
-                    self.axarr = np.empty(shape=(len(axmap.keys()), 1), dtype=object)
-                for k, pk in enumerate(axmap.keys()):
-                    g = axmap[pk]  # get the gridspec info
-                    if not gridbuilt:
-                        self.axarr[k,] = mpl.subplot(self.GS[g[0] : g[1], g[2] : g[3]])
-                    self.axdict[pk] = self.axarr.ravel()[k]
-            else:
-                raise TypeError("Plotter in PlotHelpers: axmap must be a list or dict")
-
-        if len(self.axdict) == 0:
-            for i, a in enumerate(self.axarr.flatten()):
-                label = string.ascii_uppercase[i]
-                self.axdict[label] = a
-
-        self.nrows = self.axarr.shape[0]
-        if len(self.axarr.shape) > 1:
-            self.ncolumns = self.axarr.shape[1]
-        else:
-            self.ncolumns = 1
-        self.reset_axis_counters()
-        for i in range(self.nrows):
-            for j in range(self.ncolumns):
-                self.axarr[i, j].spines["top"].set_visible(False)
-                self.axarr[i, j].get_xaxis().set_tick_params(
-                    direction="out", width=0.8, length=4.0
-                )
-                self.axarr[i, j].get_yaxis().set_tick_params(
-                    direction="out", width=0.8, length=4.0
-                )
-                if self.fontsize["tick"] is not None:
-                    self.axarr[i, j].tick_params(
-                        axis="both", which="major", labelsize=self.fontsize["tick"]
-                    )
-                #                if i < self.nrows-1:
-                #                    self.axarr[i, j].xaxis.set_major_formatter(mpl.NullFormatter())
-                nice_plot(self.axarr[i, j], position=position)
-                if refline is not None:
-                    self.referenceLines[self.axarr[i, j]] = referenceline(
-                        self.axarr[i, j], reference=refline
-                    )
-
-        if label:
-            if isinstance(axmap, dict) or isinstance(
-                axmap, OrderedDict
-            ):  # in case predefined...
-                self.axlabels = labelPanels(
-                    self.axarr.ravel().tolist(),
-                    order=self.order,
-                    axlist=axmap.keys(),
-                    xy=(-0.095 + label_position[0], 0.95 + label_position[1]),
-                    horizontalalignment=self.labelalignment,
-                    fontsize=self.fontsize["panel"],
-                    weight=self.fontweight["panel"],
-                )
-                return
-            self.axlist = []
-            if self.order == "rowsfirst":  # straight down rows in sequence
-                for i in range(self.nrows):
-                    for j in range(self.ncolumns):
-                        self.axlist.append(self.axarr[i, j])
-            else:  # go across in columns (zig zag)
-                for i in range(self.ncolumns):
-                    for j in range(self.nrows):
-                        self.axlist.append(self.axarr[j, i])
-
-            if self.nrows * self.ncolumns > 26:  # handle large plot using "A1..."
-                ctxt = string.ascii_uppercase[0 : self.ncolumns]  # columns are lettered
-                rtxt = [
-                    str(x + 1) for x in range(self.nrows)
-                ]  # rows are numbered, starting at 1
-                axl = []
-                for i in range(self.nrows):
-                    for j in range(self.ncolumns):
-                        axl.append(ctxt[j] + rtxt[i])
-                self.axlabels = labelPanels(
-                    self.axlist,
-                    axlist=axl,
-                    order=self.order,
-                    xy=(-0.35 + label_position[0], 0.75),
-                    fontsize=self.fontsize["panel"],
-                    weight=self.fontweight["panel"],
-                    horizontalalignment=self.labelalignment,
-                )
-
-            else:
-                self.axlabels = labelPanels(
-                    self.axlist,
-                    order=self.order,
-                    xy=(-0.095 + label_position[0], 0.95 + label_position[1]),
-                    fontsize=self.fontsize["panel"],
-                    weight=self.fontweight["panel"],
-                    horizontalalignment=self.labelalignment,
-                )
-
-    def _next(self):
-        """
-        Private function
-        _next gets the axis pointer to the next row, column index that is available
-        Only sets internal variables
-        """
-        # if self.order == 'rowsfirst':
-        self.row_counter += 1
-        if self.row_counter >= self.nrows:
-            self.column_counter += 1
-            self.row_counter = 0
-            if self.column_counter > self.ncolumns:
-                raise ValueError(
-                    "Call to get next axis exceeds the number of columns requested initially: %d"
-                    % self.columns
-                )
-        # else:
-        #     self.column_counter += 1
-        #     if self.column_counter >= self.ncolumns:
-        #         self.row_counter += 1
-        #         self.column_counter = 0
-        #         if self.row_counter >= self.nrows:
-        #             raise ValueError('Call to get next axis exceeds the number of rows requested initially: %d' % self.nrows)
-
-    def reset_axis_counters(self):
-        """
-        Set the column and row counters back to zero
-        """
-
-        self.column_counter = 0
-        self.row_counter = 0
-
-    def getaxis(self, group=None):
-        """
-        getaxis gets the current row, column counter, and calls _next to increment the counter
-        (so that the next getaxis returns the next available axis pointer)
-
-        Parameters
-        ----------
-        group : string (default: None)
-            forces the current axis to be selected from text name of a "group"
-
-        Returns
-        -------
-        the current axis or the axis associated with a group
-        """
-
-        if group is None:
-            currentaxis = self.axarr[self.row_counter, self.column_counter]
-            self._next()  # prepare for next call
-        else:
-            currentaxis = self.getRC(group)
-
-        return currentaxis
-
-    def adjust_panel_labels(
-        self,
-        fontsize: Union[None, str, float] = None,
-        fontweight: Union[None, str, int] = None,
-        fontstyle: Union[None, str] = None,
-        fontname: Union[None, str] = None,
-    ):
-        """Change the label size for all of the panel labels
-
-        Parameters
-        ----------
-        fontsize : float, optional
-            font size, points, by default None (no change)
-        fontweight : str, optional
-            font weight, by default None (no change)
-        fontstyle : str, optional
-            font style, by default None (no change)
-        fontname : str, optional
-            font name, by default None (no change)
-        """
-        for ax_text in self.axlabels:  # text objects
-            if fontsize is not None:
-                ax_text.set_fontsize(fontsize)
-            if fontweight is not None:
-                ax_text.set_fontweight(fontweight)
-            if fontstyle is not None:
-                ax_text.set_fontstyle(fontstyle)
-            if fontname is not None:
-                ax_text.set_fontname(fontname)
-
-    def getaxis_fromlabel(self, label):
-        """
-        Parameters
-        ----------
-        label : str
-            Find the plot instance axis object that has the
-            specified label
-
-        Returns
-        -------
-        axisobject or None if the labe is not found
-        """
-
-        axobj = self.axdict[label]
-        for i in range(self.nrows):
-            for j in range(self.ncolumns):
-                if axobj == self.axarr[i, j]:
-                    return axobj
-        return None  # not found
-
-    def getRC(self, group):
-        """
-        Get the axis associated with a group
-
-        Parameters
-        ----------
-        group : string (default: None)
-            returns the matplotlib axis associated with a text name of a "group"
-
-        Returns
-        -------
-        The matplotlib axis associated with the group name, or None if no group by
-        that name exists in the arrangement
-        """
-
-        if self.arrangement is None:
-            raise ValueError("specifying a group requires an arrangment dictionary")
-        # look for the group label in the arrangement dicts
-        for c, colname in enumerate(self.arrangement.keys()):
-            if group in self.arrangement[colname]:
-                # print ('column name, column: ', colname, self.arrangement[colname])
-                # print ('group: ', group)
-                r = self.arrangement[colname].index(
-                    group
-                )  # get the row position this way
-                return self.axarr[r, c]
-        print("Group {:s} not in the arrangement".format(group))
-        return None
-
-        # sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4]}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3]}, 'B2': {'pos': [0.40, 0.25, 0.5, 0.1]},
-        #         'C1': {'pos': [0.72, 0.25, 0.60, 0.3]}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1]},
-        #         'D': {'pos': [0.08, 0.25, 0.1, 0.3]}, 'E': {'pos': [0.40, 0.25, 0.1, 0.3]}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3]},
-        # }
-
-    def resize(self, sizer):
-        """
-        Resize the graphs in the array.
-
-        Parameters
-        ----------
-        sizer : dict (no default)
-            A dictionary with keys corresponding to the plot labels.
-            The values for each key are a list (or tuple) of [left, width, bottom, height]
-            for each panel in units of the graph [0, 1, 0, 1].
-
-        sizer = {'A': {'pos': [0.08, 0.22, 0.50, 0.4], 'labelpos': (x,y), 'noaxes': True}, 'B1': {'pos': [0.40, 0.25, 0.60, 0.3], 'labelpos': (x,y)},
-                 'B2': {'pos': [0.40, 0.25, 0.5, 0.1],, 'labelpos': (x,y), 'noaxes': False},
-                'C1': {'pos': [0.72, 0.25, 0.60, 0.3], 'labelpos': (x,y)}, 'C2': {'pos': [0.72, 0.25, 0.5, 0.1], 'labelpos': (x,y)},
-                'D': {'pos': [0.08, 0.25, 0.1, 0.3], 'labelpos': (x,y)},
-                'E': {'pos': [0.40, 0.25, 0.1, 0.3], 'labelpos': (x,y)}, 'F': {'pos': [0.72, 0.25, 0.1, 0.3],, 'labelpos': (x,y)}
-                }
-        Returns
-        -------
-        Nothing
-        """
-
-        for i, s in enumerate(sizer.keys()):
-            ax = self.axdict[s]
-            bbox = ax.get_position()
-            bbox.x0 = sizer[s]["pos"][0]
-            bbox.x1 = sizer[s]["pos"][1] + sizer[s]["pos"][0]
-            bbox.y0 = sizer[s]["pos"][2]
-            bbox.y1 = (
-                sizer[s]["pos"][3] + sizer[s]["pos"][2]
-            )  # offsets are in figure fractions
-            ax.set_position(bbox)
-            if (
-                self.panel_labels
-                and "labelpos" in sizer[s].keys()
-                and len(sizer[s]["labelpos"]) == 2
-            ):
-                x, y = sizer[s]["labelpos"]
-                self.axlabels[i].set_x(x)
-                self.axlabels[i].set_y(y)
-            if "noaxes" in sizer[s] and sizer[s]["noaxes"] is True:
-                noaxes(ax)
 
 
 def main(sf="P5"):
