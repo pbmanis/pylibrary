@@ -1840,7 +1840,7 @@ def regular_grid(
     panel_labels: Union[str, List, None] = None,
     font: str="Arial",
     **kwds,
-) -> object:
+) -> Plotter:
     """
     make a regular layout grid for plotters
 
