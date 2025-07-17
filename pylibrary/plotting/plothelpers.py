@@ -88,7 +88,7 @@ def _ax_tolist(ax: object) -> list:
 def nice_plot(
     axl: object,
     spines: list = ["left", "bottom"],
-    position: float = 0.0,
+    position: dict = {'left': float= 0.0, 'bottom': float = 0.0},
     direction: str = "inward",
     ticklength: float = 5.0,
     axesoff: bool = False,
