@@ -1,7 +1,7 @@
 
 [project]
 name = "pylibrary"
-version = "0.5.1"
+version = "0.5.2"
 description = "General routines to assist in plotting and data analysis"
 readme = "README.md"
 authors = [
