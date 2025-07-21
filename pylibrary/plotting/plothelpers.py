@@ -231,6 +231,7 @@ class Plotter:
         self.label_flag = label
         self.axlabels = []
         self.axdict = OrderedDict()
+        self.axarr = None
 
         # the following overrides fonts
         if isinstance(fontsize, int):
