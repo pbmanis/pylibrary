@@ -497,6 +497,9 @@ def flatten(
 def _rollingSum(data: np.ndarray, n: int) -> np.ndarray:
     d1 = data.copy()
     d1[1:] += d1[:-1]  # integrate
+    print(len(d1), n)
+    if len(d1) < n:
+        n = len(d1)
     d2 = np.empty(len(d1) - n + 1, dtype=data.dtype)
     d2[0] = d1[n - 1]  # copy first point
     d2[1:] = d1[n:] - d1[:-n]  # subtract the rest
@@ -571,17 +574,17 @@ def clementsBekkers(
     return (t_start, d_start)  # just return the list of the starts
 
 
-def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0, 
-        ntau=2.5, lpfilter=0, predelay=0.5, dur=5):
+def cb_template(shape:str='alpha', samplerate:float=0.1, rise:float=0.5, decay:float=2.0, 
+        ntau:float=2.5, lpfilter:int=0, predelay:float=0.5, dur:float=5):
     dual_fraction = 0.5
     if dual_fraction == 0.0:
         decay2 = 0.5
 
-    if type == "alpha":
+    if shape == "alpha":
         predelay = 0.5
         if decay * ntau < 2.5:
             ntau = 2.5 / decay
-        N = np.floor((decay * ntau + predelay) / samplerate)
+        N = int(np.floor((decay * ntau + predelay) / samplerate))
         tb = np.arange(0.0, N * samplerate, samplerate)
         template = np.zeros(N)
         for i, t in enumerate(tb):
@@ -589,8 +592,10 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0,
                 template[i] = ((t - predelay) / decay) * np.exp(
                     (-(t - predelay)) / decay
                 )
+        template = template / np.max(template)
+        return template
 
-    if type == 'EPSC':  #  for EPSC detection
+    elif shape == 'EPSC':  #  for EPSC detection
         predelay = predelay
         if ntau is None:
             ntau = dur
@@ -610,6 +615,12 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0,
             template = SignalFilter_LPFButter(
                 template, lpfilter, 1.0 / samplerate, NPole=8
             )
+        template = template / np.max(template)
+        return template
+    else:
+        raise NotImplementedError(
+            "cb_template: type %s not implemented yet. Use 'alpha' or 'EPSC'." % type
+        )
     #
     # case 2 % dual exponential function with power (standard)
     #     predelay = 0.25;
@@ -655,11 +666,6 @@ def cb_template(type='alpha', samplerate=0.1, rise=0.5, decay=2.0,
     #     template = [];
     #     return
 
-    template = template / np.max(template)
-    # N = length(template);
-    # newfigure('mini_showtemplate', 'Mini Template');
-    # plot(0:samplerate:(N-1)*samplerate', template);
-    return template
 
 
 def RichardsonSilberberg(data:Union[object, np.ndarray], tau:float, time:np.ndarray=None):

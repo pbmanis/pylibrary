@@ -18,6 +18,10 @@ class Params(object):
     parameter structure.
     """
     def __init__(self, **kwds):
+        # raise DeprecationWarning(
+        #     "Params is deprecated, use native python DataClasses instead."
+        # )
+        
         self.__dict__.update(kwds)
 
     def getkeys(self):
@@ -79,7 +83,14 @@ class ParamTests(object):
         with open('testparams.pkl', 'rb') as f:
             self.testpar2 = pickle.load(f)
         
-        
+        assert self.testpar2.haskey('number')
+        assert self.testpar2.haskey('string')
+        assert self.testpar2.haskey('dict')
+        assert self.testpar2.dict['x'] == 0
+        assert self.testpar2.dict['y'] == 1 
+        assert self.testpar2.dict == {'x': 0, 'y': 1}
+        assert self.testpar2.number == 1
+        assert self.testpar2.string == 'string' 
 
 
 if __name__ == '__main__':

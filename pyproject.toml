@@ -26,6 +26,7 @@ dependencies = [
     "numpy>=2.2.4",
     "pyparsing>=2.4",
     "pyqtgraph>=0.13",
+    "pyqt6>=6.5.0",
     "python-dateutil>=2.8",
     "scipy>=1.2",
 ]
