@@ -200,6 +200,7 @@ class Plotter:
         self.font = font
         matplotlib.rcParams["font.family"] = self.font
         self.sizer = None
+        self.figure_handle = None
         assert order in ["rowsfirst", "columnsfirst"]
         self.order = order
         figsize, margins, verticalspacing, horizontalspacing = figure_scaling(
@@ -2563,7 +2564,7 @@ def test_sizergrid():
     Grid should be 8x3
     """
     regular_grid(8, 3)
-    mpl.show()
+    # mpl.show()
 
 
 def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds):
@@ -2610,30 +2611,32 @@ def arbitrary_grid(sizer, units="page", figsize=(8, 10), showgrid=False, **kwds)
 
 
 def main(sf="P5"):
-    #    P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
-    #    test_sizergrid()
-    #    exit(1)
-    # labels = ["A", "B"]  # , 'C', 'D', 'E', 'F', 'G', 'H', 'I']
-    # left = [(a, a + 2, 0, 1) for a in range(0, 6, 2)]
-    # right = [(a, a + 1, 1, 2) for a in range(0, 6)]
-    # axmap = OrderedDict(zip(labels, left + right))
-    # P = Plotter((1, 2), axmap=axmap, figsize=(6.0, 6.0), label=True)
-    # #    P = Plotter((2,3), label=True)  # create a figure with plots
-    # for a in P.axarr.ravel():
-    #     a.plot(np.random.random(10) * 3, np.random.random(10) * 72)
-    # nice_plot(P.axdict["A"])
-    # talbotTicks(
-    #     P.axdict["A"], tickPlacesAdd={"x": 0, "y": 0}, floatAdd={"x": 1, "y": 1}
-    # )
-    # show_figure_grid(P.figure_handle)
-    # P.figure_handle.suptitle("random")
+    if sf == "P0":
+        P = Plotter((3,3), axmap=[(0, 1, 0, 3), (1, 2, 0, 2), (2, 1, 2, 3), (2, 3, 0, 1), (2, 3, 1, 2)])
+        test_sizergrid()
+
+    elif sf == "P6":
+        labels = ["A", "B"]  # , 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+        left = [(a, a + 2, 0, 1) for a in range(0, 6, 2)]
+        right = [(a, a + 1, 1, 2) for a in range(0, 6)]
+        axmap = OrderedDict(zip(labels, left + right))
+        P = Plotter((1, 2), axmap=axmap, figsize=(6.0, 6.0), label=True)
+        #    P = Plotter((2,3), label=True)  # create a figure with plots
+        for a in P.axarr.ravel():
+            a.plot(np.random.random(10) * 3, np.random.random(10) * 72)
+        nice_plot(P.axdict["A"])
+        talbotTicks(
+            P.axdict["A"], tickPlacesAdd={"x": 0, "y": 0}, floatAdd={"x": 1, "y": 1}
+        )
+        show_figure_grid(P.figure_handle)
+        P.figure_handle.suptitle("random")
 
     # make a more complex plot
-    if sf == "P1":
+    elif sf == "P1":
         P1 = Plotter((3, 2), units="page", figsize=(8.0, 10.0))  # a default
         show_figure_grid(P1)
         P1.figure_handle.suptitle("Defaults, units=page")
-        mpl.show()
+
     elif sf == "P2":
         P2 = Plotter(
             (3, 2),
@@ -2648,8 +2651,7 @@ def main(sf="P5"):
         )
         show_figure_grid(P2)
         P2.figure_handle.suptitle("defaults, units=inches")
-        mpl.show()
-        return
+
     elif sf == "P3":
         P3 = Plotter(
             (3, 2),
@@ -2663,8 +2665,7 @@ def main(sf="P5"):
             figsize=(8.0, 10.0),
         )
         P3.figure_handle.suptitle("Defaults, units=cm")
-        mpl.show()
-        return
+
     elif sf == "P4":
         P4 = regular_grid(
             rows=3,
@@ -2679,9 +2680,7 @@ def main(sf="P5"):
             figsize=(12.0, 16.0),
         )
         P4.figure_handle.suptitle("regulargrid, units=cm")
-        show_figure_grid(P4)
-        mpl.show()
-        return
+        # show_figure_grid(P4)
 
     elif sf == "P5":
         x = -0.05
@@ -2697,9 +2696,11 @@ def main(sf="P5"):
         P5.figure_handle.suptitle("arbitrary grid, units=in")
         show_figure_grid(P5, int(P5.figsize[0]), int(P5.figsize[1]))
 
-        mpl.show()
-    return
 
+    mpl.pause(0.2)
+    mpl.show(block=False)
+    mpl.close()
 
 if __name__ == "__main__":
-    main(sf="P5")
+    for sf in ["P0", "P1", "P2", "P3", "P4", "P5", "P6"]:
+        main(sf=sf)
