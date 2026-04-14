@@ -10,7 +10,7 @@ sphinx==8.2.3
 sphinx-automodapi
 sphinx-rtd-theme
 
-pytest==8.3.5
+pytest==9.0.3
 gitpython
 Cython==3.0.12
 
